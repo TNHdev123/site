@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaverLoop</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            text-align: center;
+        }
+        #message-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        #message {
+            margin-bottom: 20px;
+        }
+        #version {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="message-container">
+        <div id="message">請點擊下方按鈕啟動</div>
+        <button id="startButton">啟動 SaverLoop</button>
+    </div>
+    <div id="version">version: Internal_α0.1</div>
+    <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
+
+    <script>
+        const videoElement = document.getElementById('myVideo');
+        const messageContainer = document.getElementById('message-container');
+        const messageElement = document.getElementById('message');
+        const startButton = document.getElementById('startButton');
+        const redirectUrl = "https://www.apple.com";
+        let motionPermissionGranted = false;
+        let isPlaying = false;
+
+        function startVideoAndMotionDetection() {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            messageContainer.style.display = 'none';
+            
+            videoElement.play().then(() => {
+                if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                } else if (videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                }
+
+                let motionDetected = false;
+                const threshold = 1.0;
+
+                window.addEventListener('devicemotion', event => {
+                    const acceleration = event.accelerationIncludingGravity;
+                    if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
+                        if (isPlaying && !motionDetected) {
+                            motionDetected = true;
+                            videoElement.pause();
+                        }
+                    }
+                });
+            }).catch(e => {
+                console.error("影片播放失敗: ", e);
+                messageContainer.style.display = 'block';
+                messageElement.textContent = "播放失敗，請再試一次。";
+                isPlaying = false;
+            });
+        }
+
+        // 綁定按鈕點擊事件
+        startButton.addEventListener('click', () => {
+            if (!motionPermissionGranted) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission().then(permissionState => {
+                        if (permissionState === 'granted') {
+                            motionPermissionGranted = true;
+                            startVideoAndMotionDetection();
+                        } else {
+                            messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
+                        }
+                    }).catch(console.error);
+                } else {
+                    motionPermissionGranted = true;
+                    startVideoAndMotionDetection();
+                }
+            } else {
+                if (isPlaying) {
+                    videoElement.pause();
+                }
+            }
+        });
+
+        // 偵測影片暫停事件，並在暫停時導向
+        videoElement.addEventListener('pause', () => {
+            if (redirectUrl && redirectUrl !== "[導向URL]") {
+                window.location.href = redirectUrl;
+            }
+        });
+    </script>
+</body>
+</html>
