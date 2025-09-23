@@ -30,6 +30,11 @@
         #message {
             margin-bottom: 20px;
         }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
         #version {
             position: absolute;
             bottom: 20px;
@@ -57,6 +62,7 @@
         const redirectUrl = "https://www.apple.com";
         let motionPermissionGranted = false;
         let isPlaying = false;
+        let isIntentionalPause = false;
 
         function startVideoAndMotionDetection() {
             if (isPlaying) return;
@@ -79,6 +85,7 @@
                     if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
                         if (isPlaying && !motionDetected) {
                             motionDetected = true;
+                            isIntentionalPause = true; // 新增：設定為有意暫停
                             videoElement.pause();
                         }
                     }
@@ -109,6 +116,7 @@
                 }
             } else {
                 if (isPlaying) {
+                    isIntentionalPause = true; // 新增：設定為有意暫停
                     videoElement.pause();
                 }
             }
@@ -116,8 +124,9 @@
 
         // 偵測影片暫停事件，並在暫停時導向
         videoElement.addEventListener('pause', () => {
-            if (redirectUrl && redirectUrl !== "[導向URL]") {
+            if (isIntentionalPause && redirectUrl && redirectUrl !== "[導向URL]") {
                 window.location.href = redirectUrl;
+                isIntentionalPause = false; // 新增：重設標誌
             }
         });
     </script>
