@@ -49,7 +49,7 @@
     <div id="message-container">
         <div id="message">Tap the screen to start</div>
     </div>
-    <div id="version">version: Internal_α0.1</div>
+    <div id="version">version: Internal_α0.2</div>
     <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
 
     <script>
@@ -58,6 +58,7 @@
         const messageElement = document.getElementById('message');
         const redirectUrl = "https://www.apple.com";
         let isPlaying = false;
+        let isIntentionalPause = false;
 
         // 啟動影片和全螢幕模式
         function startVideo() {
@@ -85,14 +86,23 @@
             if (!isPlaying) {
                 startVideo();
             } else {
+                isIntentionalPause = true;
                 videoElement.pause();
             }
         });
 
         // 監聽影片暫停事件並導向
         videoElement.addEventListener('pause', () => {
-            if (isPlaying && redirectUrl) { // 確保只有在播放狀態下暫停才導向
+            if (isIntentionalPause && redirectUrl) {
                 window.location.href = redirectUrl;
+            }
+            isIntentionalPause = false;
+        });
+
+        // 處理返回頁面事件
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                startVideo();
             }
         });
 
