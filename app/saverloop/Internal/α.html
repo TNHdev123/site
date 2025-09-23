@@ -58,7 +58,7 @@
         let countdown = 5;
         let countdownTimer;
 
-        function startMotionDetectionAfterDelay() {
+        function startMotionDetection() {
             let motionDetected = false;
             const threshold = 1.0;
 
@@ -75,7 +75,7 @@
             });
         }
 
-        function startVideoAndPrepareMotionDetection() {
+        function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
             
@@ -87,10 +87,6 @@
                 } else if (videoElement.webkitEnterFullscreen) {
                     videoElement.webkitEnterFullscreen();
                 }
-                
-                // 延遲一秒後再啟動動作偵測
-                setTimeout(startMotionDetectionAfterDelay, 1000);
-
             }).catch(e => {
                 console.error("影片播放失敗: ", e);
                 messageContainer.style.display = 'block';
@@ -105,14 +101,14 @@
                     DeviceMotionEvent.requestPermission().then(permissionState => {
                         if (permissionState === 'granted') {
                             motionPermissionGranted = true;
-                            startVideoAndPrepareMotionDetection();
+                            startVideo();
                         } else {
                             messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
                         }
                     }).catch(console.error);
                 } else {
                     motionPermissionGranted = true;
-                    startVideoAndPrepareMotionDetection();
+                    startVideo();
                 }
             }
         }
@@ -122,6 +118,19 @@
             if (!isPlaying) {
                 clearInterval(countdownTimer);
                 handleStart();
+            }
+        });
+
+        // 監聽全螢幕狀態變化
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                startMotionDetection();
+            }
+        });
+
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (document.webkitFullscreenElement) {
+                startMotionDetection();
             }
         });
 
