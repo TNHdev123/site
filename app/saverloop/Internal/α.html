@@ -58,7 +58,6 @@
         const messageElement = document.getElementById('message');
         const redirectUrl = "https://www.apple.com";
         let isPlaying = false;
-        let isHandled = false;
 
         // 啟動影片和全螢幕模式
         function startVideo() {
@@ -86,6 +85,13 @@
             if (!isPlaying) {
                 startVideo();
             } else {
+                videoElement.pause();
+            }
+        });
+
+        // 監聽影片暫停事件並導向
+        videoElement.addEventListener('pause', () => {
+            if (isPlaying && redirectUrl) {
                 window.location.href = redirectUrl;
             }
         });
