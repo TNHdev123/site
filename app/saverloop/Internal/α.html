@@ -58,7 +58,24 @@
         let countdown = 5;
         let countdownTimer;
 
-        function startVideoAndMotionDetection() {
+        function startMotionDetectionAfterDelay() {
+            let motionDetected = false;
+            const threshold = 1.0;
+
+            window.addEventListener('devicemotion', event => {
+                const acceleration = event.accelerationIncludingGravity;
+                if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
+                    if (isPlaying && !motionDetected) {
+                        motionDetected = true;
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        }
+                    }
+                }
+            });
+        }
+
+        function startVideoAndPrepareMotionDetection() {
             if (isPlaying) return;
             isPlaying = true;
             
@@ -70,22 +87,10 @@
                 } else if (videoElement.webkitEnterFullscreen) {
                     videoElement.webkitEnterFullscreen();
                 }
+                
+                // 延遲一秒後再啟動動作偵測
+                setTimeout(startMotionDetectionAfterDelay, 1000);
 
-                let motionDetected = false;
-                const threshold = 1.0;
-
-                window.addEventListener('devicemotion', event => {
-                    const acceleration = event.accelerationIncludingGravity;
-                    if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
-                        if (isPlaying && !motionDetected) {
-                            motionDetected = true;
-                            // 在此直接導向，不經過暫停事件
-                            if (redirectUrl) {
-                                window.location.href = redirectUrl;
-                            }
-                        }
-                    }
-                });
             }).catch(e => {
                 console.error("影片播放失敗: ", e);
                 messageContainer.style.display = 'block';
@@ -94,25 +99,29 @@
             });
         }
 
+        function handleStart() {
+            if (!motionPermissionGranted) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission().then(permissionState => {
+                        if (permissionState === 'granted') {
+                            motionPermissionGranted = true;
+                            startVideoAndPrepareMotionDetection();
+                        } else {
+                            messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
+                        }
+                    }).catch(console.error);
+                } else {
+                    motionPermissionGranted = true;
+                    startVideoAndPrepareMotionDetection();
+                }
+            }
+        }
+
         // 處理點擊事件
         document.body.addEventListener('click', () => {
             if (!isPlaying) {
                 clearInterval(countdownTimer);
-                if (!motionPermissionGranted) {
-                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                        DeviceMotionEvent.requestPermission().then(permissionState => {
-                            if (permissionState === 'granted') {
-                                motionPermissionGranted = true;
-                                startVideoAndMotionDetection();
-                            } else {
-                                messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
-                            }
-                        }).catch(console.error);
-                    } else {
-                        motionPermissionGranted = true;
-                        startVideoAndMotionDetection();
-                    }
-                }
+                handleStart();
             }
         });
 
