@@ -95,22 +95,13 @@
                 window.location.href = redirectUrl;
             }
         });
-        
-        // 監聽影片播放事件，在 PWA 模式下自動進入全螢幕
-        videoElement.addEventListener('play', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (videoElement.requestFullscreen) {
-                    videoElement.requestFullscreen();
-                } else if (videoElement.webkitEnterFullscreen) {
-                    videoElement.webkitEnterFullscreen();
-                }
-            }
-        }, { once: true }); // 只監聽一次
 
-        // 處理返回頁面事件
+        // 處理返回頁面事件，將介面重置
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
-                startVideo();
+                isPlaying = false;
+                messageContainer.style.display = 'block';
+                messageElement.textContent = "Tap the screen to start";
             }
         });
 
