@@ -94,29 +94,25 @@
             });
         }
 
-        function handleStart() {
-            if (!motionPermissionGranted) {
-                if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission().then(permissionState => {
-                        if (permissionState === 'granted') {
-                            motionPermissionGranted = true;
-                            startVideoAndMotionDetection();
-                        } else {
-                            messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
-                        }
-                    }).catch(console.error);
-                } else {
-                    motionPermissionGranted = true;
-                    startVideoAndMotionDetection();
-                }
-            }
-        }
-
         // 處理點擊事件
         document.body.addEventListener('click', () => {
             if (!isPlaying) {
                 clearInterval(countdownTimer);
-                handleStart();
+                if (!motionPermissionGranted) {
+                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                        DeviceMotionEvent.requestPermission().then(permissionState => {
+                            if (permissionState === 'granted') {
+                                motionPermissionGranted = true;
+                                startVideoAndMotionDetection();
+                            } else {
+                                messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
+                            }
+                        }).catch(console.error);
+                    } else {
+                        motionPermissionGranted = true;
+                        startVideoAndMotionDetection();
+                    }
+                }
             }
         });
 
@@ -130,7 +126,6 @@
             }
         }
         countdownTimer = setInterval(updateCountdown, 1000);
-
     </script>
 </body>
 </html>
