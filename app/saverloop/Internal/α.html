@@ -40,10 +40,14 @@
             z-index: 10;
         }
     </style>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <div id="message-container">
-        <div id="message">SaverLoop will start in 5s or by tapping the screen</div>
+        <div id="message">Tap the screen to start</div>
     </div>
     <div id="version">version: Internal_α0.1</div>
     <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
@@ -53,28 +57,9 @@
         const messageContainer = document.getElementById('message-container');
         const messageElement = document.getElementById('message');
         const redirectUrl = "https://www.apple.com";
-        let motionPermissionGranted = false;
         let isPlaying = false;
-        let countdown = 5;
-        let countdownTimer;
 
-        function startMotionDetection() {
-            let motionDetected = false;
-            const threshold = 1.0;
-
-            window.addEventListener('devicemotion', event => {
-                const acceleration = event.accelerationIncludingGravity;
-                if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
-                    if (isPlaying && !motionDetected) {
-                        motionDetected = true;
-                        if (redirectUrl) {
-                            window.location.href = redirectUrl;
-                        }
-                    }
-                }
-            });
-        }
-
+        // 啟動影片和全螢幕模式
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -95,55 +80,22 @@
             });
         }
 
-        function handleStart() {
-            if (!motionPermissionGranted) {
-                if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission().then(permissionState => {
-                        if (permissionState === 'granted') {
-                            motionPermissionGranted = true;
-                            startVideo();
-                        } else {
-                            messageElement.textContent = "需要動作權限才能啟動，請再試一次。";
-                        }
-                    }).catch(console.error);
-                } else {
-                    motionPermissionGranted = true;
-                    startVideo();
-                }
-            }
-        }
-
         // 處理點擊事件
         document.body.addEventListener('click', () => {
             if (!isPlaying) {
-                clearInterval(countdownTimer);
-                handleStart();
+                startVideo();
+            } else {
+                videoElement.pause();
             }
         });
 
-        // 監聽全螢幕狀態變化
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                startMotionDetection();
+        // 監聽影片暫停事件並導向
+        videoElement.addEventListener('pause', () => {
+            if (isPlaying && redirectUrl) { // 確保只有在播放狀態下暫停才導向
+                window.location.href = redirectUrl;
             }
         });
 
-        document.addEventListener('webkitfullscreenchange', () => {
-            if (document.webkitFullscreenElement) {
-                startMotionDetection();
-            }
-        });
-
-        // 倒數計時邏輯
-        function updateCountdown() {
-            messageElement.textContent = `SaverLoop will start in ${countdown}s or by tapping the screen`;
-            countdown--;
-            if (countdown < 0) {
-                clearInterval(countdownTimer);
-                messageElement.textContent = "Tap the screen to start";
-            }
-        }
-        countdownTimer = setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
