@@ -30,11 +30,6 @@
         #message {
             margin-bottom: 20px;
         }
-        #startButton {
-            padding: 10px 20px;
-            font-size: 1.2em;
-            cursor: pointer;
-        }
         #version {
             position: absolute;
             bottom: 20px;
@@ -48,8 +43,7 @@
 </head>
 <body>
     <div id="message-container">
-        <div id="message">請點擊下方按鈕啟動</div>
-        <button id="startButton">啟動 SaverLoop</button>
+        <div id="message">SaverLoop will start in 5s or by tapping the screen</div>
     </div>
     <div id="version">version: Internal_α0.1</div>
     <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
@@ -58,18 +52,18 @@
         const videoElement = document.getElementById('myVideo');
         const messageContainer = document.getElementById('message-container');
         const messageElement = document.getElementById('message');
-        const startButton = document.getElementById('startButton');
         const redirectUrl = "https://www.apple.com";
         let motionPermissionGranted = false;
         let isPlaying = false;
-        let isIntentionalPause = false;
+        let countdown = 5;
+        let countdownTimer;
 
         function startVideoAndMotionDetection() {
             if (isPlaying) return;
             isPlaying = true;
-
-            messageContainer.style.display = 'none';
             
+            messageContainer.style.display = 'none';
+
             videoElement.play().then(() => {
                 if (videoElement.requestFullscreen) {
                     videoElement.requestFullscreen();
@@ -85,8 +79,10 @@
                     if (Math.abs(acceleration.x) > threshold || Math.abs(acceleration.y) > threshold || Math.abs(acceleration.z) > threshold) {
                         if (isPlaying && !motionDetected) {
                             motionDetected = true;
-                            isIntentionalPause = true; // 新增：設定為有意暫停
-                            videoElement.pause();
+                            // 在此直接導向，不經過暫停事件
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl;
+                            }
                         }
                     }
                 });
@@ -98,8 +94,7 @@
             });
         }
 
-        // 綁定按鈕點擊事件
-        startButton.addEventListener('click', () => {
+        function handleStart() {
             if (!motionPermissionGranted) {
                 if (typeof DeviceMotionEvent.requestPermission === 'function') {
                     DeviceMotionEvent.requestPermission().then(permissionState => {
@@ -114,21 +109,28 @@
                     motionPermissionGranted = true;
                     startVideoAndMotionDetection();
                 }
-            } else {
-                if (isPlaying) {
-                    isIntentionalPause = true; // 新增：設定為有意暫停
-                    videoElement.pause();
-                }
+            }
+        }
+
+        // 處理點擊事件
+        document.body.addEventListener('click', () => {
+            if (!isPlaying) {
+                clearInterval(countdownTimer);
+                handleStart();
             }
         });
 
-        // 偵測影片暫停事件，並在暫停時導向
-        videoElement.addEventListener('pause', () => {
-            if (isIntentionalPause && redirectUrl && redirectUrl !== "[導向URL]") {
-                window.location.href = redirectUrl;
-                isIntentionalPause = false; // 新增：重設標誌
+        // 倒數計時邏輯
+        function updateCountdown() {
+            messageElement.textContent = `SaverLoop will start in ${countdown}s or by tapping the screen`;
+            countdown--;
+            if (countdown < 0) {
+                clearInterval(countdownTimer);
+                messageElement.textContent = "Tap the screen to start";
             }
-        });
+        }
+        countdownTimer = setInterval(updateCountdown, 1000);
+
     </script>
 </body>
 </html>
