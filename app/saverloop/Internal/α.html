@@ -49,7 +49,7 @@
     <div id="message-container">
         <div id="message">Tap the screen to start</div>
     </div>
-    <div id="version">version: Internal_α0.2</div>
+    <div id="version">version: Internal_α0.3</div>
     <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
 
     <script>
@@ -95,6 +95,17 @@
                 window.location.href = redirectUrl;
             }
         });
+        
+        // 監聽影片播放事件，在 PWA 模式下自動進入全螢幕
+        videoElement.addEventListener('play', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                } else if (videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                }
+            }
+        }, { once: true }); // 只監聽一次
 
         // 處理返回頁面事件
         window.addEventListener('pageshow', event => {
