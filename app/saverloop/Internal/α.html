@@ -40,6 +40,10 @@
             z-index: 10;
         }
     </style>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <div id="message-container">
@@ -54,6 +58,7 @@
         const messageElement = document.getElementById('message');
         const redirectUrl = "https://www.apple.com";
         let isPlaying = false;
+        let isHandled = false;
 
         // 啟動影片和全螢幕模式
         function startVideo() {
@@ -84,6 +89,14 @@
                 window.location.href = redirectUrl;
             }
         });
+
+        // 處理返回頁面事件
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                startVideo();
+            }
+        });
+
     </script>
 </body>
 </html>
