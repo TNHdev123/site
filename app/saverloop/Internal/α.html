@@ -20,6 +20,17 @@
             font-size: 1em;
             text-align: center;
         }
+        #top-icon-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #top-icon {
+            width: 80px; /* 放大 Icon */
+            height: 80px;
+        }
         #message-container {
             position: absolute;
             top: 50%;
@@ -29,17 +40,6 @@
         }
         #message {
             margin-bottom: 20px;
-        }
-        #top-icon-container {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-        }
-        #top-icon {
-            width: 40px;
-            height: 40px;
         }
         #options-container {
             position: absolute;
@@ -62,6 +62,9 @@
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.8em;
             z-index: 10;
+        }
+        #myVideo {
+            display: none; /* 預設隱藏影片 */
         }
         #options-panel {
             position: absolute;
@@ -88,7 +91,7 @@
             width: 90%;
             margin-bottom: 50px;
         }
-        #options-panel input {
+        #options-panel input[type="text"], #options-panel input[type="url"] {
             width: 100%;
             padding: 8px;
             border: none;
@@ -103,12 +106,56 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            background-color: #555;
             color: white;
             font-size: 1em;
         }
-        #options-panel #close-button {
-            background-color: #d9534f;
+        #close-button {
+            background-color: #777; /* 灰色 */
+        }
+        #reset-button {
+            background-color: #d9534f; /* 紅色 */
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.9em;
+        }
+        #iframe-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: none;
+            background-color: black;
+        }
+        #iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 12;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+        #iframe-overlay p {
+            background-color: rgba(128, 128, 128, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
     <link rel="manifest" href="/manifest.json">
@@ -126,8 +173,15 @@
     <div id="options-container">
         <span id="options-button">Options</span>
     </div>
-    <div id="version">version: Internal_α0.5</div>
+    <div id="version">version: Internal_α0.6</div>
     <video id="myVideo" playsinline loop></video>
+
+    <div id="iframe-container">
+        <iframe id="info-iframe"></iframe>
+        <div id="iframe-overlay">
+            <p>Do you want to continue browsing?<br>The page will be closed in <span id="countdown">15</span> seconds.<br>Click on the screen to cancel</p>
+        </div>
+    </div>
 
     <div id="options-panel">
         <div id="options-panel-top">
@@ -135,8 +189,19 @@
             <label for="video-upload">Upload Video:</label>
             <input type="file" id="video-upload" accept="video/*">
             
+            <label for="video-url-input">Video URL:</label>
+            <input type="url" id="video-url-input" placeholder="https://">
+            <div class="checkbox-container">
+                <input type="checkbox" id="always-use-url">
+                <label for="always-use-url">Always use Video URL</label>
+            </div>
+            
             <label for="url-input">Guide URL:</label>
             <input type="url" id="url-input" placeholder="https://www.apple.com">
+            <div class="checkbox-container">
+                <input type="checkbox" id="use-iframe">
+                <label for="use-iframe">use iFrame (Beta)</label>
+            </div>
             
             <button id="reset-button">Reset to Default</button>
         </div>
@@ -148,19 +213,28 @@
     <script>
         const videoElement = document.getElementById('myVideo');
         const messageContainer = document.getElementById('message-container');
-        const messageElement = document.getElementById('message');
         const optionsButton = document.getElementById('options-button');
         const optionsPanel = document.getElementById('options-panel');
         const closeButton = document.getElementById('close-button');
         const videoUpload = document.getElementById('video-upload');
+        const videoUrlInput = document.getElementById('video-url-input');
+        const alwaysUseUrlCheckbox = document.getElementById('always-use-url');
         const urlInput = document.getElementById('url-input');
+        const useIframeCheckbox = document.getElementById('use-iframe');
         const resetButton = document.getElementById('reset-button');
+        const iframeContainer = document.getElementById('iframe-container');
+        const infoIframe = document.getElementById('info-iframe');
+        const iframeOverlay = document.getElementById('iframe-overlay');
+        const countdownElement = document.getElementById('countdown');
 
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
         const dbName = 'SaverLoopDB';
         const storeName = 'videos';
         let db;
+        let isPlaying = false;
+        let idleTimer;
+        let countdownTimer;
         
         // 建立或打開 IndexedDB 資料庫
         const request = indexedDB.open(dbName, 1);
@@ -185,29 +259,45 @@
                 urlInput.value = defaultRedirectUrl;
             }
 
-            // 載入影片
-            const transaction = db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const getRequest = store.get('userVideo');
+            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            if (savedVideoUrl) {
+                videoUrlInput.value = savedVideoUrl;
+            }
+
+            const savedAlwaysUseUrl = localStorage.getItem('saverloopAlwaysUseUrl');
+            alwaysUseUrlCheckbox.checked = savedAlwaysUseUrl === 'true';
+
+            const savedUseIframe = localStorage.getItem('saverloopUseIframe');
+            useIframeCheckbox.checked = savedUseIframe === 'true';
             
-            getRequest.onsuccess = (event) => {
-                const result = event.target.result;
-                if (result && result.videoBlob) {
-                    const videoUrl = URL.createObjectURL(result.videoBlob);
-                    videoElement.src = videoUrl;
-                } else {
-                    videoElement.src = defaultVideoUrl;
-                }
-            };
+            // 載入影片
+            if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
+                videoElement.src = videoUrlInput.value;
+            } else {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const getRequest = store.get('userVideo');
+                
+                getRequest.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result && result.videoBlob) {
+                        const videoUrl = URL.createObjectURL(result.videoBlob);
+                        videoElement.src = videoUrl;
+                    } else {
+                        videoElement.src = defaultVideoUrl;
+                    }
+                };
+            }
         }
         
         // 將設定儲存至 localStorage 和 IndexedDB
         function saveSettings() {
-            // 儲存 URL
             localStorage.setItem('saverloopRedirectUrl', urlInput.value);
-            
-            // 儲存影片（如果有上傳新影片）
-            if (videoUpload.files.length > 0) {
+            localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
+            localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
+            localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
+
+            if (!alwaysUseUrlCheckbox.checked && videoUpload.files.length > 0) {
                 const file = videoUpload.files[0];
                 const transaction = db.transaction([storeName], 'readwrite');
                 const store = transaction.objectStore(storeName);
@@ -215,14 +305,13 @@
             }
         }
         
-        let isPlaying = false;
-        
         // 啟動影片和全螢幕模式
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
             
             messageContainer.style.display = 'none';
+            videoElement.style.display = 'block';
 
             videoElement.play().then(() => {
                 if (videoElement.requestFullscreen) {
@@ -233,9 +322,56 @@
             }).catch(e => {
                 console.error("影片播放失敗: ", e);
                 messageContainer.style.display = 'block';
-                messageElement.textContent = "播放失敗，請再試一次。";
+                videoElement.style.display = 'none';
+                messageContainer.textContent = "播放失敗，請再試一次。";
                 isPlaying = false;
             });
+        }
+        
+        // 閒置偵測
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                startCountdown();
+            }, 30000); // 30 秒閒置
+        }
+        
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            iframeOverlay.style.display = 'flex';
+            countdownElement.textContent = seconds;
+            
+            countdownTimer = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownTimer);
+                    // 倒數結束，回到起始頁面
+                    iframeContainer.style.display = 'none';
+                    resetToStart();
+                }
+            }, 1000);
+        }
+        
+        function cancelCountdown() {
+            clearInterval(countdownTimer);
+            iframeOverlay.style.display = 'none';
+            resetIdleTimer();
+        }
+        
+        // 重置為起始介面
+        function resetToStart() {
+            isPlaying = false;
+            videoElement.currentTime = 0;
+            videoElement.pause();
+            videoElement.style.display = 'none';
+            messageContainer.style.display = 'block';
+            messageContainer.textContent = "Tap the screen to start";
         }
 
         // 處理點擊事件
@@ -246,13 +382,32 @@
             if (!isPlaying) {
                 startVideo();
             } else {
-                videoElement.pause();
+                if (useIframeCheckbox.checked) {
+                    videoElement.pause();
+                    iframeContainer.style.display = 'block';
+                    infoIframe.src = urlInput.value;
+                    startIdleTimer();
+                } else {
+                    videoElement.pause();
+                    // 暫停後導向，pageshow會重置介面
+                }
             }
         });
+        
+        // 處理 iFrame 介面點擊
+        iframeOverlay.addEventListener('click', () => {
+            cancelCountdown();
+        });
+        
+        // 處理 iFrame 介面互動
+        document.addEventListener('mousemove', resetIdleTimer);
+        document.addEventListener('touchstart', resetIdleTimer);
+        document.addEventListener('scroll', resetIdleTimer);
 
-        // 監聽影片暫停事件並導向
+
+        // 監聽影片暫停事件
         videoElement.addEventListener('pause', () => {
-            if (isPlaying && urlInput.value) {
+            if (isPlaying && !useIframeCheckbox.checked) {
                 window.location.href = urlInput.value;
             }
         });
@@ -260,11 +415,7 @@
         // 處理返回頁面事件
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
-                isPlaying = false;
-                videoElement.currentTime = 0; // 重置影片時間
-                videoElement.pause();
-                messageContainer.style.display = 'block';
-                messageElement.textContent = "Tap the screen to start";
+                resetToStart();
             }
         });
 
@@ -291,9 +442,14 @@
             store.delete('userVideo');
             videoElement.src = defaultVideoUrl;
             
-            // 重設 URL
+            // 重設 URL 和勾選框
+            videoUrlInput.value = "";
             urlInput.value = defaultRedirectUrl;
-            localStorage.setItem('saverloopRedirectUrl', defaultRedirectUrl);
+            alwaysUseUrlCheckbox.checked = false;
+            useIframeCheckbox.checked = false;
+
+            localStorage.clear(); // 清空所有設定
+            loadSettings();
         });
         
         // 確保點擊選項面板時不會觸發背景事件
