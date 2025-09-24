@@ -157,6 +157,29 @@
             height: 100%;
             border: none;
         }
+        #custom-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 30;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        #custom-popup h4 {
+            margin: 0;
+            color: white;
+        }
+        #custom-popup p {
+            margin: 0;
+        }
     </style>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
@@ -210,6 +233,12 @@
         </div>
     </div>
 
+    <div id="custom-popup">
+        <h4 id="popup-title"></h4>
+        <p id="popup-message"></p>
+        <button id="popup-close-button">OK</button>
+    </div>
+
     <script>
         const videoElement = document.getElementById('myVideo');
         const messageContainer = document.getElementById('message-container');
@@ -226,6 +255,10 @@
         const infoIframe = document.getElementById('info-iframe');
         const iframeOverlay = document.getElementById('iframe-overlay');
         const countdownElement = document.getElementById('countdown');
+        const customPopup = document.getElementById('custom-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseButton = document.getElementById('popup-close-button');
 
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
@@ -248,6 +281,13 @@
             db = event.target.result;
             loadSettings();
         };
+
+        // Show custom popup
+        function showCustomPopup(title, message) {
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            customPopup.style.display = 'flex';
+        }
 
         // Load settings from localStorage and IndexedDB
         function loadSettings() {
@@ -328,24 +368,19 @@
         
         // Handle iframe loading with fallback
         function handleIframeLoad() {
-            infoIframe.onload = () => {
-                try {
-                    // Check if content is accessible (will throw a security error if not)
-                    const iframeDoc = infoIframe.contentWindow.document;
-                    if (iframeDoc.body.children.length === 0) {
-                        throw new Error('Iframe content is empty, likely due to security restrictions.');
-                    }
-                    iframeContainer.style.display = 'block';
-                    videoElement.pause();
-                    videoElement.style.display = 'none';
-                    startIdleTimer();
-                } catch (e) {
-                    console.error("Iframe load failed:", e);
-                    alert('This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
-                    window.location.href = urlInput.value;
-                }
-            };
             infoIframe.src = urlInput.value;
+            
+            // Set a timeout to check if iframe loaded successfully
+            let loadTimer = setTimeout(() => {
+                showCustomPopup('Failed to load', 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
+                window.location.href = urlInput.value;
+            }, 5000); // 5 seconds timeout
+            
+            infoIframe.onload = () => {
+                clearTimeout(loadTimer);
+                iframeContainer.style.display = 'block';
+                startIdleTimer();
+            };
         }
 
         // Idle detection
@@ -393,9 +428,21 @@
             message.textContent = "Tap the screen to start";
         }
 
+        // Fullscreen exit logic
+        document.addEventListener('fullscreenchange', exitFullscreenHandler);
+        document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
+
+        function exitFullscreenHandler() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!isFullscreen && isPlaying && useIframeCheckbox.checked) {
+                // Now that we've exited fullscreen, try to load the iframe
+                handleIframeLoad();
+            }
+        }
+
         // Handle click event
         document.body.addEventListener('click', (event) => {
-            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block') {
+            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex') {
                 return;
             }
             if (!isPlaying) {
@@ -403,7 +450,16 @@
             } else {
                 if (useIframeCheckbox.checked) {
                     videoElement.pause();
-                    handleIframeLoad();
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                    } else {
+                        // If not in fullscreen, load iframe immediately
+                        handleIframeLoad();
+                    }
                 } else {
                     videoElement.pause();
                 }
@@ -465,6 +521,11 @@
             loadSettings();
         });
         
+        // Close custom popup
+        popupCloseButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+        });
+
         // Prevent clicks on options panel from triggering background events
         optionsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
