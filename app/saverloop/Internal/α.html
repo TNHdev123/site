@@ -30,6 +30,19 @@
         #message {
             margin-bottom: 20px;
         }
+        #options-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #options-button {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            cursor: pointer;
+            text-decoration: underline;
+        }
         #version {
             position: absolute;
             bottom: 20px;
@@ -39,9 +52,41 @@
             font-size: 0.8em;
             z-index: 10;
         }
+        #options-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 20;
+            width: 80%;
+            max-width: 400px;
+        }
+        #options-panel input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+        }
+        #options-panel button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+        }
+        #options-panel #close-button {
+            background-color: #d9534f;
+        }
     </style>
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
@@ -49,15 +94,43 @@
     <div id="message-container">
         <div id="message">Tap the screen to start</div>
     </div>
-    <div id="version">version: Internal_α0.3</div>
-    <video id="myVideo" src="https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v" playsinline loop></video>
+    <div id="options-container">
+        <span id="options-button">Options</span>
+    </div>
+    <div id="version">version: Internal_α0.4</div>
+    <video id="myVideo" playsinline loop></video>
+
+    <div id="options-panel">
+        <h3>Options</h3>
+        <label for="video-upload">Upload Video:</label>
+        <input type="file" id="video-upload" accept="video/*">
+        
+        <label for="url-input">Guide URL:</label>
+        <input type="url" id="url-input" placeholder="https://www.apple.com">
+        
+        <button id="reset-button">Reset to Default</button>
+        <button id="close-button">Close</button>
+    </div>
 
     <script>
         const videoElement = document.getElementById('myVideo');
         const messageContainer = document.getElementById('message-container');
         const messageElement = document.getElementById('message');
-        const redirectUrl = "https://www.apple.com";
+        const optionsButton = document.getElementById('options-button');
+        const optionsPanel = document.getElementById('options-panel');
+        const closeButton = document.getElementById('close-button');
+        const videoUpload = document.getElementById('video-upload');
+        const urlInput = document.getElementById('url-input');
+        const resetButton = document.getElementById('reset-button');
+
+        const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
+        const defaultRedirectUrl = "https://www.apple.com";
         let isPlaying = false;
+        let currentRedirectUrl = defaultRedirectUrl;
+        let currentVideoUrl = defaultVideoUrl;
+
+        // 初始化影片和URL
+        videoElement.src = currentVideoUrl;
 
         // 啟動影片和全螢幕模式
         function startVideo() {
@@ -81,7 +154,10 @@
         }
 
         // 處理點擊事件
-        document.body.addEventListener('click', () => {
+        document.body.addEventListener('click', (event) => {
+            if (optionsPanel.style.display === 'flex') {
+                return; // 如果選項介面開啟，不處理點擊事件
+            }
             if (!isPlaying) {
                 startVideo();
             } else {
@@ -91,8 +167,10 @@
 
         // 監聽影片暫停事件並導向
         videoElement.addEventListener('pause', () => {
-            if (isPlaying && redirectUrl) {
-                window.location.href = redirectUrl;
+            if (isPlaying) {
+                isPlaying = false;
+                videoElement.currentTime = 0; // 將影片重置到開頭
+                window.location.href = currentRedirectUrl;
             }
         });
 
@@ -103,6 +181,38 @@
                 messageContainer.style.display = 'block';
                 messageElement.textContent = "Tap the screen to start";
             }
+        });
+
+        // 打開/關閉選項介面
+        optionsButton.addEventListener('click', () => {
+            optionsPanel.style.display = 'flex';
+        });
+
+        closeButton.addEventListener('click', () => {
+            optionsPanel.style.display = 'none';
+        });
+
+        // 處理影片上傳
+        videoUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                videoElement.src = url;
+                currentVideoUrl = url;
+            }
+        });
+
+        // 處理URL設定
+        urlInput.addEventListener('input', (event) => {
+            currentRedirectUrl = event.target.value || defaultRedirectUrl;
+        });
+
+        // 處理重設按鈕
+        resetButton.addEventListener('click', () => {
+            videoElement.src = defaultVideoUrl;
+            urlInput.value = "";
+            currentVideoUrl = defaultVideoUrl;
+            currentRedirectUrl = defaultRedirectUrl;
         });
 
     </script>
