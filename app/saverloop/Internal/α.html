@@ -30,6 +30,17 @@
         #message {
             margin-bottom: 20px;
         }
+        #top-icon-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #top-icon {
+            width: 40px;
+            height: 40px;
+        }
         #options-container {
             position: absolute;
             bottom: 50px;
@@ -54,32 +65,47 @@
         }
         #options-panel {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 20px;
-            border-radius: 10px;
             display: none;
             flex-direction: column;
-            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
             z-index: 20;
-            width: 80%;
-            max-width: 400px;
+        }
+        #options-panel-top {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 50px;
+        }
+        #options-panel-bottom {
+            width: 90%;
+            margin-bottom: 50px;
         }
         #options-panel input {
             width: 100%;
             padding: 8px;
             border: none;
             border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
         }
         #options-panel button {
+            width: 100%;
             padding: 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             background-color: #555;
             color: white;
+            font-size: 1em;
         }
         #options-panel #close-button {
             background-color: #d9534f;
@@ -91,25 +117,32 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+    <div id="top-icon-container">
+        <img id="top-icon" src="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png" alt="SaverLoop Icon">
+    </div>
     <div id="message-container">
         <div id="message">Tap the screen to start</div>
     </div>
     <div id="options-container">
         <span id="options-button">Options</span>
     </div>
-    <div id="version">version: Internal_α0.4</div>
+    <div id="version">version: Internal_α0.5</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="options-panel">
-        <h3>Options</h3>
-        <label for="video-upload">Upload Video:</label>
-        <input type="file" id="video-upload" accept="video/*">
-        
-        <label for="url-input">Guide URL:</label>
-        <input type="url" id="url-input" placeholder="https://www.apple.com">
-        
-        <button id="reset-button">Reset to Default</button>
-        <button id="close-button">Close</button>
+        <div id="options-panel-top">
+            <h3>Options</h3>
+            <label for="video-upload">Upload Video:</label>
+            <input type="file" id="video-upload" accept="video/*">
+            
+            <label for="url-input">Guide URL:</label>
+            <input type="url" id="url-input" placeholder="https://www.apple.com">
+            
+            <button id="reset-button">Reset to Default</button>
+        </div>
+        <div id="options-panel-bottom">
+            <button id="close-button">Close</button>
+        </div>
     </div>
 
     <script>
@@ -126,11 +159,32 @@
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
         let isPlaying = false;
-        let currentRedirectUrl = defaultRedirectUrl;
-        let currentVideoUrl = defaultVideoUrl;
+        
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
+            
+            if (savedVideoUrl) {
+                videoElement.src = savedVideoUrl;
+            } else {
+                videoElement.src = defaultVideoUrl;
+            }
+            if (savedRedirectUrl) {
+                urlInput.value = savedRedirectUrl;
+            } else {
+                urlInput.value = defaultRedirectUrl;
+            }
+        }
+        
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('saverloopVideoUrl', videoElement.src);
+            localStorage.setItem('saverloopRedirectUrl', urlInput.value);
+        }
 
-        // 初始化影片和URL
-        videoElement.src = currentVideoUrl;
+        // Initialize with saved settings
+        loadSettings();
 
         // 啟動影片和全螢幕模式
         function startVideo() {
@@ -167,10 +221,8 @@
 
         // 監聽影片暫停事件並導向
         videoElement.addEventListener('pause', () => {
-            if (isPlaying) {
-                isPlaying = false;
-                videoElement.currentTime = 0; // 將影片重置到開頭
-                window.location.href = currentRedirectUrl;
+            if (isPlaying && urlInput.value) {
+                window.location.href = urlInput.value;
             }
         });
 
@@ -178,6 +230,8 @@
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
                 isPlaying = false;
+                videoElement.currentTime = 0; // 重置影片時間
+                videoElement.pause();
                 messageContainer.style.display = 'block';
                 messageElement.textContent = "Tap the screen to start";
             }
@@ -189,6 +243,7 @@
         });
 
         closeButton.addEventListener('click', () => {
+            saveSettings(); // 儲存設定
             optionsPanel.style.display = 'none';
         });
 
@@ -198,23 +253,20 @@
             if (file) {
                 const url = URL.createObjectURL(file);
                 videoElement.src = url;
-                currentVideoUrl = url;
             }
-        });
-
-        // 處理URL設定
-        urlInput.addEventListener('input', (event) => {
-            currentRedirectUrl = event.target.value || defaultRedirectUrl;
         });
 
         // 處理重設按鈕
         resetButton.addEventListener('click', () => {
             videoElement.src = defaultVideoUrl;
-            urlInput.value = "";
-            currentVideoUrl = defaultVideoUrl;
-            currentRedirectUrl = defaultRedirectUrl;
+            urlInput.value = defaultRedirectUrl;
+            saveSettings(); // 儲存預設設定
         });
-
+        
+        // 確保點擊選項面板時不會觸發背景事件
+        optionsPanel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
     </script>
 </body>
 </html>
