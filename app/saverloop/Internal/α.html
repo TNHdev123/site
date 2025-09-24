@@ -158,34 +158,65 @@
 
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
-        let isPlaying = false;
+        const dbName = 'SaverLoopDB';
+        const storeName = 'videos';
+        let db;
         
-        // Load settings from localStorage
+        // 建立或打開 IndexedDB 資料庫
+        const request = indexedDB.open(dbName, 1);
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSettings();
+        };
+
+        // 從 localStorage 和 IndexedDB 載入設定
         function loadSettings() {
-            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            // 載入 URL
             const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
-            
-            if (savedVideoUrl) {
-                videoElement.src = savedVideoUrl;
-            } else {
-                videoElement.src = defaultVideoUrl;
-            }
             if (savedRedirectUrl) {
                 urlInput.value = savedRedirectUrl;
             } else {
                 urlInput.value = defaultRedirectUrl;
             }
+
+            // 載入影片
+            const transaction = db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const getRequest = store.get('userVideo');
+            
+            getRequest.onsuccess = (event) => {
+                const result = event.target.result;
+                if (result && result.videoBlob) {
+                    const videoUrl = URL.createObjectURL(result.videoBlob);
+                    videoElement.src = videoUrl;
+                } else {
+                    videoElement.src = defaultVideoUrl;
+                }
+            };
         }
         
-        // Save settings to localStorage
+        // 將設定儲存至 localStorage 和 IndexedDB
         function saveSettings() {
-            localStorage.setItem('saverloopVideoUrl', videoElement.src);
+            // 儲存 URL
             localStorage.setItem('saverloopRedirectUrl', urlInput.value);
+            
+            // 儲存影片（如果有上傳新影片）
+            if (videoUpload.files.length > 0) {
+                const file = videoUpload.files[0];
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                store.put({ id: 'userVideo', videoBlob: file });
+            }
         }
-
-        // Initialize with saved settings
-        loadSettings();
-
+        
+        let isPlaying = false;
+        
         // 啟動影片和全螢幕模式
         function startVideo() {
             if (isPlaying) return;
@@ -248,19 +279,21 @@
         });
 
         // 處理影片上傳
-        videoUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                videoElement.src = url;
-            }
+        videoUpload.addEventListener('change', () => {
+            // 當檔案被選取時，不需要立即儲存，等使用者關閉面板時才儲存
         });
 
         // 處理重設按鈕
         resetButton.addEventListener('click', () => {
+            // 重設影片
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete('userVideo');
             videoElement.src = defaultVideoUrl;
+            
+            // 重設 URL
             urlInput.value = defaultRedirectUrl;
-            saveSettings(); // 儲存預設設定
+            localStorage.setItem('saverloopRedirectUrl', defaultRedirectUrl);
         });
         
         // 確保點擊選項面板時不會觸發背景事件
