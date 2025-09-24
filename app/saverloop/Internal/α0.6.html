@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaverLoop</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            text-align: center;
+        }
+        #top-icon-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #top-icon {
+            width: 80px; /* Enlarge Icon */
+            height: 80px;
+        }
+        #message-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        #message {
+            margin-bottom: 20px;
+        }
+        #options-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #options-button {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        #version {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            z-index: 10;
+        }
+        #myVideo {
+            display: none; /* Hide video by default */
+        }
+        #options-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+        #options-panel-top {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 50px;
+        }
+        #options-panel-bottom {
+            width: 90%;
+            margin-bottom: 50px;
+        }
+        #options-panel input[type="text"], #options-panel input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+        }
+        #options-panel button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-size: 1em;
+        }
+        #close-button {
+            background-color: #777; /* Gray */
+        }
+        #reset-button {
+            background-color: #d9534f; /* Red */
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.9em;
+        }
+        #iframe-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: none;
+            background-color: black;
+        }
+        #iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 12;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+        #iframe-overlay p {
+            background-color: rgba(128, 128, 128, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #custom-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 30;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        #custom-popup h4 {
+            margin: 0;
+            color: white;
+        }
+        #custom-popup p {
+            margin: 0;
+        }
+        #popup-button-container {
+            display: flex;
+            justify-content: center;
+        }
+        .popup-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
+    </style>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div id="top-icon-container">
+        <img id="top-icon" src="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png" alt="SaverLoop Icon">
+    </div>
+    <div id="message-container">
+        <div id="message">Tap the screen to start</div>
+    </div>
+    <div id="options-container">
+        <span id="options-button">Options</span>
+    </div>
+    <div id="version">version: Internal_α0.6</div>
+    <video id="myVideo" playsinline loop></video>
+
+    <div id="iframe-container">
+        <iframe id="info-iframe"></iframe>
+        <div id="iframe-overlay">
+            <p>Do you want to continue browsing?<br>The page will be closed in <span id="countdown">15</span> seconds.<br>Click on the screen to cancel</p>
+        </div>
+    </div>
+
+    <div id="options-panel">
+        <div id="options-panel-top">
+            <h3>Options</h3>
+            <label for="video-upload">Upload Video:</label>
+            <input type="file" id="video-upload" accept="video/*">
+            
+            <label for="video-url-input">Video URL:</label>
+            <input type="url" id="video-url-input" placeholder="https://">
+            <div class="checkbox-container">
+                <input type="checkbox" id="always-use-url">
+                <label for="always-use-url">Always use Video URL</label>
+            </div>
+            
+            <label for="url-input">Guide URL:</label>
+            <input type="url" id="url-input" placeholder="https://www.apple.com">
+            <div class="checkbox-container">
+                <input type="checkbox" id="use-iframe">
+                <label for="use-iframe">Try to use iFrame (Beta)</label>
+            </div>
+            
+            <button id="reset-button">Reset to Default</button>
+        </div>
+        <div id="options-panel-bottom">
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <div id="custom-popup">
+        <h4 id="popup-title"></h4>
+        <p id="popup-message"></p>
+        <div id="popup-button-container">
+            <button id="popup-close-button" class="popup-button">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('myVideo');
+        const messageContainer = document.getElementById('message-container');
+        const optionsButton = document.getElementById('options-button');
+        const optionsPanel = document.getElementById('options-panel');
+        const closeButton = document.getElementById('close-button');
+        const videoUpload = document.getElementById('video-upload');
+        const videoUrlInput = document.getElementById('video-url-input');
+        const alwaysUseUrlCheckbox = document.getElementById('always-use-url');
+        const urlInput = document.getElementById('url-input');
+        const useIframeCheckbox = document.getElementById('use-iframe');
+        const resetButton = document.getElementById('reset-button');
+        const iframeContainer = document.getElementById('iframe-container');
+        const infoIframe = document.getElementById('info-iframe');
+        const iframeOverlay = document.getElementById('iframe-overlay');
+        const countdownElement = document.getElementById('countdown');
+        const customPopup = document.getElementById('custom-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseButton = document.getElementById('popup-close-button');
+
+        const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
+        const defaultRedirectUrl = "https://www.apple.com";
+        const dbName = 'SaverLoopDB';
+        const storeName = 'videos';
+        let db;
+        let isPlaying = false;
+        let idleTimer;
+        let countdownTimer;
+        
+        // Setup IndexedDB
+        const request = indexedDB.open(dbName, 1);
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSettings();
+        };
+
+        // Show custom popup
+        function showCustomPopup(title, message) {
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            customPopup.style.display = 'flex';
+        }
+        
+        // Load settings from localStorage and IndexedDB
+        function loadSettings() {
+            const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
+            if (savedRedirectUrl) {
+                urlInput.value = savedRedirectUrl;
+            } else {
+                urlInput.value = defaultRedirectUrl;
+            }
+
+            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            if (savedVideoUrl) {
+                videoUrlInput.value = savedVideoUrl;
+            }
+
+            const savedAlwaysUseUrl = localStorage.getItem('saverloopAlwaysUseUrl');
+            alwaysUseUrlCheckbox.checked = savedAlwaysUseUrl === 'true';
+
+            const savedUseIframe = localStorage.getItem('saverloopUseIframe');
+            useIframeCheckbox.checked = savedUseIframe === 'true';
+            
+            if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
+                videoElement.src = videoUrlInput.value;
+            } else {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const getRequest = store.get('userVideo');
+                
+                getRequest.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result && result.videoBlob) {
+                        const videoUrl = URL.createObjectURL(result.videoBlob);
+                        videoElement.src = videoUrl;
+                    } else {
+                        videoElement.src = defaultVideoUrl;
+                    }
+                };
+            }
+        }
+        
+        // Save settings to localStorage and IndexedDB
+        function saveSettings() {
+            localStorage.setItem('saverloopRedirectUrl', urlInput.value);
+            localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
+            localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
+            localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
+
+            if (!alwaysUseUrlCheckbox.checked && videoUpload.files.length > 0) {
+                const file = videoUpload.files[0];
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                store.put({ id: 'userVideo', videoBlob: file });
+            }
+        }
+        
+        // Start video and fullscreen mode
+        function startVideo() {
+            if (isPlaying) return;
+            isPlaying = true;
+            
+            messageContainer.style.display = 'none';
+            videoElement.style.display = 'block';
+
+            videoElement.play().then(() => {
+                if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                } else if (videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                }
+            }).catch(e => {
+                console.error("Video playback failed: ", e);
+                messageContainer.style.display = 'block';
+                videoElement.style.display = 'none';
+                message.textContent = "Playback failed, please try again.";
+                isPlaying = false;
+            });
+        }
+        
+        // Handle iframe loading with fallback
+        function handleIframeLoad() {
+            infoIframe.src = urlInput.value;
+            
+            // Wait a moment to allow the browser to attempt loading
+            setTimeout(() => {
+                try {
+                    // This will throw a SecurityError if the content is blocked
+                    if (infoIframe.contentWindow && infoIframe.contentWindow.document.body.children.length === 0 && infoIframe.src !== 'about:blank') {
+                        throw new Error('Iframe content is empty, likely due to security restrictions.');
+                    }
+                    // If we reach here, it loaded (or is still loading) without a security error
+                    iframeContainer.style.display = 'block';
+                    videoElement.style.display = 'none';
+                    startIdleTimer();
+                } catch (e) {
+                    console.error("Iframe load failed:", e);
+                    showCustomPopup('Load Failed', 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
+                    // Fallback to old behavior
+                    window.location.href = urlInput.value;
+                }
+            }, 500); // 500ms delay to allow browser to block the request
+        }
+
+        // Idle detection
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                startCountdown();
+            }, 30000); // 30 seconds idle
+        }
+        
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            iframeOverlay.style.display = 'flex';
+            countdownElement.textContent = seconds;
+            
+            countdownTimer = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownTimer);
+                    iframeContainer.style.display = 'none';
+                    resetToStart();
+                }
+            }, 1000);
+        }
+        
+        function cancelCountdown() {
+            clearInterval(countdownTimer);
+            iframeOverlay.style.display = 'none';
+            resetIdleTimer();
+        }
+        
+        // Reset to start interface
+        function resetToStart() {
+            isPlaying = false;
+            videoElement.currentTime = 0;
+            videoElement.pause();
+            videoElement.style.display = 'none';
+            messageContainer.style.display = 'block';
+            message.textContent = "Tap the screen to start";
+        }
+
+        // Handle click event
+        document.body.addEventListener('click', (event) => {
+            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex') {
+                return;
+            }
+            if (!isPlaying) {
+                startVideo();
+            } else {
+                if (useIframeCheckbox.checked) {
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                    }
+                    videoElement.pause();
+                    handleIframeLoad();
+                } else {
+                    videoElement.pause();
+                }
+            }
+        });
+        
+        // Handle iframe interface clicks
+        iframeOverlay.addEventListener('click', (event) => {
+            event.stopPropagation();
+            cancelCountdown();
+        });
+        
+        // Handle iframe interface interactions
+        iframeContainer.addEventListener('mousemove', resetIdleTimer);
+        iframeContainer.addEventListener('touchstart', resetIdleTimer);
+        iframeContainer.addEventListener('scroll', resetIdleTimer);
+
+        // Listen for video pause event
+        videoElement.addEventListener('pause', () => {
+            if (isPlaying && !useIframeCheckbox.checked) {
+                window.location.href = urlInput.value;
+            }
+        });
+
+        // Handle pageshow event
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                resetToStart();
+            }
+        });
+
+        // Open/close options panel
+        optionsButton.addEventListener('click', () => {
+            optionsPanel.style.display = 'flex';
+        });
+
+        closeButton.addEventListener('click', () => {
+            saveSettings();
+            optionsPanel.style.display = 'none';
+        });
+
+        // Handle video upload
+        videoUpload.addEventListener('change', () => {
+        });
+
+        // Handle reset button
+        resetButton.addEventListener('click', () => {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete('userVideo');
+            videoElement.src = defaultVideoUrl;
+            
+            videoUrlInput.value = "";
+            urlInput.value = defaultRedirectUrl;
+            alwaysUseUrlCheckbox.checked = false;
+            useIframeCheckbox.checked = false;
+
+            localStorage.clear();
+            loadSettings();
+        });
+        
+        // Close custom popup
+        popupCloseButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+        });
+
+        // Prevent clicks on options panel from triggering background events
+        optionsPanel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+    </script>
+</body>
+</html>
