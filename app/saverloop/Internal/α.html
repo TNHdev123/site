@@ -180,6 +180,19 @@
         #custom-popup p {
             margin: 0;
         }
+        #popup-button-container {
+            display: flex;
+            justify-content: center;
+        }
+        .popup-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
     </style>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
@@ -236,7 +249,9 @@
     <div id="custom-popup">
         <h4 id="popup-title"></h4>
         <p id="popup-message"></p>
-        <button id="popup-close-button">OK</button>
+        <div id="popup-button-container">
+            <button id="popup-close-button" class="popup-button">OK</button>
+        </div>
     </div>
 
     <script>
@@ -288,7 +303,7 @@
             popupMessage.textContent = message;
             customPopup.style.display = 'flex';
         }
-
+        
         // Load settings from localStorage and IndexedDB
         function loadSettings() {
             const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
@@ -370,17 +385,24 @@
         function handleIframeLoad() {
             infoIframe.src = urlInput.value;
             
-            // Set a timeout to check if iframe loaded successfully
-            let loadTimer = setTimeout(() => {
-                showCustomPopup('Failed to load', 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
-                window.location.href = urlInput.value;
-            }, 5000); // 5 seconds timeout
-            
-            infoIframe.onload = () => {
-                clearTimeout(loadTimer);
-                iframeContainer.style.display = 'block';
-                startIdleTimer();
-            };
+            // Wait a moment to allow the browser to attempt loading
+            setTimeout(() => {
+                try {
+                    // This will throw a SecurityError if the content is blocked
+                    if (infoIframe.contentWindow && infoIframe.contentWindow.document.body.children.length === 0 && infoIframe.src !== 'about:blank') {
+                        throw new Error('Iframe content is empty, likely due to security restrictions.');
+                    }
+                    // If we reach here, it loaded (or is still loading) without a security error
+                    iframeContainer.style.display = 'block';
+                    videoElement.style.display = 'none';
+                    startIdleTimer();
+                } catch (e) {
+                    console.error("Iframe load failed:", e);
+                    showCustomPopup('Load Failed', 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
+                    // Fallback to old behavior
+                    window.location.href = urlInput.value;
+                }
+            }, 500); // 500ms delay to allow browser to block the request
         }
 
         // Idle detection
@@ -428,18 +450,6 @@
             message.textContent = "Tap the screen to start";
         }
 
-        // Fullscreen exit logic
-        document.addEventListener('fullscreenchange', exitFullscreenHandler);
-        document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
-
-        function exitFullscreenHandler() {
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-            if (!isFullscreen && isPlaying && useIframeCheckbox.checked) {
-                // Now that we've exited fullscreen, try to load the iframe
-                handleIframeLoad();
-            }
-        }
-
         // Handle click event
         document.body.addEventListener('click', (event) => {
             if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex') {
@@ -449,17 +459,15 @@
                 startVideo();
             } else {
                 if (useIframeCheckbox.checked) {
-                    videoElement.pause();
                     if (document.fullscreenElement || document.webkitFullscreenElement) {
                         if (document.exitFullscreen) {
                             document.exitFullscreen();
                         } else if (document.webkitExitFullscreen) {
                             document.webkitExitFullscreen();
                         }
-                    } else {
-                        // If not in fullscreen, load iframe immediately
-                        handleIframeLoad();
                     }
+                    videoElement.pause();
+                    handleIframeLoad();
                 } else {
                     videoElement.pause();
                 }
