@@ -28,7 +28,7 @@
             z-index: 10;
         }
         #top-icon {
-            width: 80px; /* 放大 Icon */
+            width: 80px; /* Enlarge Icon */
             height: 80px;
         }
         #message-container {
@@ -64,7 +64,7 @@
             z-index: 10;
         }
         #myVideo {
-            display: none; /* 預設隱藏影片 */
+            display: none; /* Hide video by default */
         }
         #options-panel {
             position: absolute;
@@ -110,10 +110,10 @@
             font-size: 1em;
         }
         #close-button {
-            background-color: #777; /* 灰色 */
+            background-color: #777; /* Gray */
         }
         #reset-button {
-            background-color: #d9534f; /* 紅色 */
+            background-color: #d9534f; /* Red */
         }
         .checkbox-container {
             display: flex;
@@ -200,7 +200,7 @@
             <input type="url" id="url-input" placeholder="https://www.apple.com">
             <div class="checkbox-container">
                 <input type="checkbox" id="use-iframe">
-                <label for="use-iframe">use iFrame (Beta)</label>
+                <label for="use-iframe">Try to use iFrame (Beta)</label>
             </div>
             
             <button id="reset-button">Reset to Default</button>
@@ -236,7 +236,7 @@
         let idleTimer;
         let countdownTimer;
         
-        // 建立或打開 IndexedDB 資料庫
+        // Setup IndexedDB
         const request = indexedDB.open(dbName, 1);
         
         request.onupgradeneeded = (event) => {
@@ -249,9 +249,8 @@
             loadSettings();
         };
 
-        // 從 localStorage 和 IndexedDB 載入設定
+        // Load settings from localStorage and IndexedDB
         function loadSettings() {
-            // 載入 URL
             const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
             if (savedRedirectUrl) {
                 urlInput.value = savedRedirectUrl;
@@ -270,7 +269,6 @@
             const savedUseIframe = localStorage.getItem('saverloopUseIframe');
             useIframeCheckbox.checked = savedUseIframe === 'true';
             
-            // 載入影片
             if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
                 videoElement.src = videoUrlInput.value;
             } else {
@@ -290,7 +288,7 @@
             }
         }
         
-        // 將設定儲存至 localStorage 和 IndexedDB
+        // Save settings to localStorage and IndexedDB
         function saveSettings() {
             localStorage.setItem('saverloopRedirectUrl', urlInput.value);
             localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
@@ -305,7 +303,7 @@
             }
         }
         
-        // 啟動影片和全螢幕模式
+        // Start video and fullscreen mode
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -320,20 +318,42 @@
                     videoElement.webkitEnterFullscreen();
                 }
             }).catch(e => {
-                console.error("影片播放失敗: ", e);
+                console.error("Video playback failed: ", e);
                 messageContainer.style.display = 'block';
                 videoElement.style.display = 'none';
-                messageContainer.textContent = "播放失敗，請再試一次。";
+                message.textContent = "Playback failed, please try again.";
                 isPlaying = false;
             });
         }
         
-        // 閒置偵測
+        // Handle iframe loading with fallback
+        function handleIframeLoad() {
+            infoIframe.onload = () => {
+                try {
+                    // Check if content is accessible (will throw a security error if not)
+                    const iframeDoc = infoIframe.contentWindow.document;
+                    if (iframeDoc.body.children.length === 0) {
+                        throw new Error('Iframe content is empty, likely due to security restrictions.');
+                    }
+                    iframeContainer.style.display = 'block';
+                    videoElement.pause();
+                    videoElement.style.display = 'none';
+                    startIdleTimer();
+                } catch (e) {
+                    console.error("Iframe load failed:", e);
+                    alert('This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
+                    window.location.href = urlInput.value;
+                }
+            };
+            infoIframe.src = urlInput.value;
+        }
+
+        // Idle detection
         function startIdleTimer() {
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => {
                 startCountdown();
-            }, 30000); // 30 秒閒置
+            }, 30000); // 30 seconds idle
         }
         
         function resetIdleTimer() {
@@ -351,7 +371,6 @@
                 countdownElement.textContent = seconds;
                 if (seconds <= 0) {
                     clearInterval(countdownTimer);
-                    // 倒數結束，回到起始頁面
                     iframeContainer.style.display = 'none';
                     resetToStart();
                 }
@@ -364,94 +383,89 @@
             resetIdleTimer();
         }
         
-        // 重置為起始介面
+        // Reset to start interface
         function resetToStart() {
             isPlaying = false;
             videoElement.currentTime = 0;
             videoElement.pause();
             videoElement.style.display = 'none';
             messageContainer.style.display = 'block';
-            messageContainer.textContent = "Tap the screen to start";
+            message.textContent = "Tap the screen to start";
         }
 
-        // 處理點擊事件
+        // Handle click event
         document.body.addEventListener('click', (event) => {
             if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block') {
-                return; // 如果選項介面或iFrame介面開啟，不處理點擊事件
+                return;
             }
             if (!isPlaying) {
                 startVideo();
             } else {
                 if (useIframeCheckbox.checked) {
                     videoElement.pause();
-                    videoElement.style.display = 'none';
-                    iframeContainer.style.display = 'block';
-                    infoIframe.src = urlInput.value;
-                    startIdleTimer();
+                    handleIframeLoad();
                 } else {
                     videoElement.pause();
                 }
             }
         });
         
-        // 處理 iFrame 介面點擊
-        iframeOverlay.addEventListener('click', () => {
+        // Handle iframe interface clicks
+        iframeOverlay.addEventListener('click', (event) => {
+            event.stopPropagation();
             cancelCountdown();
         });
         
-        // 處理 iFrame 介面互動
+        // Handle iframe interface interactions
         iframeContainer.addEventListener('mousemove', resetIdleTimer);
         iframeContainer.addEventListener('touchstart', resetIdleTimer);
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
-        // 監聽影片暫停事件
+        // Listen for video pause event
         videoElement.addEventListener('pause', () => {
             if (isPlaying && !useIframeCheckbox.checked) {
                 window.location.href = urlInput.value;
             }
         });
 
-        // 處理返回頁面事件
+        // Handle pageshow event
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
                 resetToStart();
             }
         });
 
-        // 打開/關閉選項介面
+        // Open/close options panel
         optionsButton.addEventListener('click', () => {
             optionsPanel.style.display = 'flex';
         });
 
         closeButton.addEventListener('click', () => {
-            saveSettings(); // 儲存設定
+            saveSettings();
             optionsPanel.style.display = 'none';
         });
 
-        // 處理影片上傳
+        // Handle video upload
         videoUpload.addEventListener('change', () => {
-            // 當檔案被選取時，不需要立即儲存，等使用者關閉面板時才儲存
         });
 
-        // 處理重設按鈕
+        // Handle reset button
         resetButton.addEventListener('click', () => {
-            // 重設影片
             const transaction = db.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
             store.delete('userVideo');
             videoElement.src = defaultVideoUrl;
             
-            // 重設 URL 和勾選框
             videoUrlInput.value = "";
             urlInput.value = defaultRedirectUrl;
             alwaysUseUrlCheckbox.checked = false;
             useIframeCheckbox.checked = false;
 
-            localStorage.clear(); // 清空所有設定
+            localStorage.clear();
             loadSettings();
         });
         
-        // 確保點擊選項面板時不會觸發背景事件
+        // Prevent clicks on options panel from triggering background events
         optionsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
         });
