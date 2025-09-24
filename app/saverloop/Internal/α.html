@@ -376,20 +376,20 @@
 
         // 處理點擊事件
         document.body.addEventListener('click', (event) => {
-            if (optionsPanel.style.display === 'flex') {
-                return; // 如果選項介面開啟，不處理點擊事件
+            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block') {
+                return; // 如果選項介面或iFrame介面開啟，不處理點擊事件
             }
             if (!isPlaying) {
                 startVideo();
             } else {
                 if (useIframeCheckbox.checked) {
                     videoElement.pause();
+                    videoElement.style.display = 'none';
                     iframeContainer.style.display = 'block';
                     infoIframe.src = urlInput.value;
                     startIdleTimer();
                 } else {
                     videoElement.pause();
-                    // 暫停後導向，pageshow會重置介面
                 }
             }
         });
@@ -400,10 +400,9 @@
         });
         
         // 處理 iFrame 介面互動
-        document.addEventListener('mousemove', resetIdleTimer);
-        document.addEventListener('touchstart', resetIdleTimer);
-        document.addEventListener('scroll', resetIdleTimer);
-
+        iframeContainer.addEventListener('mousemove', resetIdleTimer);
+        iframeContainer.addEventListener('touchstart', resetIdleTimer);
+        iframeContainer.addEventListener('scroll', resetIdleTimer);
 
         // 監聽影片暫停事件
         videoElement.addEventListener('pause', () => {
