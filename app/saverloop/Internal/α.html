@@ -211,7 +211,7 @@
             padding: 20px;
             border-radius: 10px;
             display: none;
-            z-index: 31; /* Changed Z-index to be on top */
+            z-index: 31;
             color: white;
         }
     </style>
@@ -502,19 +502,26 @@
         }
         
         function handleIframeLoad() {
+            // Hide everything else and show loading popup
+            iframeContainer.style.display = 'none';
+            videoElement.style.display = 'none';
             loadingPopup.style.display = 'flex';
             infoIframe.src = urlInput.value;
             
-            // Onload event listener
+            const loadTimer = setTimeout(() => {
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+            }, 5000);
+
             infoIframe.onload = () => {
+                clearTimeout(loadTimer);
                 loadingPopup.style.display = 'none';
                 iframeContainer.style.display = 'block';
-                videoElement.style.display = 'none';
                 startIdleTimer();
             };
 
-            // Onerror event listener
             infoIframe.onerror = () => {
+                clearTimeout(loadTimer);
                 loadingPopup.style.display = 'none';
                 showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
             };
@@ -574,9 +581,17 @@
             if (!isPlaying) {
                 startVideo();
             } else {
-                // If iFrame is enabled, a single click will pause the video, and the pause event listener will handle the iFrame
                 if (useIframeCheckbox.checked) {
+                    // Stop video and then handle iFrame
+                    videoElement.currentTime = 0;
                     videoElement.pause();
+                    videoElement.style.display = 'none';
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    handleIframeLoad();
                 } else {
                     videoElement.pause();
                 }
@@ -603,16 +618,8 @@
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
         videoElement.addEventListener('pause', () => {
-            if (isPlaying) {
-                if (useIframeCheckbox.checked) {
-                    // Check if we are already in fullscreen and trying to exit
-                    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-                    if (!isFullscreen) {
-                        handleIframeLoad();
-                    }
-                } else {
-                    window.location.href = urlInput.value;
-                }
+            if (isPlaying && !useIframeCheckbox.checked) {
+                window.location.href = urlInput.value;
             }
         });
 
