@@ -49,7 +49,7 @@
             z-index: 10;
         }
         #settings-button {
-            color: white; /* Changed to white */
+            color: white;
             font-size: 0.8em;
             cursor: pointer;
             text-decoration: underline;
@@ -86,7 +86,7 @@
             flex-direction: column;
             gap: 15px;
             margin-top: 50px;
-            align-items: flex-start; /* Aligned to top-left */
+            align-items: flex-start;
         }
         #settings-panel-bottom {
             width: 90%;
@@ -115,12 +115,12 @@
         }
         #close-button {
             width: 100%;
-            background-color: #777; /* Gray */
+            background-color: #777;
         }
         #reset-button {
-            width: auto; /* Shrink to fit content */
-            align-self: flex-end; /* Align to the right */
-            background-color: #d9534f; /* Red */
+            width: auto;
+            align-self: flex-end;
+            background-color: #d9534f;
         }
         .checkbox-container {
             display: flex;
@@ -190,7 +190,7 @@
         }
         #popup-button-container {
             display: flex;
-            justify-content: space-between; /* Space between buttons */
+            justify-content: space-between;
             width: 100%;
         }
         .popup-button {
@@ -424,7 +424,7 @@
         }
 
         function loadSettings() {
-            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'zh-tw';
+            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'en'; // Changed default to 'en'
             languageSelect.value = savedLanguage;
             setLanguage(savedLanguage);
 
@@ -497,7 +497,7 @@
                 console.error("Video playback failed: ", e);
                 messageContainer.style.display = 'block';
                 videoElement.style.display = 'none';
-                message.textContent = translations[languageSelect.value].playback_failed;
+                messageElement.textContent = translations[languageSelect.value].playback_failed; // Fixed typo
                 isPlaying = false;
             });
         }
@@ -569,7 +569,7 @@
             videoElement.pause();
             videoElement.style.display = 'none';
             messageContainer.style.display = 'block';
-            message.textContent = translations[languageSelect.value].start_message;
+            messageElement.textContent = translations[languageSelect.value].start_message; // Fixed typo
         }
 
         document.body.addEventListener('click', (event) => {
