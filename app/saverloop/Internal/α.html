@@ -49,13 +49,13 @@
             z-index: 10;
         }
         #settings-button {
-            color: black; /* Changed button text color to black */
-            background-color: white; /* Changed button background to white */
+            color: black;
+            background-color: white;
             font-size: 0.8em;
             cursor: pointer;
-            text-decoration: none; /* Removed underline */
-            padding: 8px 15px; /* Added padding to make it a button */
-            border-radius: 5px; /* Added border-radius for styling */
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
             border: none;
         }
         #settings-button:hover {
@@ -221,6 +221,18 @@
             z-index: 31;
             color: white;
         }
+        #device-event-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 40;
+            color: white;
+        }
     </style>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
@@ -235,9 +247,9 @@
         <div id="message"></div>
     </div>
     <div id="settings-container">
-        <span id="settings-button"></span>
+        <button id="settings-button"></button>
     </div>
-    <div id="version">version: Internal_α0.7</div>
+    <div id="version">version: Internal_α0.8</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="iframe-container">
@@ -274,6 +286,13 @@
                 <option value="ja">日本語</option>
             </select>
 
+            <div class="checkbox-container">
+                <input type="checkbox" id="device-event-detect">
+                <label for="device-event-detect" id="device-event-detect-label"></label>
+            </div>
+
+            <button id="notifications-api-button"></button>
+
             <button id="reset-button"></button>
         </div>
         <div id="settings-panel-bottom">
@@ -292,6 +311,10 @@
 
     <div id="loading-popup">
         <p id="loading-message"></p>
+    </div>
+
+    <div id="device-event-popup">
+        <p id="device-event-message">DeviceEventDetect(debug)</p>
     </div>
 
     <script>
@@ -319,6 +342,9 @@
         const popupExitButton = document.getElementById('popup-exit-button');
         const loadingPopup = document.getElementById('loading-popup');
         const loadingMessage = document.getElementById('loading-message');
+        const deviceEventDetectCheckbox = document.getElementById('device-event-detect');
+        const deviceEventPopup = document.getElementById('device-event-popup');
+        const notificationsApiButton = document.getElementById('notifications-api-button');
 
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
@@ -340,6 +366,8 @@
                 'guide_url_label': 'Guide URL:',
                 'use_iframe_label': 'Try to use iFrame (Beta)',
                 'language_label': 'Language:',
+                'device_event_detect_label': 'DeviceEventDetect(debug)',
+                'notifications_api_button': 'NotificationsAPI(debug)',
                 'reset_button': 'Reset to Default',
                 'close_button': 'Close',
                 'loading_message': 'Loading...',
@@ -347,6 +375,8 @@
                 'playback_failed': 'Playback failed, please try again.',
                 'iframe_load_title': 'Load Failed',
                 'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions.',
+                'notifications_title': 'Notification Not Supported',
+                'notifications_message': 'Your browser does not support Notifications API.',
                 'popup_ok': 'OK',
                 'popup_exit': 'Exit'
             },
@@ -360,6 +390,8 @@
                 'guide_url_label': '導向URL：',
                 'use_iframe_label': '嘗試使用iFrame (Beta)',
                 'language_label': '語言：',
+                'device_event_detect_label': '動作偵測(debug)',
+                'notifications_api_button': '發送通知(debug)',
                 'reset_button': '重設為預設',
                 'close_button': '關閉',
                 'loading_message': '載入中...',
@@ -367,6 +399,8 @@
                 'playback_failed': '播放失敗，請再試一次。',
                 'iframe_load_title': '載入失敗',
                 'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。',
+                'notifications_title': '通知不支援',
+                'notifications_message': '你的瀏覽器不支援通知API。',
                 'popup_ok': '確定',
                 'popup_exit': '退出'
             },
@@ -380,6 +414,8 @@
                 'guide_url_label': '誘導先URL:',
                 'use_iframe_label': 'iFrameの使用を試みる (Beta)',
                 'language_label': '言語:',
+                'device_event_detect_label': '動作検出(debug)',
+                'notifications_api_button': '通知の送信(debug)',
                 'reset_button': 'デフォルトに戻す',
                 'close_button': '閉じる',
                 'loading_message': 'ロード中...',
@@ -387,6 +423,8 @@
                 'playback_failed': '再生に失敗しました。もう一度お試しください。',
                 'iframe_load_title': '読み込み失敗',
                 'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。',
+                'notifications_title': '通知非対応',
+                'notifications_message': 'お使いのブラウザは通知APIをサポートしていません。',
                 'popup_ok': 'OK',
                 'popup_exit': '終了'
             }
@@ -403,6 +441,8 @@
             document.getElementById('guide-url-label').textContent = t.guide_url_label;
             document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
             document.getElementById('language-label').textContent = t.language_label;
+            document.getElementById('device-event-detect-label').textContent = t.device_event_detect_label;
+            document.getElementById('notifications-api-button').textContent = t.notifications_api_button;
             resetButton.textContent = t.reset_button;
             closeButton.textContent = t.close_button;
             loadingMessage.textContent = t.loading_message;
@@ -451,6 +491,9 @@
 
             const savedUseIframe = localStorage.getItem('saverloopUseIframe');
             useIframeCheckbox.checked = savedUseIframe === 'true';
+
+            const savedDeviceEventDetect = localStorage.getItem('saverloopDeviceEventDetect');
+            deviceEventDetectCheckbox.checked = savedDeviceEventDetect === 'true';
             
             if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
                 videoElement.src = videoUrlInput.value;
@@ -477,6 +520,7 @@
             localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
             localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
             localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
+            localStorage.setItem('saverloopDeviceEventDetect', deviceEventDetectCheckbox.checked);
 
             if (!alwaysUseUrlCheckbox.checked && videoUpload.files.length > 0) {
                 const file = videoUpload.files[0];
@@ -580,8 +624,41 @@
             messageElement.textContent = translations[languageSelect.value].start_message;
         }
 
+        // Device Event Detection
+        let motionStoppedTimer;
+        function handleDeviceMotion(event) {
+            if (!deviceEventDetectCheckbox.checked) return;
+            const acceleration = event.accelerationIncludingGravity;
+            const sumOfAcceleration = Math.abs(acceleration.x) + Math.abs(acceleration.y) + Math.abs(acceleration.z);
+            const isMoving = sumOfAcceleration > 0.5;
+
+            if (isMoving) {
+                deviceEventPopup.style.display = 'flex';
+                clearTimeout(motionStoppedTimer);
+            } else {
+                clearTimeout(motionStoppedTimer);
+                motionStoppedTimer = setTimeout(() => {
+                    deviceEventPopup.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        function toggleDeviceEventDetection() {
+            if (deviceEventDetectCheckbox.checked) {
+                if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', handleDeviceMotion);
+                } else {
+                    alert('DeviceMotion is not supported on this device.');
+                    deviceEventDetectCheckbox.checked = false;
+                }
+            } else {
+                window.removeEventListener('devicemotion', handleDeviceMotion);
+                deviceEventPopup.style.display = 'none';
+            }
+        }
+        
         document.body.addEventListener('click', (event) => {
-            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex') {
+            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex' || deviceEventPopup.style.display === 'flex') {
                 return;
             }
             if (!isPlaying) {
@@ -650,6 +727,22 @@
         videoUpload.addEventListener('change', () => {
         });
 
+        deviceEventDetectCheckbox.addEventListener('change', toggleDeviceEventDetection);
+
+        notificationsApiButton.addEventListener('click', () => {
+            if (!('Notification' in window)) {
+                showCustomPopup(translations[languageSelect.value].notifications_title, translations[languageSelect.value].notifications_message);
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('saverloop(debug)', {
+                        body: 'NotificationsAPI testing'
+                    });
+                }
+            });
+        });
+
         resetButton.addEventListener('click', () => {
             const transaction = db.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
@@ -660,6 +753,7 @@
             urlInput.value = defaultRedirectUrl;
             alwaysUseUrlCheckbox.checked = false;
             useIframeCheckbox.checked = false;
+            deviceEventDetectCheckbox.checked = false;
 
             localStorage.clear();
             loadSettings();
@@ -667,7 +761,6 @@
         
         popupCloseButton.addEventListener('click', () => {
             customPopup.style.display = 'none';
-            // If it's a load fail popup, clicking OK should also reset
             if (popupExitButton.style.display === 'inline-block') {
                 resetToStart();
             }
