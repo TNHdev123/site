@@ -753,6 +753,7 @@
             }
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
+                    // Send notification immediately after permission is granted
                     new Notification('saverloop(debug)', {
                         body: 'NotificationsAPI testing'
                     });
