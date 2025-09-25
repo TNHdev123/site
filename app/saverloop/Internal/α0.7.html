@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SaverLoop</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            text-align: center;
+        }
+        #top-icon-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #top-icon {
+            width: 120px;
+            height: 120px;
+        }
+        #message-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        #message {
+            margin-bottom: 20px;
+        }
+        #settings-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #settings-button {
+            color: black; /* Changed button text color to black */
+            background-color: white; /* Changed button background to white */
+            font-size: 0.8em;
+            cursor: pointer;
+            text-decoration: none; /* Removed underline */
+            padding: 8px 15px; /* Added padding to make it a button */
+            border-radius: 5px; /* Added border-radius for styling */
+            border: none;
+        }
+        #settings-button:hover {
+            opacity: 0.8;
+        }
+        #version {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            z-index: 10;
+        }
+        #myVideo {
+            display: none;
+        }
+        #settings-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+        #settings-panel-top {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 50px;
+            align-items: flex-start;
+        }
+        #settings-panel-bottom {
+            width: 90%;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        #settings-panel-top label, #settings-panel-top h3 {
+            align-self: flex-start;
+        }
+        #settings-panel-top input[type="text"], #settings-panel-top input[type="url"], #settings-panel-top select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+        }
+        #settings-panel button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-size: 1em;
+        }
+        #close-button {
+            width: 100%;
+            background-color: #777;
+        }
+        #reset-button {
+            width: auto;
+            align-self: flex-end;
+            background-color: #d9534f;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.9em;
+            width: 100%;
+        }
+        #iframe-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: none;
+            background-color: black;
+        }
+        #iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 12;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+        #iframe-overlay p {
+            background-color: rgba(128, 128, 128, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #custom-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 30;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        #custom-popup h4 {
+            margin: 0;
+            color: white;
+        }
+        #custom-popup p {
+            margin: 0;
+        }
+        #popup-button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .popup-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
+        #loading-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 31;
+            color: white;
+        }
+    </style>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div id="top-icon-container">
+        <img id="top-icon" src="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png" alt="SaverLoop Icon">
+    </div>
+    <div id="message-container">
+        <div id="message"></div>
+    </div>
+    <div id="settings-container">
+        <span id="settings-button"></span>
+    </div>
+    <div id="version">version: Internal_α0.7</div>
+    <video id="myVideo" playsinline loop></video>
+
+    <div id="iframe-container">
+        <iframe id="info-iframe"></iframe>
+        <div id="iframe-overlay">
+            <p id="continue-browsing-message"></p>
+        </div>
+    </div>
+
+    <div id="settings-panel">
+        <div id="settings-panel-top">
+            <h3 id="settings-title"></h3>
+            <label for="video-upload" id="upload-video-label"></label>
+            <input type="file" id="video-upload" accept="video/*">
+            
+            <label for="video-url-input" id="video-url-label"></label>
+            <input type="url" id="video-url-input" placeholder="https://">
+            <div class="checkbox-container">
+                <input type="checkbox" id="always-use-url">
+                <label for="always-use-url" id="always-use-url-label"></label>
+            </div>
+            
+            <label for="url-input" id="guide-url-label"></label>
+            <input type="url" id="url-input" placeholder="https://www.apple.com">
+            <div class="checkbox-container">
+                <input type="checkbox" id="use-iframe">
+                <label for="use-iframe" id="use-iframe-label"></label>
+            </div>
+            
+            <label for="language-select" id="language-label"></label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="zh-tw">中文</option>
+                <option value="ja">日本語</option>
+            </select>
+
+            <button id="reset-button"></button>
+        </div>
+        <div id="settings-panel-bottom">
+            <button id="close-button"></button>
+        </div>
+    </div>
+
+    <div id="custom-popup">
+        <h4 id="popup-title"></h4>
+        <p id="popup-message"></p>
+        <div id="popup-button-container">
+            <button id="popup-close-button" class="popup-button"></button>
+            <button id="popup-exit-button" class="popup-button" style="display: none;"></button>
+        </div>
+    </div>
+
+    <div id="loading-popup">
+        <p id="loading-message"></p>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('myVideo');
+        const messageContainer = document.getElementById('message-container');
+        const messageElement = document.getElementById('message');
+        const settingsButton = document.getElementById('settings-button');
+        const settingsPanel = document.getElementById('settings-panel');
+        const closeButton = document.getElementById('close-button');
+        const videoUpload = document.getElementById('video-upload');
+        const videoUrlInput = document.getElementById('video-url-input');
+        const alwaysUseUrlCheckbox = document.getElementById('always-use-url');
+        const urlInput = document.getElementById('url-input');
+        const useIframeCheckbox = document.getElementById('use-iframe');
+        const resetButton = document.getElementById('reset-button');
+        const languageSelect = document.getElementById('language-select');
+        const iframeContainer = document.getElementById('iframe-container');
+        const infoIframe = document.getElementById('info-iframe');
+        const iframeOverlay = document.getElementById('iframe-overlay');
+        const countdownElement = document.getElementById('countdown');
+        const customPopup = document.getElementById('custom-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseButton = document.getElementById('popup-close-button');
+        const popupExitButton = document.getElementById('popup-exit-button');
+        const loadingPopup = document.getElementById('loading-popup');
+        const loadingMessage = document.getElementById('loading-message');
+
+        const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
+        const defaultRedirectUrl = "https://www.apple.com";
+        const dbName = 'SaverLoopDB';
+        const storeName = 'videos';
+        let db;
+        let isPlaying = false;
+        let idleTimer;
+        let countdownTimer;
+
+        const translations = {
+            'en': {
+                'start_message': 'Tap the screen to start',
+                'settings_button': 'Settings',
+                'settings_title': 'Settings',
+                'upload_video_label': 'Upload Video:',
+                'video_url_label': 'Video URL:',
+                'always_use_url_label': 'Always use Video URL',
+                'guide_url_label': 'Guide URL:',
+                'use_iframe_label': 'Try to use iFrame (Beta)',
+                'language_label': 'Language:',
+                'reset_button': 'Reset to Default',
+                'close_button': 'Close',
+                'loading_message': 'Loading...',
+                'continue_browsing_message': 'Do you want to continue browsing? The page will be closed in {seconds} seconds. Click on the screen to cancel',
+                'playback_failed': 'Playback failed, please try again.',
+                'iframe_load_title': 'Load Failed',
+                'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions.',
+                'popup_ok': 'OK',
+                'popup_exit': 'Exit'
+            },
+            'zh-tw': {
+                'start_message': '點擊螢幕開始',
+                'settings_button': '設定',
+                'settings_title': '設定',
+                'upload_video_label': '上傳影片：',
+                'video_url_label': '影片URL：',
+                'always_use_url_label': '永遠使用影片URL',
+                'guide_url_label': '導向URL：',
+                'use_iframe_label': '嘗試使用iFrame (Beta)',
+                'language_label': '語言：',
+                'reset_button': '重設為預設',
+                'close_button': '關閉',
+                'loading_message': '載入中...',
+                'continue_browsing_message': '您想繼續瀏覽嗎？頁面將在 {seconds} 秒後關閉。點擊螢幕取消',
+                'playback_failed': '播放失敗，請再試一次。',
+                'iframe_load_title': '載入失敗',
+                'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。',
+                'popup_ok': '確定',
+                'popup_exit': '退出'
+            },
+            'ja': {
+                'start_message': '画面をタップして開始',
+                'settings_button': '設定',
+                'settings_title': '設定',
+                'upload_video_label': '動画をアップロード:',
+                'video_url_label': '動画URL:',
+                'always_use_url_label': '常に動画URLを使用',
+                'guide_url_label': '誘導先URL:',
+                'use_iframe_label': 'iFrameの使用を試みる (Beta)',
+                'language_label': '言語:',
+                'reset_button': 'デフォルトに戻す',
+                'close_button': '閉じる',
+                'loading_message': 'ロード中...',
+                'continue_browsing_message': 'ブラウジングを続行しますか？ページは {seconds} 秒後に閉じます。画面をクリックしてキャンセル',
+                'playback_failed': '再生に失敗しました。もう一度お試しください。',
+                'iframe_load_title': '読み込み失敗',
+                'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。',
+                'popup_ok': 'OK',
+                'popup_exit': '終了'
+            }
+        };
+
+        function setLanguage(lang) {
+            const t = translations[lang];
+            messageElement.textContent = t.start_message;
+            settingsButton.textContent = t.settings_button;
+            document.getElementById('settings-title').textContent = t.settings_title;
+            document.getElementById('upload-video-label').textContent = t.upload_video_label;
+            document.getElementById('video-url-label').textContent = t.video_url_label;
+            document.getElementById('always-use-url-label').textContent = t.always_use_url_label;
+            document.getElementById('guide-url-label').textContent = t.guide_url_label;
+            document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
+            document.getElementById('language-label').textContent = t.language_label;
+            resetButton.textContent = t.reset_button;
+            closeButton.textContent = t.close_button;
+            loadingMessage.textContent = t.loading_message;
+            document.getElementById('popup-close-button').textContent = t.popup_ok;
+            document.getElementById('popup-exit-button').textContent = t.popup_exit;
+        }
+
+        const request = indexedDB.open(dbName, 1);
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSettings();
+        };
+
+        function showCustomPopup(title, message, showExit = false) {
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            popupExitButton.style.display = showExit ? 'inline-block' : 'none';
+            customPopup.style.display = 'flex';
+        }
+
+        function loadSettings() {
+            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'en';
+            languageSelect.value = savedLanguage;
+            setLanguage(savedLanguage);
+
+            const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
+            if (savedRedirectUrl) {
+                urlInput.value = savedRedirectUrl;
+            } else {
+                urlInput.value = defaultRedirectUrl;
+            }
+
+            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            if (savedVideoUrl) {
+                videoUrlInput.value = savedVideoUrl;
+            }
+
+            const savedAlwaysUseUrl = localStorage.getItem('saverloopAlwaysUseUrl');
+            alwaysUseUrlCheckbox.checked = savedAlwaysUseUrl === 'true';
+
+            const savedUseIframe = localStorage.getItem('saverloopUseIframe');
+            useIframeCheckbox.checked = savedUseIframe === 'true';
+            
+            if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
+                videoElement.src = videoUrlInput.value;
+            } else {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const getRequest = store.get('userVideo');
+                
+                getRequest.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result && result.videoBlob) {
+                        const videoUrl = URL.createObjectURL(result.videoBlob);
+                        videoElement.src = videoUrl;
+                    } else {
+                        videoElement.src = defaultVideoUrl;
+                    }
+                };
+            }
+        }
+        
+        function saveSettings() {
+            localStorage.setItem('saverloopLanguage', languageSelect.value);
+            localStorage.setItem('saverloopRedirectUrl', urlInput.value);
+            localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
+            localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
+            localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
+
+            if (!alwaysUseUrlCheckbox.checked && videoUpload.files.length > 0) {
+                const file = videoUpload.files[0];
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                store.put({ id: 'userVideo', videoBlob: file });
+            }
+        }
+        
+        function startVideo() {
+            if (isPlaying) return;
+            isPlaying = true;
+            
+            messageContainer.style.display = 'none';
+            videoElement.style.display = 'block';
+
+            videoElement.play().then(() => {
+                if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                } else if (videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                }
+            }).catch(e => {
+                console.error("Video playback failed: ", e);
+                messageContainer.style.display = 'block';
+                videoElement.style.display = 'none';
+                messageElement.textContent = translations[languageSelect.value].playback_failed;
+                isPlaying = false;
+            });
+        }
+        
+        function handleIframeLoad() {
+            iframeContainer.style.display = 'none';
+            videoElement.style.display = 'none';
+            loadingPopup.style.display = 'flex';
+            infoIframe.src = urlInput.value;
+            
+            const loadTimer = setTimeout(() => {
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+            }, 5000);
+
+            infoIframe.onload = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                iframeContainer.style.display = 'block';
+                startIdleTimer();
+            };
+
+            infoIframe.onerror = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+            };
+        }
+
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                startCountdown();
+            }, 30000);
+        }
+        
+        function resetIdleTimer() {
+            if (loadingPopup.style.display === 'flex' || customPopup.style.display === 'flex') {
+                return;
+            }
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            iframeOverlay.style.display = 'flex';
+            
+            countdownTimer = setInterval(() => {
+                const message = translations[languageSelect.value].continue_browsing_message.replace('{seconds}', seconds);
+                document.getElementById('continue-browsing-message').textContent = message;
+                
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(countdownTimer);
+                    iframeContainer.style.display = 'none';
+                    resetToStart();
+                }
+            }, 1000);
+        }
+        
+        function cancelCountdown() {
+            clearInterval(countdownTimer);
+            iframeOverlay.style.display = 'none';
+            resetIdleTimer();
+        }
+        
+        function resetToStart() {
+            isPlaying = false;
+            videoElement.currentTime = 0;
+            videoElement.pause();
+            videoElement.style.display = 'none';
+            messageContainer.style.display = 'block';
+            messageElement.textContent = translations[languageSelect.value].start_message;
+        }
+
+        document.body.addEventListener('click', (event) => {
+            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex') {
+                return;
+            }
+            if (!isPlaying) {
+                startVideo();
+            } else {
+                if (useIframeCheckbox.checked) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    videoElement.currentTime = 0;
+                    videoElement.pause();
+                    videoElement.style.display = 'none';
+                    handleIframeLoad();
+                } else {
+                    videoElement.pause();
+                }
+            }
+        });
+
+        document.addEventListener('fullscreenchange', exitFullscreenHandler);
+        document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
+
+        function exitFullscreenHandler() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!isFullscreen && isPlaying && useIframeCheckbox.checked) {
+                 handleIframeLoad();
+            }
+        }
+        
+        iframeOverlay.addEventListener('click', (event) => {
+            event.stopPropagation();
+            cancelCountdown();
+        });
+        
+        iframeContainer.addEventListener('mousemove', resetIdleTimer);
+        iframeContainer.addEventListener('touchstart', resetIdleTimer);
+        iframeContainer.addEventListener('scroll', resetIdleTimer);
+
+        videoElement.addEventListener('pause', () => {
+            if (isPlaying && !useIframeCheckbox.checked) {
+                window.location.href = urlInput.value;
+            }
+        });
+
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                resetToStart();
+            }
+        });
+
+        settingsButton.addEventListener('click', () => {
+            settingsPanel.style.display = 'flex';
+        });
+
+        closeButton.addEventListener('click', () => {
+            saveSettings();
+            settingsPanel.style.display = 'none';
+        });
+
+        languageSelect.addEventListener('change', (event) => {
+            setLanguage(event.target.value);
+        });
+
+        videoUpload.addEventListener('change', () => {
+        });
+
+        resetButton.addEventListener('click', () => {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete('userVideo');
+            videoElement.src = defaultVideoUrl;
+            
+            videoUrlInput.value = "";
+            urlInput.value = defaultRedirectUrl;
+            alwaysUseUrlCheckbox.checked = false;
+            useIframeCheckbox.checked = false;
+
+            localStorage.clear();
+            loadSettings();
+        });
+        
+        popupCloseButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+            // If it's a load fail popup, clicking OK should also reset
+            if (popupExitButton.style.display === 'inline-block') {
+                resetToStart();
+            }
+        });
+
+        popupExitButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+            resetToStart();
+        });
+
+        settingsPanel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        // Mobile input zoom fix
+        const inputs = document.querySelectorAll('input[type="url"], input[type="text"]');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no');
+            });
+            input.addEventListener('blur', () => {
+                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+            });
+        });
+    </script>
+</body>
+</html>
