@@ -211,7 +211,7 @@
             padding: 20px;
             border-radius: 10px;
             display: none;
-            z-index: 30;
+            z-index: 31; /* Changed Z-index to be on top */
             color: white;
         }
     </style>
@@ -336,10 +336,10 @@
                 'reset_button': 'Reset to Default',
                 'close_button': 'Close',
                 'loading_message': 'Loading...',
-                'continue_browsing_message': 'Do you want to continue browsing? The page will be closed in [seconds] seconds. Click on the screen to cancel',
+                'continue_browsing_message': 'Do you want to continue browsing? The page will be closed in {seconds} seconds. Click on the screen to cancel',
                 'playback_failed': 'Playback failed, please try again.',
                 'iframe_load_title': 'Load Failed',
-                'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.',
+                'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions.',
                 'popup_ok': 'OK',
                 'popup_exit': 'Exit'
             },
@@ -356,10 +356,10 @@
                 'reset_button': '重設為預設',
                 'close_button': '關閉',
                 'loading_message': '載入中...',
-                'continue_browsing_message': '您想繼續瀏覽嗎？頁面將在 [seconds] 秒後關閉。點擊螢幕取消',
+                'continue_browsing_message': '您想繼續瀏覽嗎？頁面將在 {seconds} 秒後關閉。點擊螢幕取消',
                 'playback_failed': '播放失敗，請再試一次。',
                 'iframe_load_title': '載入失敗',
-                'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。將改為重新導向。',
+                'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。',
                 'popup_ok': '確定',
                 'popup_exit': '退出'
             },
@@ -376,10 +376,10 @@
                 'reset_button': 'デフォルトに戻す',
                 'close_button': '閉じる',
                 'loading_message': 'ロード中...',
-                'continue_browsing_message': 'ブラウジングを続行しますか？ページは [seconds] 秒後に閉じます。画面をクリックしてキャンセル',
+                'continue_browsing_message': 'ブラウジングを続行しますか？ページは {seconds} 秒後に閉じます。画面をクリックしてキャンセル',
                 'playback_failed': '再生に失敗しました。もう一度お試しください。',
                 'iframe_load_title': '読み込み失敗',
-                'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。代わりにリダイレクトされます。',
+                'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。',
                 'popup_ok': 'OK',
                 'popup_exit': '終了'
             }
@@ -399,7 +399,6 @@
             resetButton.textContent = t.reset_button;
             closeButton.textContent = t.close_button;
             loadingMessage.textContent = t.loading_message;
-            document.getElementById('continue-browsing-message').textContent = t.continue_browsing_message;
             document.getElementById('popup-close-button').textContent = t.popup_ok;
             document.getElementById('popup-exit-button').textContent = t.popup_exit;
         }
@@ -506,21 +505,16 @@
             loadingPopup.style.display = 'flex';
             infoIframe.src = urlInput.value;
             
-            const loadTimer = setTimeout(() => {
-                loadingPopup.style.display = 'none';
-                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
-            }, 5000);
-
+            // Onload event listener
             infoIframe.onload = () => {
-                clearTimeout(loadTimer);
                 loadingPopup.style.display = 'none';
                 iframeContainer.style.display = 'block';
                 videoElement.style.display = 'none';
                 startIdleTimer();
             };
 
+            // Onerror event listener
             infoIframe.onerror = () => {
-                clearTimeout(loadTimer);
                 loadingPopup.style.display = 'none';
                 showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
             };
@@ -544,12 +538,13 @@
         function startCountdown() {
             let seconds = 15;
             iframeOverlay.style.display = 'flex';
-            countdownElement.textContent = seconds;
             
             countdownTimer = setInterval(() => {
+                const message = translations[languageSelect.value].continue_browsing_message.replace('{seconds}', seconds);
+                document.getElementById('continue-browsing-message').textContent = message;
+                
                 seconds--;
-                countdownElement.textContent = seconds;
-                if (seconds <= 0) {
+                if (seconds < 0) {
                     clearInterval(countdownTimer);
                     iframeContainer.style.display = 'none';
                     resetToStart();
@@ -579,16 +574,9 @@
             if (!isPlaying) {
                 startVideo();
             } else {
+                // If iFrame is enabled, a single click will pause the video, and the pause event listener will handle the iFrame
                 if (useIframeCheckbox.checked) {
-                    if (document.fullscreenElement || document.webkitFullscreenElement) {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        } else if (document.webkitExitFullscreen) {
-                            document.webkitExitFullscreen();
-                        }
-                    }
                     videoElement.pause();
-                    handleIframeLoad();
                 } else {
                     videoElement.pause();
                 }
@@ -615,8 +603,16 @@
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
         videoElement.addEventListener('pause', () => {
-            if (isPlaying && !useIframeCheckbox.checked) {
-                window.location.href = urlInput.value;
+            if (isPlaying) {
+                if (useIframeCheckbox.checked) {
+                    // Check if we are already in fullscreen and trying to exit
+                    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+                    if (!isFullscreen) {
+                        handleIframeLoad();
+                    }
+                } else {
+                    window.location.href = urlInput.value;
+                }
             }
         });
 
@@ -659,6 +655,10 @@
         
         popupCloseButton.addEventListener('click', () => {
             customPopup.style.display = 'none';
+            // If it's a load fail popup, clicking OK should also reset
+            if (popupExitButton.style.display === 'inline-block') {
+                resetToStart();
+            }
         });
 
         popupExitButton.addEventListener('click', () => {
