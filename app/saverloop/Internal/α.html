@@ -424,7 +424,7 @@
         }
 
         function loadSettings() {
-            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'en'; // Changed default to 'en'
+            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'en';
             languageSelect.value = savedLanguage;
             setLanguage(savedLanguage);
 
@@ -497,7 +497,7 @@
                 console.error("Video playback failed: ", e);
                 messageContainer.style.display = 'block';
                 videoElement.style.display = 'none';
-                messageElement.textContent = translations[languageSelect.value].playback_failed; // Fixed typo
+                messageElement.textContent = translations[languageSelect.value].playback_failed;
                 isPlaying = false;
             });
         }
@@ -569,11 +569,11 @@
             videoElement.pause();
             videoElement.style.display = 'none';
             messageContainer.style.display = 'block';
-            messageElement.textContent = translations[languageSelect.value].start_message; // Fixed typo
+            messageElement.textContent = translations[languageSelect.value].start_message;
         }
 
         document.body.addEventListener('click', (event) => {
-            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex') {
+            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex') {
                 return;
             }
             if (!isPlaying) {
