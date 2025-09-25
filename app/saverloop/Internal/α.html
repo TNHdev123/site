@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>SaverLoop</title>
     <style>
         body, html {
@@ -28,7 +28,7 @@
             z-index: 10;
         }
         #top-icon {
-            width: 80px; /* Enlarge Icon */
+            width: 80px;
             height: 80px;
         }
         #message-container {
@@ -41,15 +41,15 @@
         #message {
             margin-bottom: 20px;
         }
-        #options-container {
+        #settings-container {
             position: absolute;
             bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
         }
-        #options-button {
-            color: rgba(255, 255, 255, 0.5);
+        #settings-button {
+            color: white; /* Changed to white */
             font-size: 0.8em;
             cursor: pointer;
             text-decoration: underline;
@@ -64,9 +64,9 @@
             z-index: 10;
         }
         #myVideo {
-            display: none; /* Hide video by default */
+            display: none;
         }
-        #options-panel {
+        #settings-panel {
             position: absolute;
             top: 0;
             left: 0;
@@ -80,18 +80,23 @@
             align-items: center;
             z-index: 20;
         }
-        #options-panel-top {
+        #settings-panel-top {
             width: 90%;
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-top: 50px;
+            align-items: flex-start; /* Aligned to top-left */
         }
-        #options-panel-bottom {
+        #settings-panel-bottom {
             width: 90%;
             margin-bottom: 50px;
+            text-align: center;
         }
-        #options-panel input[type="text"], #options-panel input[type="url"] {
+        #settings-panel-top label, #settings-panel-top h3 {
+            align-self: flex-start;
+        }
+        #settings-panel-top input[type="text"], #settings-panel-top input[type="url"], #settings-panel-top select {
             width: 100%;
             padding: 8px;
             border: none;
@@ -100,8 +105,7 @@
             color: white;
             box-sizing: border-box;
         }
-        #options-panel button {
-            width: 100%;
+        #settings-panel button {
             padding: 10px;
             border: none;
             border-radius: 5px;
@@ -110,9 +114,12 @@
             font-size: 1em;
         }
         #close-button {
+            width: 100%;
             background-color: #777; /* Gray */
         }
         #reset-button {
+            width: auto; /* Shrink to fit content */
+            align-self: flex-end; /* Align to the right */
             background-color: #d9534f; /* Red */
         }
         .checkbox-container {
@@ -121,6 +128,7 @@
             gap: 10px;
             color: white;
             font-size: 0.9em;
+            width: 100%;
         }
         #iframe-container {
             position: absolute;
@@ -182,7 +190,8 @@
         }
         #popup-button-container {
             display: flex;
-            justify-content: center;
+            justify-content: space-between; /* Space between buttons */
+            width: 100%;
         }
         .popup-button {
             padding: 10px 20px;
@@ -192,6 +201,18 @@
             background-color: #555;
             color: white;
             font-size: 1em;
+        }
+        #loading-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 30;
+            color: white;
         }
     </style>
     <link rel="manifest" href="/manifest.json">
@@ -204,45 +225,52 @@
         <img id="top-icon" src="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png" alt="SaverLoop Icon">
     </div>
     <div id="message-container">
-        <div id="message">Tap the screen to start</div>
+        <div id="message"></div>
     </div>
-    <div id="options-container">
-        <span id="options-button">Options</span>
+    <div id="settings-container">
+        <span id="settings-button"></span>
     </div>
-    <div id="version">version: Internal_α0.6</div>
+    <div id="version">version: Internal_α0.7</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="iframe-container">
         <iframe id="info-iframe"></iframe>
         <div id="iframe-overlay">
-            <p>Do you want to continue browsing?<br>The page will be closed in <span id="countdown">15</span> seconds.<br>Click on the screen to cancel</p>
+            <p id="continue-browsing-message"></p>
         </div>
     </div>
 
-    <div id="options-panel">
-        <div id="options-panel-top">
-            <h3>Options</h3>
-            <label for="video-upload">Upload Video:</label>
+    <div id="settings-panel">
+        <div id="settings-panel-top">
+            <h3 id="settings-title"></h3>
+            <label for="video-upload" id="upload-video-label"></label>
             <input type="file" id="video-upload" accept="video/*">
             
-            <label for="video-url-input">Video URL:</label>
+            <label for="video-url-input" id="video-url-label"></label>
             <input type="url" id="video-url-input" placeholder="https://">
             <div class="checkbox-container">
                 <input type="checkbox" id="always-use-url">
-                <label for="always-use-url">Always use Video URL</label>
+                <label for="always-use-url" id="always-use-url-label"></label>
             </div>
             
-            <label for="url-input">Guide URL:</label>
+            <label for="url-input" id="guide-url-label"></label>
             <input type="url" id="url-input" placeholder="https://www.apple.com">
             <div class="checkbox-container">
                 <input type="checkbox" id="use-iframe">
-                <label for="use-iframe">Try to use iFrame (Beta)</label>
+                <label for="use-iframe" id="use-iframe-label"></label>
             </div>
             
-            <button id="reset-button">Reset to Default</button>
+            <label for="language-select" id="language-label"></label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="zh-tw">中文</option>
+                <option value="ja">日本語</option>
+            </select>
+
+            <button id="reset-button"></button>
         </div>
-        <div id="options-panel-bottom">
-            <button id="close-button">Close</button>
+        <div id="settings-panel-bottom">
+            <button id="close-button"></button>
         </div>
     </div>
 
@@ -250,15 +278,21 @@
         <h4 id="popup-title"></h4>
         <p id="popup-message"></p>
         <div id="popup-button-container">
-            <button id="popup-close-button" class="popup-button">OK</button>
+            <button id="popup-close-button" class="popup-button"></button>
+            <button id="popup-exit-button" class="popup-button" style="display: none;"></button>
         </div>
+    </div>
+
+    <div id="loading-popup">
+        <p id="loading-message"></p>
     </div>
 
     <script>
         const videoElement = document.getElementById('myVideo');
         const messageContainer = document.getElementById('message-container');
-        const optionsButton = document.getElementById('options-button');
-        const optionsPanel = document.getElementById('options-panel');
+        const messageElement = document.getElementById('message');
+        const settingsButton = document.getElementById('settings-button');
+        const settingsPanel = document.getElementById('settings-panel');
         const closeButton = document.getElementById('close-button');
         const videoUpload = document.getElementById('video-upload');
         const videoUrlInput = document.getElementById('video-url-input');
@@ -266,6 +300,7 @@
         const urlInput = document.getElementById('url-input');
         const useIframeCheckbox = document.getElementById('use-iframe');
         const resetButton = document.getElementById('reset-button');
+        const languageSelect = document.getElementById('language-select');
         const iframeContainer = document.getElementById('iframe-container');
         const infoIframe = document.getElementById('info-iframe');
         const iframeOverlay = document.getElementById('iframe-overlay');
@@ -274,6 +309,9 @@
         const popupTitle = document.getElementById('popup-title');
         const popupMessage = document.getElementById('popup-message');
         const popupCloseButton = document.getElementById('popup-close-button');
+        const popupExitButton = document.getElementById('popup-exit-button');
+        const loadingPopup = document.getElementById('loading-popup');
+        const loadingMessage = document.getElementById('loading-message');
 
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
@@ -283,8 +321,89 @@
         let isPlaying = false;
         let idleTimer;
         let countdownTimer;
-        
-        // Setup IndexedDB
+
+        const translations = {
+            'en': {
+                'start_message': 'Tap the screen to start',
+                'settings_button': 'Settings',
+                'settings_title': 'Settings',
+                'upload_video_label': 'Upload Video:',
+                'video_url_label': 'Video URL:',
+                'always_use_url_label': 'Always use Video URL',
+                'guide_url_label': 'Guide URL:',
+                'use_iframe_label': 'Try to use iFrame (Beta)',
+                'language_label': 'Language:',
+                'reset_button': 'Reset to Default',
+                'close_button': 'Close',
+                'loading_message': 'Loading...',
+                'continue_browsing_message': 'Do you want to continue browsing? The page will be closed in [seconds] seconds. Click on the screen to cancel',
+                'playback_failed': 'Playback failed, please try again.',
+                'iframe_load_title': 'Load Failed',
+                'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.',
+                'popup_ok': 'OK',
+                'popup_exit': 'Exit'
+            },
+            'zh-tw': {
+                'start_message': '點擊螢幕開始',
+                'settings_button': '設定',
+                'settings_title': '設定',
+                'upload_video_label': '上傳影片：',
+                'video_url_label': '影片URL：',
+                'always_use_url_label': '永遠使用影片URL',
+                'guide_url_label': '導向URL：',
+                'use_iframe_label': '嘗試使用iFrame (Beta)',
+                'language_label': '語言：',
+                'reset_button': '重設為預設',
+                'close_button': '關閉',
+                'loading_message': '載入中...',
+                'continue_browsing_message': '您想繼續瀏覽嗎？頁面將在 [seconds] 秒後關閉。點擊螢幕取消',
+                'playback_failed': '播放失敗，請再試一次。',
+                'iframe_load_title': '載入失敗',
+                'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。將改為重新導向。',
+                'popup_ok': '確定',
+                'popup_exit': '退出'
+            },
+            'ja': {
+                'start_message': '画面をタップして開始',
+                'settings_button': '設定',
+                'settings_title': '設定',
+                'upload_video_label': '動画をアップロード:',
+                'video_url_label': '動画URL:',
+                'always_use_url_label': '常に動画URLを使用',
+                'guide_url_label': '誘導先URL:',
+                'use_iframe_label': 'iFrameの使用を試みる (Beta)',
+                'language_label': '言語:',
+                'reset_button': 'デフォルトに戻す',
+                'close_button': '閉じる',
+                'loading_message': 'ロード中...',
+                'continue_browsing_message': 'ブラウジングを続行しますか？ページは [seconds] 秒後に閉じます。画面をクリックしてキャンセル',
+                'playback_failed': '再生に失敗しました。もう一度お試しください。',
+                'iframe_load_title': '読み込み失敗',
+                'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。代わりにリダイレクトされます。',
+                'popup_ok': 'OK',
+                'popup_exit': '終了'
+            }
+        };
+
+        function setLanguage(lang) {
+            const t = translations[lang];
+            messageElement.textContent = t.start_message;
+            settingsButton.textContent = t.settings_button;
+            document.getElementById('settings-title').textContent = t.settings_title;
+            document.getElementById('upload-video-label').textContent = t.upload_video_label;
+            document.getElementById('video-url-label').textContent = t.video_url_label;
+            document.getElementById('always-use-url-label').textContent = t.always_use_url_label;
+            document.getElementById('guide-url-label').textContent = t.guide_url_label;
+            document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
+            document.getElementById('language-label').textContent = t.language_label;
+            resetButton.textContent = t.reset_button;
+            closeButton.textContent = t.close_button;
+            loadingMessage.textContent = t.loading_message;
+            document.getElementById('continue-browsing-message').textContent = t.continue_browsing_message;
+            document.getElementById('popup-close-button').textContent = t.popup_ok;
+            document.getElementById('popup-exit-button').textContent = t.popup_exit;
+        }
+
         const request = indexedDB.open(dbName, 1);
         
         request.onupgradeneeded = (event) => {
@@ -297,15 +416,18 @@
             loadSettings();
         };
 
-        // Show custom popup
-        function showCustomPopup(title, message) {
+        function showCustomPopup(title, message, showExit = false) {
             popupTitle.textContent = title;
             popupMessage.textContent = message;
+            popupExitButton.style.display = showExit ? 'inline-block' : 'none';
             customPopup.style.display = 'flex';
         }
-        
-        // Load settings from localStorage and IndexedDB
+
         function loadSettings() {
+            const savedLanguage = localStorage.getItem('saverloopLanguage') || 'zh-tw';
+            languageSelect.value = savedLanguage;
+            setLanguage(savedLanguage);
+
             const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
             if (savedRedirectUrl) {
                 urlInput.value = savedRedirectUrl;
@@ -343,8 +465,8 @@
             }
         }
         
-        // Save settings to localStorage and IndexedDB
         function saveSettings() {
+            localStorage.setItem('saverloopLanguage', languageSelect.value);
             localStorage.setItem('saverloopRedirectUrl', urlInput.value);
             localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
             localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
@@ -358,7 +480,6 @@
             }
         }
         
-        // Start video and fullscreen mode
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -376,44 +497,46 @@
                 console.error("Video playback failed: ", e);
                 messageContainer.style.display = 'block';
                 videoElement.style.display = 'none';
-                message.textContent = "Playback failed, please try again.";
+                message.textContent = translations[languageSelect.value].playback_failed;
                 isPlaying = false;
             });
         }
         
-        // Handle iframe loading with fallback
         function handleIframeLoad() {
+            loadingPopup.style.display = 'flex';
             infoIframe.src = urlInput.value;
             
-            // Wait a moment to allow the browser to attempt loading
-            setTimeout(() => {
-                try {
-                    // This will throw a SecurityError if the content is blocked
-                    if (infoIframe.contentWindow && infoIframe.contentWindow.document.body.children.length === 0 && infoIframe.src !== 'about:blank') {
-                        throw new Error('Iframe content is empty, likely due to security restrictions.');
-                    }
-                    // If we reach here, it loaded (or is still loading) without a security error
-                    iframeContainer.style.display = 'block';
-                    videoElement.style.display = 'none';
-                    startIdleTimer();
-                } catch (e) {
-                    console.error("Iframe load failed:", e);
-                    showCustomPopup('Load Failed', 'This website cannot be displayed in an iframe due to security restrictions. You will be redirected instead.');
-                    // Fallback to old behavior
-                    window.location.href = urlInput.value;
-                }
-            }, 500); // 500ms delay to allow browser to block the request
+            const loadTimer = setTimeout(() => {
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+            }, 5000);
+
+            infoIframe.onload = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                iframeContainer.style.display = 'block';
+                videoElement.style.display = 'none';
+                startIdleTimer();
+            };
+
+            infoIframe.onerror = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+            };
         }
 
-        // Idle detection
         function startIdleTimer() {
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => {
                 startCountdown();
-            }, 30000); // 30 seconds idle
+            }, 30000);
         }
         
         function resetIdleTimer() {
+            if (loadingPopup.style.display === 'flex') {
+                return;
+            }
             clearTimeout(idleTimer);
             startIdleTimer();
         }
@@ -440,19 +563,17 @@
             resetIdleTimer();
         }
         
-        // Reset to start interface
         function resetToStart() {
             isPlaying = false;
             videoElement.currentTime = 0;
             videoElement.pause();
             videoElement.style.display = 'none';
             messageContainer.style.display = 'block';
-            message.textContent = "Tap the screen to start";
+            message.textContent = translations[languageSelect.value].start_message;
         }
 
-        // Handle click event
         document.body.addEventListener('click', (event) => {
-            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex') {
+            if (optionsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex') {
                 return;
             }
             if (!isPlaying) {
@@ -473,47 +594,54 @@
                 }
             }
         });
+
+        document.addEventListener('fullscreenchange', exitFullscreenHandler);
+        document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
+
+        function exitFullscreenHandler() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!isFullscreen && isPlaying && useIframeCheckbox.checked) {
+                 handleIframeLoad();
+            }
+        }
         
-        // Handle iframe interface clicks
         iframeOverlay.addEventListener('click', (event) => {
             event.stopPropagation();
             cancelCountdown();
         });
         
-        // Handle iframe interface interactions
         iframeContainer.addEventListener('mousemove', resetIdleTimer);
         iframeContainer.addEventListener('touchstart', resetIdleTimer);
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
-        // Listen for video pause event
         videoElement.addEventListener('pause', () => {
             if (isPlaying && !useIframeCheckbox.checked) {
                 window.location.href = urlInput.value;
             }
         });
 
-        // Handle pageshow event
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
                 resetToStart();
             }
         });
 
-        // Open/close options panel
-        optionsButton.addEventListener('click', () => {
-            optionsPanel.style.display = 'flex';
+        settingsButton.addEventListener('click', () => {
+            settingsPanel.style.display = 'flex';
         });
 
         closeButton.addEventListener('click', () => {
             saveSettings();
-            optionsPanel.style.display = 'none';
+            settingsPanel.style.display = 'none';
         });
 
-        // Handle video upload
+        languageSelect.addEventListener('change', (event) => {
+            setLanguage(event.target.value);
+        });
+
         videoUpload.addEventListener('change', () => {
         });
 
-        // Handle reset button
         resetButton.addEventListener('click', () => {
             const transaction = db.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
@@ -529,14 +657,28 @@
             loadSettings();
         });
         
-        // Close custom popup
         popupCloseButton.addEventListener('click', () => {
             customPopup.style.display = 'none';
         });
 
-        // Prevent clicks on options panel from triggering background events
-        optionsPanel.addEventListener('click', (event) => {
+        popupExitButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+            resetToStart();
+        });
+
+        settingsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
+        });
+
+        // Mobile input zoom fix
+        const inputs = document.querySelectorAll('input[type="url"], input[type="text"]');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no');
+            });
+            input.addEventListener('blur', () => {
+                document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+            });
         });
     </script>
 </body>
