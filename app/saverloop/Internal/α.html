@@ -28,8 +28,8 @@
             z-index: 10;
         }
         #top-icon {
-            width: 120px; /* Adjusted icon size */
-            height: 120px; /* Adjusted icon size */
+            width: 120px;
+            height: 120px;
         }
         #message-container {
             position: absolute;
@@ -49,10 +49,17 @@
             z-index: 10;
         }
         #settings-button {
-            color: white;
+            color: black; /* Changed button text color to black */
+            background-color: white; /* Changed button background to white */
             font-size: 0.8em;
             cursor: pointer;
-            text-decoration: underline;
+            text-decoration: none; /* Removed underline */
+            padding: 8px 15px; /* Added padding to make it a button */
+            border-radius: 5px; /* Added border-radius for styling */
+            border: none;
+        }
+        #settings-button:hover {
+            opacity: 0.8;
         }
         #version {
             position: absolute;
