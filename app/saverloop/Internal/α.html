@@ -366,7 +366,7 @@
                 'guide_url_label': 'Guide URL:',
                 'use_iframe_label': 'Try to use iFrame (Beta)',
                 'language_label': 'Language:',
-                'device_event_detect_label': 'DeviceEventDetect(debug)',
+                'device_event_detect_label': 'Device Event Detection(debug)',
                 'notifications_api_button': 'NotificationsAPI(debug)',
                 'reset_button': 'Reset to Default',
                 'close_button': 'Close',
@@ -377,6 +377,8 @@
                 'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions.',
                 'notifications_title': 'Notification Not Supported',
                 'notifications_message': 'Your browser does not support Notifications API.',
+                'permission_denied_title': 'Permission Denied',
+                'permission_denied_message': 'You have denied access to device motion. Please enable it in your browser settings.',
                 'popup_ok': 'OK',
                 'popup_exit': 'Exit'
             },
@@ -401,6 +403,8 @@
                 'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。',
                 'notifications_title': '通知不支援',
                 'notifications_message': '你的瀏覽器不支援通知API。',
+                'permission_denied_title': '權限拒絕',
+                'permission_denied_message': '您已拒絕裝置動作的權限。請在瀏覽器設定中啟用。',
                 'popup_ok': '確定',
                 'popup_exit': '退出'
             },
@@ -414,7 +418,7 @@
                 'guide_url_label': '誘導先URL:',
                 'use_iframe_label': 'iFrameの使用を試みる (Beta)',
                 'language_label': '言語:',
-                'device_event_detect_label': '動作検出(debug)',
+                'device_event_detect_label': 'デバイス動作検出(debug)',
                 'notifications_api_button': '通知の送信(debug)',
                 'reset_button': 'デフォルトに戻す',
                 'close_button': '閉じる',
@@ -425,6 +429,8 @@
                 'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。',
                 'notifications_title': '通知非対応',
                 'notifications_message': 'お使いのブラウザは通知APIをサポートしていません。',
+                'permission_denied_title': '権限が拒否されました',
+                'permission_denied_message': 'デバイスの動作へのアクセスが拒否されました。ブラウザの設定で有効にしてください。',
                 'popup_ok': 'OK',
                 'popup_exit': '終了'
             }
@@ -627,7 +633,6 @@
         // Device Event Detection
         let motionStoppedTimer;
         function handleDeviceMotion(event) {
-            if (!deviceEventDetectCheckbox.checked) return;
             const acceleration = event.accelerationIncludingGravity;
             const sumOfAcceleration = Math.abs(acceleration.x) + Math.abs(acceleration.y) + Math.abs(acceleration.z);
             const isMoving = sumOfAcceleration > 0.5;
@@ -639,17 +644,29 @@
                 clearTimeout(motionStoppedTimer);
                 motionStoppedTimer = setTimeout(() => {
                     deviceEventPopup.style.display = 'none';
-                }, 500);
+                }, 1000); // Wait 1 second before hiding
             }
         }
 
         function toggleDeviceEventDetection() {
             if (deviceEventDetectCheckbox.checked) {
-                if (window.DeviceMotionEvent) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    // Handle iOS 13+ device motion permission
+                    DeviceMotionEvent.requestPermission().then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('devicemotion', handleDeviceMotion);
+                        } else {
+                            deviceEventDetectCheckbox.checked = false;
+                            showCustomPopup(translations[languageSelect.value].permission_denied_title, translations[languageSelect.value].permission_denied_message);
+                        }
+                    }).catch(console.error);
+                } else if (window.DeviceMotionEvent) {
+                    // Handle non-iOS devices that support DeviceMotionEvent
                     window.addEventListener('devicemotion', handleDeviceMotion);
                 } else {
-                    alert('DeviceMotion is not supported on this device.');
+                    // Browser does not support DeviceMotionEvent
                     deviceEventDetectCheckbox.checked = false;
+                    alert('DeviceMotion is not supported on this device.');
                 }
             } else {
                 window.removeEventListener('devicemotion', handleDeviceMotion);
@@ -754,6 +771,7 @@
             alwaysUseUrlCheckbox.checked = false;
             useIframeCheckbox.checked = false;
             deviceEventDetectCheckbox.checked = false;
+            toggleDeviceEventDetection();
 
             localStorage.clear();
             loadSettings();
