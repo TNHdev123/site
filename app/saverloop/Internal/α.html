@@ -28,8 +28,8 @@
             z-index: 10;
         }
         #top-icon {
-            width: 80px;
-            height: 80px;
+            width: 120px; /* Adjusted icon size */
+            height: 120px; /* Adjusted icon size */
         }
         #message-container {
             position: absolute;
@@ -502,7 +502,6 @@
         }
         
         function handleIframeLoad() {
-            // Hide everything else and show loading popup
             iframeContainer.style.display = 'none';
             videoElement.style.display = 'none';
             loadingPopup.style.display = 'flex';
@@ -535,7 +534,7 @@
         }
         
         function resetIdleTimer() {
-            if (loadingPopup.style.display === 'flex') {
+            if (loadingPopup.style.display === 'flex' || customPopup.style.display === 'flex') {
                 return;
             }
             clearTimeout(idleTimer);
@@ -582,15 +581,14 @@
                 startVideo();
             } else {
                 if (useIframeCheckbox.checked) {
-                    // Stop video and then handle iFrame
-                    videoElement.currentTime = 0;
-                    videoElement.pause();
-                    videoElement.style.display = 'none';
                     if (document.exitFullscreen) {
                         document.exitFullscreen();
                     } else if (document.webkitExitFullscreen) {
                         document.webkitExitFullscreen();
                     }
+                    videoElement.currentTime = 0;
+                    videoElement.pause();
+                    videoElement.style.display = 'none';
                     handleIframeLoad();
                 } else {
                     videoElement.pause();
