@@ -119,6 +119,8 @@
             cursor: pointer;
             color: white;
             font-size: 1em;
+            /* New: Password buttons style */
+            background-color: #555; 
         }
         #close-button {
             width: 100%;
@@ -172,6 +174,7 @@
             height: 100%;
             border: none;
         }
+        /* Custom Popup (General Use) */
         #custom-popup {
             position: absolute;
             top: 50%;
@@ -233,6 +236,56 @@
             z-index: 40;
             color: white;
         }
+        /* Password Setup/Input Popups */
+        .password-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            color: white;
+        }
+        .password-popup h4 {
+            margin: 0;
+        }
+        .password-popup input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .password-popup .error-message {
+            color: #d9534f;
+            font-size: 0.8em;
+            height: 1.2em;
+        }
+        .password-popup .button-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .password-popup .button-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
     </style>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
@@ -249,7 +302,7 @@
     <div id="settings-container">
         <button id="settings-button"></button>
     </div>
-    <div id="version">version: Internal_α0.8</div>
+    <div id="version">version: Internal_α0.9</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="iframe-container">
@@ -262,6 +315,10 @@
     <div id="settings-panel">
         <div id="settings-panel-top">
             <h3 id="settings-title"></h3>
+            
+            <button id="set-password-button"></button>
+            <button id="turn-off-password-button"></button>
+            
             <label for="video-upload" id="upload-video-label"></label>
             <input type="file" id="video-upload" accept="video/*">
             
@@ -300,6 +357,27 @@
         </div>
     </div>
 
+    <div id="password-setup-popup" class="password-popup">
+        <h4 id="setup-popup-title"></h4>
+        <p id="setup-popup-prompt"></p>
+        <input type="password" id="new-password-input" maxlength="30" placeholder="Password">
+        <div id="setup-error-message" class="error-message"></div>
+        <div class="button-container">
+            <button id="setup-cancel-button"></button>
+            <button id="setup-confirm-button"></button>
+        </div>
+    </div>
+
+    <div id="password-input-popup" class="password-popup">
+        <h4 id="input-popup-title"></h4>
+        <input type="password" id="current-password-input" placeholder="Password">
+        <div id="input-error-message" class="error-message"></div>
+        <div class="button-container">
+            <button id="input-cancel-button"></button>
+            <button id="input-confirm-button"></button>
+        </div>
+    </div>
+    
     <div id="custom-popup">
         <h4 id="popup-title"></h4>
         <p id="popup-message"></p>
@@ -334,7 +412,6 @@
         const iframeContainer = document.getElementById('iframe-container');
         const infoIframe = document.getElementById('info-iframe');
         const iframeOverlay = document.getElementById('iframe-overlay');
-        const countdownElement = document.getElementById('countdown');
         const customPopup = document.getElementById('custom-popup');
         const popupTitle = document.getElementById('popup-title');
         const popupMessage = document.getElementById('popup-message');
@@ -346,10 +423,28 @@
         const deviceEventPopup = document.getElementById('device-event-popup');
         const notificationsApiButton = document.getElementById('notifications-api-button');
 
+        // New Password Elements
+        const setPasswordButton = document.getElementById('set-password-button');
+        const turnOffPasswordButton = document.getElementById('turn-off-password-button');
+        const passwordSetupPopup = document.getElementById('password-setup-popup');
+        const passwordInputPopup = document.getElementById('password-input-popup');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const currentPasswordInput = document.getElementById('current-password-input');
+        const setupError = document.getElementById('setup-error-message');
+        const inputError = document.getElementById('input-error-message');
+        const setupCancelButton = document.getElementById('setup-cancel-button');
+        const setupConfirmButton = document.getElementById('setup-confirm-button');
+        const inputCancelButton = document.getElementById('input-cancel-button');
+        const inputConfirmButton = document.getElementById('input-confirm-button');
+        const setupPopupTitle = document.getElementById('setup-popup-title');
+        const setupPopupPrompt = document.getElementById('setup-popup-prompt');
+        const inputPopupTitle = document.getElementById('input-popup-title');
+
         const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
         const defaultRedirectUrl = "https://www.apple.com";
         const dbName = 'SaverLoopDB';
         const storeName = 'videos';
+        const PASSWORD_KEY = 'saverloopPassword'; // New: Key for storing password
         let db;
         let isPlaying = false;
         let idleTimer;
@@ -368,6 +463,18 @@
                 'language_label': 'Language:',
                 'device_event_detect_label': 'Device Event Detection(debug)',
                 'notifications_api_button': 'NotificationsAPI(debug)',
+                'set_password': 'Set up Password',
+                'change_password': 'Change Password',
+                'turn_off_password': 'Turn off Password',
+                'password_setup_title': 'Set/Change Password',
+                'password_input_title': 'Enter Password',
+                'password_prompt': 'Enter a new password (A-Z, 0-9, Punctuation only, max 30 chars)',
+                'password_confirm': 'Confirm',
+                'password_cancel': 'Cancel',
+                'password_error_invalid_chars': 'Invalid characters. Use A-Z, 0-9, and English punctuation.',
+                'password_error_empty': 'Password cannot be empty or contain only spaces.',
+                'password_error_length': 'Password must be 30 characters or less.',
+                'password_error_incorrect': 'Incorrect Password.',
                 'reset_button': 'Reset to Default',
                 'close_button': 'Close',
                 'loading_message': 'Loading...',
@@ -394,6 +501,18 @@
                 'language_label': '語言：',
                 'device_event_detect_label': '動作偵測(debug)',
                 'notifications_api_button': '發送通知(debug)',
+                'set_password': '設定密碼',
+                'change_password': '更改密碼',
+                'turn_off_password': '關閉密碼',
+                'password_setup_title': '設定/更改密碼',
+                'password_input_title': '輸入密碼',
+                'password_prompt': '請輸入新密碼 (限英數字元與英文標點符號，最多30字)',
+                'password_confirm': '確認',
+                'password_cancel': '取消',
+                'password_error_invalid_chars': '字元無效。請使用英數字元和英文標點符號。',
+                'password_error_empty': '密碼不可留空或只包含空格。',
+                'password_error_length': '密碼必須在 30 個字元以內。',
+                'password_error_incorrect': '密碼錯誤。',
                 'reset_button': '重設為預設',
                 'close_button': '關閉',
                 'loading_message': '載入中...',
@@ -420,6 +539,18 @@
                 'language_label': '言語:',
                 'device_event_detect_label': 'デバイス動作検出(debug)',
                 'notifications_api_button': '通知の送信(debug)',
+                'set_password': 'パスワードを設定',
+                'change_password': 'パスワードを変更',
+                'turn_off_password': 'パスワードを解除',
+                'password_setup_title': 'パスワードの設定/変更',
+                'password_input_title': 'パスワードを入力',
+                'password_prompt': '新しいパスワードを入力してください (英数字、句読点のみ、最大30文字)',
+                'password_confirm': '確認',
+                'password_cancel': 'キャンセル',
+                'password_error_invalid_chars': '無効な文字が含まれています。英数字と句読点のみ使用してください。',
+                'password_error_empty': 'パスワードは空またはスペースのみにできません。',
+                'password_error_length': 'パスワードは30文字以下である必要があります。',
+                'password_error_incorrect': 'パスワードが違います。',
                 'reset_button': 'デフォルトに戻す',
                 'close_button': '閉じる',
                 'loading_message': 'ロード中...',
@@ -454,8 +585,145 @@
             loadingMessage.textContent = t.loading_message;
             document.getElementById('popup-close-button').textContent = t.popup_ok;
             document.getElementById('popup-exit-button').textContent = t.popup_exit;
+            
+            // New: Password button labels
+            setupConfirmButton.textContent = t.password_confirm;
+            setupCancelButton.textContent = t.password_cancel;
+            inputConfirmButton.textContent = t.password_confirm;
+            inputCancelButton.textContent = t.password_cancel;
+            setupPopupTitle.textContent = t.password_setup_title;
+            setupPopupPrompt.textContent = t.password_prompt;
+            inputPopupTitle.textContent = t.password_input_title;
+
+            updatePasswordButtonText();
         }
 
+        function updatePasswordButtonText() {
+            const lang = languageSelect.value;
+            const t = translations[lang];
+            if (getPassword()) {
+                setPasswordButton.textContent = t.change_password;
+                turnOffPasswordButton.style.display = 'block';
+            } else {
+                setPasswordButton.textContent = t.set_password;
+                turnOffPasswordButton.style.display = 'none';
+            }
+            turnOffPasswordButton.textContent = t.turn_off_password;
+        }
+
+        // New: Password Logic
+        function getPassword() {
+            return localStorage.getItem(PASSWORD_KEY);
+        }
+        
+        function savePassword(pwd) {
+            localStorage.setItem(PASSWORD_KEY, pwd);
+        }
+        
+        function removePassword() {
+            localStorage.removeItem(PASSWORD_KEY);
+        }
+        
+        function isValidPassword(pwd) {
+            const t = translations[languageSelect.value];
+            const trimmedPwd = pwd.trim();
+            
+            if (!pwd || trimmedPwd === "") {
+                return t.password_error_empty;
+            }
+            if (pwd.length > 30) {
+                return t.password_error_length;
+            }
+            // Check for English letters (A-Z, a-z), numbers (0-9), and common English punctuation (.,!?-@#$%^&*()_+={}|:;"'<>/`~).
+            // This regex allows any character used in basic English text and programming/URLs, but excludes most non-English/non-ASCII characters.
+            const allowedPattern = /^[a-zA-Z0-9\s.,!?'"@#$%^&*()_+={}|:;"'<>/`~\[\]\-]*$/;
+            
+            // The prompt says "不接受空格/留空等等" but also "只接受英文字母/數字/英文標點符號的字元". 
+            // The validation below explicitly checks for length/empty/spaces, so we can check for allowed characters without including spaces in the character set here, as spaces should be treated as part of the "empty" check, but the user might enter a valid password and then a space, which is still invalid by the rules.
+            // Let's use a simpler pattern based on the stated character limit and re-verify the "no space/empty" rule.
+            
+            // Re-evaluating: The user says "不接受空格/留空等等". The easiest way to handle this is to check if the password contains any whitespace, OR if it's empty after trimming.
+            if (/\s/.test(pwd) || trimmedPwd !== pwd) {
+                 return t.password_error_empty; // Treating whitespace anywhere as invalid based on the strong "不接受空格/留空等等" rule.
+            }
+            
+            // Final check on allowed characters (A-Z, 0-9, and English punctuation)
+            const strictPattern = /^[a-zA-Z0-9!@#$%^&*()_+=\-\[\]{}|\\:;"'<>,.?/~`]+$/;
+            if (!strictPattern.test(pwd)) {
+                 return t.password_error_invalid_chars;
+            }
+            
+            return true; // Valid
+        }
+
+        function showPasswordSetup(isChange = false) {
+            newPasswordInput.value = '';
+            setupError.textContent = '';
+            
+            const t = translations[languageSelect.value];
+            setupPopupTitle.textContent = t.password_setup_title;
+            setupPopupPrompt.textContent = t.password_prompt;
+            
+            passwordSetupPopup.style.display = 'flex';
+            passwordInputPopup.style.display = 'none';
+
+            // Remove existing listener to prevent duplicates
+            setupConfirmButton.replaceWith(setupConfirmButton.cloneNode(true));
+            const newSetupConfirmButton = document.getElementById('setup-confirm-button');
+            
+            newSetupConfirmButton.addEventListener('click', handleSetPassword);
+            
+            newPasswordInput.focus();
+        }
+        
+        function handleSetPassword() {
+            const newPwd = newPasswordInput.value;
+            const validationResult = isValidPassword(newPwd);
+            
+            if (validationResult === true) {
+                savePassword(newPwd);
+                passwordSetupPopup.style.display = 'none';
+                updatePasswordButtonText();
+            } else {
+                setupError.textContent = validationResult;
+            }
+        }
+
+        function showPasswordInput(successCallback, failCallback = () => {}) {
+            currentPasswordInput.value = '';
+            inputError.textContent = '';
+            passwordInputPopup.style.display = 'flex';
+            passwordSetupPopup.style.display = 'none';
+
+            // Remove existing listener to prevent duplicates
+            inputConfirmButton.replaceWith(inputConfirmButton.cloneNode(true));
+            const newConfirmButton = document.getElementById('input-confirm-button');
+            
+            newConfirmButton.addEventListener('click', () => {
+                const currentPwd = currentPasswordInput.value;
+                const storedPwd = getPassword();
+                const t = translations[languageSelect.value];
+
+                if (currentPwd === storedPwd) {
+                    passwordInputPopup.style.display = 'none';
+                    successCallback();
+                } else {
+                    inputError.textContent = t.password_error_incorrect;
+                    failCallback();
+                }
+            });
+            
+            inputCancelButton.replaceWith(inputCancelButton.cloneNode(true));
+            document.getElementById('input-cancel-button').addEventListener('click', () => {
+                passwordInputPopup.style.display = 'none';
+                failCallback();
+            });
+
+            currentPasswordInput.focus();
+        }
+
+
+        // IndexedDB and Settings Loading
         const request = indexedDB.open(dbName, 1);
         
         request.onupgradeneeded = (event) => {
@@ -500,6 +768,8 @@
 
             const savedDeviceEventDetect = localStorage.getItem('saverloopDeviceEventDetect');
             deviceEventDetectCheckbox.checked = savedDeviceEventDetect === 'true';
+
+            updatePasswordButtonText();
             
             if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
                 videoElement.src = videoUrlInput.value;
@@ -675,7 +945,8 @@
         }
         
         document.body.addEventListener('click', (event) => {
-            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex' || deviceEventPopup.style.display === 'flex') {
+            // Check if any critical popups are open
+            if (settingsPanel.style.display === 'flex' || iframeContainer.style.display === 'block' || customPopup.style.display === 'flex' || loadingPopup.style.display === 'flex' || deviceEventPopup.style.display === 'flex' || passwordInputPopup.style.display === 'flex' || passwordSetupPopup.style.display === 'flex') {
                 return;
             }
             if (!isPlaying) {
@@ -728,9 +999,50 @@
             }
         });
 
+        // Main Settings Button Handler (with Password Protection)
         settingsButton.addEventListener('click', () => {
-            settingsPanel.style.display = 'flex';
+            if (getPassword()) {
+                showPasswordInput(
+                    () => { settingsPanel.style.display = 'flex'; }, // Success: Open settings
+                    () => { /* Failure: Do nothing, popup closed by handler */ }
+                );
+            } else {
+                settingsPanel.style.display = 'flex';
+            }
         });
+        
+        // Password Button Event Listeners
+        setPasswordButton.addEventListener('click', () => {
+            if (getPassword()) {
+                // Change Password flow: Ask for current password first
+                showPasswordInput(
+                    () => { showPasswordSetup(true); }, // Success: Open Setup/Change window
+                    () => { /* Failure: Do nothing */ }
+                );
+            } else {
+                // Set Password flow: Go straight to Setup window
+                showPasswordSetup(false);
+            }
+        });
+        
+        turnOffPasswordButton.addEventListener('click', () => {
+            if (!getPassword()) return; // Do nothing if no password is set
+            
+            // Turn off Password flow: Ask for current password
+            showPasswordInput(
+                () => { // Success: Delete password
+                    removePassword();
+                    updatePasswordButtonText();
+                },
+                () => { /* Failure: Do nothing */ }
+            );
+        });
+
+        setupCancelButton.addEventListener('click', () => {
+            passwordSetupPopup.style.display = 'none';
+            setupError.textContent = '';
+        });
+
 
         closeButton.addEventListener('click', () => {
             saveSettings();
@@ -767,6 +1079,9 @@
             store.delete('userVideo');
             videoElement.src = defaultVideoUrl;
             
+            // New: Reset password
+            removePassword();
+            
             videoUrlInput.value = "";
             urlInput.value = defaultRedirectUrl;
             alwaysUseUrlCheckbox.checked = false;
@@ -775,7 +1090,7 @@
             toggleDeviceEventDetection();
 
             localStorage.clear();
-            loadSettings();
+            loadSettings(); // Reloads all settings, including language and button text
         });
         
         popupCloseButton.addEventListener('click', () => {
@@ -792,6 +1107,13 @@
 
         settingsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
+        });
+        
+        // Prevent closing settings if a password popup is open
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && (passwordInputPopup.style.display === 'flex' || passwordSetupPopup.style.display === 'flex')) {
+                event.preventDefault();
+            }
         });
 
         // Mobile input zoom fix
