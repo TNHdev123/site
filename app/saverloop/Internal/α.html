@@ -307,7 +307,7 @@
     <div id="settings-container">
         <button id="settings-button"></button>
     </div>
-    <div id="version">version: Internal_α0.10</div>
+    <div id="version">version: Internal_α0.10.1</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="iframe-container">
@@ -494,7 +494,7 @@
         let wakeLockSentinel = null;
         let newPasswordTentative = '';
         
-        // BUG FIX 2: 全域變數用於儲存密碼輸入成功後的回調函數
+        // 全域變數用於儲存密碼輸入成功後的回調函數
         let currentPasswordSuccessCallback = () => {};
 
         const translations = {
@@ -733,7 +733,7 @@
             if (!pwd || trimmedPwd === "") {
                 return t.password_error_empty;
             }
-            // Check for whitespace anywhere (based on "不接受空格/留空等等" rule)
+            // Check for whitespace anywhere
             if (/\s/.test(pwd)) {
                  return t.password_error_empty;
             }
@@ -802,7 +802,7 @@
             }
         }
 
-        // BUG FIX 2: 使用全域回調函數來解決動態監聽器替換可能導致的錯誤
+        // 使用全域回調函數來解決動態監聽器替換可能導致的錯誤
         function showPasswordInput(successCallback, failCallback = () => {}) {
             currentPasswordInput.value = '';
             inputError.textContent = '';
@@ -814,30 +814,13 @@
             // 替換 inputCancelButton 監聽器，確保執行提供的 failCallback
             inputCancelButton.replaceWith(inputCancelButton.cloneNode(true));
             document.getElementById('input-cancel-button').addEventListener('click', (event) => {
-                event.stopPropagation(); // BUG FIX 3b: 防止誤觸
+                event.stopPropagation(); // 防止誤觸
                 passwordInputPopup.style.display = 'none';
                 failCallback(); 
             });
 
             currentPasswordInput.focus();
         }
-
-        // BUG FIX 2: 獨立的密碼確認按鈕監聽器，使用全域回調函數
-        inputConfirmButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // BUG FIX 3b: 防止誤觸
-            const currentPwd = currentPasswordInput.value;
-            const storedPwd = getPassword();
-            const t = translations[languageSelect.value];
-
-            if (currentPwd === storedPwd) {
-                passwordInputPopup.style.display = 'none';
-                // 執行儲存的成功回調
-                currentPasswordSuccessCallback(); 
-            } else {
-                inputError.textContent = t.password_error_incorrect;
-            }
-        });
-
 
         // --- IndexedDB and Settings Loading ---
         const request = indexedDB.open(dbName, 1);
@@ -931,6 +914,7 @@
             }
         }
         
+        // BUG FIX: 影片播放和全螢幕的同步問題
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -940,15 +924,30 @@
 
             videoElement.muted = muteVideoCheckbox.checked;
 
-            videoElement.play().then(() => {
-                if (videoElement.requestFullscreen) {
-                    videoElement.requestFullscreen();
-                } else if (videoElement.webkitEnterFullscreen) {
-                    videoElement.webkitEnterFullscreen();
-                }
-                
-                acquireWakeLock();
+            // 1. 儲存全螢幕的 Promise
+            let fullscreenPromise = Promise.resolve();
+            if (videoElement.requestFullscreen) {
+                fullscreenPromise = videoElement.requestFullscreen();
+            } else if (videoElement.webkitEnterFullscreen) {
+                // webkitEnterFullscreen is synchronous and does not return a Promise,
+                // so we rely on the play Promise chain to handle it.
+                videoElement.webkitEnterFullscreen();
+            }
 
+            // 2. 啟動播放並等待全螢幕完成
+            videoElement.play().then(() => {
+                // 播放成功，等待全螢幕完成 (如果適用)
+                return fullscreenPromise;
+            }).then(() => {
+                // 全螢幕完成後，再次檢查是否需要播放 (這是修復的核心)
+                if (videoElement.paused) {
+                    console.log('Video paused after fullscreen transition, re-attempting play...');
+                    // 再次嘗試播放，解決 PWA 下卡住的問題
+                    return videoElement.play(); 
+                }
+            }).then(() => {
+                // 播放和全螢幕都成功了，鎖定螢幕
+                acquireWakeLock();
             }).catch(e => {
                 console.error("Video playback failed: ", e);
                 messageContainer.style.display = 'block';
@@ -1124,14 +1123,14 @@
             newPasswordTentative = '';
         });
         
-        // BUG FIX 3: 關閉按鈕事件處理
+        // 關閉按鈕事件處理 (阻止誤觸播放)
         closeButton.addEventListener('click', (event) => {
             event.stopPropagation(); // 阻止事件冒泡到 document.body，防止誤觸播放
             saveSettings();
             settingsPanel.style.display = 'none';
         });
 
-        // BUG FIX 3b: 阻止密碼彈出視窗的點擊事件冒泡
+        // 阻止密碼彈出視窗的點擊事件冒泡
         passwordSetupPopup.addEventListener('click', (e) => e.stopPropagation());
         passwordInputPopup.addEventListener('click', (e) => e.stopPropagation());
         passwordConfirmPopup.addEventListener('click', (e) => e.stopPropagation());
@@ -1157,11 +1156,10 @@
         iframeContainer.addEventListener('touchstart', resetIdleTimer);
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
-        // BUG FIX 1: 影片暫停後導向邏輯
+        // 影片暫停後導向邏輯
         videoElement.addEventListener('pause', () => {
             releaseWakeLock(); 
             if (isPlaying && !useIframeCheckbox.checked) {
-                // 修正：立即清除 isPlaying 狀態
                 isPlaying = false; 
                 window.location.href = urlInput.value;
             }
@@ -1213,6 +1211,30 @@
                 deviceEventPopup.style.display = 'none';
             }
         }
+        
+        // 其他監聽器
+        resetButton.addEventListener('click', () => {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete('userVideo');
+            videoElement.src = defaultVideoUrl;
+            
+            removePassword();
+            
+            videoUrlInput.value = "";
+            urlInput.value = defaultRedirectUrl;
+            alwaysUseUrlCheckbox.checked = false;
+            useIframeCheckbox.checked = false;
+            deviceEventDetectCheckbox.checked = false;
+            wakeLockCheckbox.checked = false;
+            muteVideoCheckbox.checked = false;
+
+            toggleDeviceEventDetection();
+            releaseWakeLock();
+
+            localStorage.clear();
+            loadSettings();
+        });
 
         languageSelect.addEventListener('change', (event) => {
             setLanguage(event.target.value);
@@ -1248,6 +1270,21 @@
 
         settingsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
+        });
+
+        // 密碼輸入的確認按鈕 (使用全域回調函數)
+        inputConfirmButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            const currentPwd = currentPasswordInput.value;
+            const storedPwd = getPassword();
+            const t = translations[languageSelect.value];
+
+            if (currentPwd === storedPwd) {
+                passwordInputPopup.style.display = 'none';
+                currentPasswordSuccessCallback(); 
+            } else {
+                inputError.textContent = t.password_error_incorrect;
+            }
         });
 
         // 密碼設定/更改的確認按鈕
