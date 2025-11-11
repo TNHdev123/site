@@ -307,7 +307,7 @@
     <div id="settings-container">
         <button id="settings-button"></button>
     </div>
-    <div id="version">version: Internal_α0.10</div>
+    <div id="version">version: Internal_α0.10.1</div>
     <video id="myVideo" playsinline loop></video>
 
     <div id="iframe-container">
@@ -466,7 +466,7 @@
         const setupPopupPrompt = document.getElementById('setup-popup-prompt');
         const inputPopupTitle = document.getElementById('input-popup-title');
         
-        // 新增: 密碼驗證元素
+        // 密碼驗證元素
         const passwordConfirmPopup = document.getElementById('password-confirm-popup');
         const confirmPasswordInput = document.getElementById('confirm-password-input');
         const confirmError = document.getElementById('confirm-error-message');
@@ -475,7 +475,7 @@
         const confirmPopupTitle = document.getElementById('confirm-popup-title');
         const confirmPopupPrompt = document.getElementById('confirm-popup-prompt');
 
-        // 新增: Wake Lock 和 Mute Video 元素
+        // Wake Lock 和 Mute Video 元素
         const wakeLockCheckbox = document.getElementById('wake-lock-enabled');
         const muteVideoCheckbox = document.getElementById('mute-video-enabled');
 
@@ -484,15 +484,18 @@
         const dbName = 'SaverLoopDB';
         const storeName = 'videos';
         const PASSWORD_KEY = 'saverloopPassword';
-        const WAKE_LOCK_KEY = 'saverloopWakeLock'; // 新增: Wake Lock key
-        const MUTE_VIDEO_KEY = 'saverloopMuteVideo'; // 新增: Mute Video key
+        const WAKE_LOCK_KEY = 'saverloopWakeLock';
+        const MUTE_VIDEO_KEY = 'saverloopMuteVideo';
 
         let db;
         let isPlaying = false;
         let idleTimer;
         let countdownTimer;
-        let wakeLockSentinel = null; // Wake Lock 物件
-        let newPasswordTentative = ''; // 用於密碼驗證的第一步儲存
+        let wakeLockSentinel = null;
+        let newPasswordTentative = '';
+        
+        // BUG FIX 2: 全域變數用於儲存密碼輸入成功後的回調函數
+        let currentPasswordSuccessCallback = () => {};
 
         const translations = {
             'en': {
@@ -510,20 +513,20 @@
                 'set_password': 'Set up Password',
                 'change_password': 'Change Password',
                 'turn_off_password': 'Turn off Password',
-                'wake_lock_label': 'Always Prevent Screen Lock', // 新增
-                'mute_video_label': 'Mute Video (Beta)', // 新增
+                'wake_lock_label': 'Always Prevent Screen Lock',
+                'mute_video_label': 'Mute Video (Beta)',
                 'password_setup_title': 'Set/Change Password',
                 'password_input_title': 'Enter Password',
-                'password_confirm_title': 'Confirm New Password', // 新增
+                'password_confirm_title': 'Confirm New Password',
                 'password_prompt': 'Enter a new password (A-Z, 0-9, Punctuation only, max 30 chars)',
-                'password_confirm_prompt': 'Please re-enter the new password.', // 新增
+                'password_confirm_prompt': 'Please re-enter the new password.',
                 'password_confirm': 'Confirm',
                 'password_cancel': 'Cancel',
                 'password_error_invalid_chars': 'Invalid characters. Use A-Z, 0-9, and English punctuation.',
                 'password_error_empty': 'Password cannot be empty or contain spaces.',
                 'password_error_length': 'Password must be 30 characters or less.',
                 'password_error_incorrect': 'Incorrect Password.',
-                'password_error_mismatch': 'Passwords do not match.', // 新增
+                'password_error_mismatch': 'Passwords do not match.',
                 'reset_button': 'Reset to Default',
                 'close_button': 'Close',
                 'loading_message': 'Loading...',
@@ -553,20 +556,20 @@
                 'set_password': '設定密碼',
                 'change_password': '更改密碼',
                 'turn_off_password': '關閉密碼',
-                'wake_lock_label': '永遠防止螢幕鎖定', // 新增
-                'mute_video_label': '靜音影片 (Beta)', // 新增
+                'wake_lock_label': '永遠防止螢幕鎖定',
+                'mute_video_label': '靜音影片 (Beta)',
                 'password_setup_title': '設定/更改密碼',
                 'password_input_title': '輸入密碼',
-                'password_confirm_title': '確認新密碼', // 新增
+                'password_confirm_title': '確認新密碼',
                 'password_prompt': '請輸入新密碼 (限英數字元與英文標點符號，最多30字)',
-                'password_confirm_prompt': '請再次輸入新密碼。', // 新增
+                'password_confirm_prompt': '請再次輸入新密碼。',
                 'password_confirm': '確認',
                 'password_cancel': '取消',
                 'password_error_invalid_chars': '字元無效。請使用英數字元和英文標點符號。',
                 'password_error_empty': '密碼不可留空或包含空格。',
                 'password_error_length': '密碼必須在 30 個字元以內。',
                 'password_error_incorrect': '密碼錯誤。',
-                'password_error_mismatch': '兩次輸入的密碼不符。', // 新增
+                'password_error_mismatch': '兩次輸入的密碼不符。',
                 'reset_button': '重設為預設',
                 'close_button': '關閉',
                 'loading_message': '載入中...',
@@ -596,20 +599,20 @@
                 'set_password': 'パスワードを設定',
                 'change_password': 'パスワードを変更',
                 'turn_off_password': 'パスワードを解除',
-                'wake_lock_label': '常に画面ロックを防止', // 新增
-                'mute_video_label': '動画をミュート (Beta)', // 新增
+                'wake_lock_label': '常に画面ロックを防止',
+                'mute_video_label': '動画をミュート (Beta)',
                 'password_setup_title': 'パスワードの設定/変更',
                 'password_input_title': 'パスワードを入力',
-                'password_confirm_title': '新しいパスワードを確認', // 新增
+                'password_confirm_title': '新しいパスワードを確認',
                 'password_prompt': '新しいパスワードを入力してください (英数字、句読点のみ、最大30文字)',
-                'password_confirm_prompt': 'もう一度新しいパスワードを入力してください。', // 新增
+                'password_confirm_prompt': 'もう一度新しいパスワードを入力してください。',
                 'password_confirm': '確認',
                 'password_cancel': 'キャンセル',
                 'password_error_invalid_chars': '無効な文字が含まれています。英数字と句読点のみ使用してください。',
                 'password_error_empty': 'パスワードは空またはスペースのみにできません。',
                 'password_error_length': 'パスワードは30文字以下である必要があります。',
                 'password_error_incorrect': 'パスワードが違います。',
-                'password_error_mismatch': 'パスワードが一致しません。', // 新增
+                'password_error_mismatch': 'パスワードが一致しません。',
                 'reset_button': 'デフォルトに戻す',
                 'close_button': '閉じる',
                 'loading_message': 'ロード中...',
@@ -650,18 +653,18 @@
             setupCancelButton.textContent = t.password_cancel;
             inputConfirmButton.textContent = t.password_confirm;
             inputCancelButton.textContent = t.password_cancel;
-            confirmConfirmButton.textContent = t.password_confirm; // 新增
-            confirmCancelButton.textContent = t.password_cancel; // 新增
+            confirmConfirmButton.textContent = t.password_confirm;
+            confirmCancelButton.textContent = t.password_cancel;
 
             setupPopupTitle.textContent = t.password_setup_title;
             setupPopupPrompt.textContent = t.password_prompt;
             inputPopupTitle.textContent = t.password_input_title;
-            confirmPopupTitle.textContent = t.password_confirm_title; // 新增
-            confirmPopupPrompt.textContent = t.password_confirm_prompt; // 新增
+            confirmPopupTitle.textContent = t.password_confirm_title;
+            confirmPopupPrompt.textContent = t.password_confirm_prompt;
 
             // New feature labels
-            document.getElementById('wake-lock-label').textContent = t.wake_lock_label; // 新增
-            document.getElementById('mute-video-label').textContent = t.mute_video_label; // 新增
+            document.getElementById('wake-lock-label').textContent = t.wake_lock_label;
+            document.getElementById('mute-video-label').textContent = t.mute_video_label;
 
             updatePasswordButtonText();
         }
@@ -679,7 +682,7 @@
             turnOffPasswordButton.textContent = t.turn_off_password;
         }
 
-        // --- Wake Lock Logic (新增) ---
+        // --- Wake Lock Logic ---
         async function acquireWakeLock() {
             if (!wakeLockCheckbox.checked || wakeLockSentinel !== null || !('wakeLock' in navigator)) return;
             try {
@@ -748,7 +751,7 @@
             return true; // Valid
         }
 
-        // 新增: 顯示密碼驗證視窗
+        // 顯示密碼驗證視窗
         function showPasswordConfirmation(firstPwd) {
             newPasswordTentative = firstPwd;
             confirmPasswordInput.value = '';
@@ -756,15 +759,11 @@
             
             passwordConfirmPopup.style.display = 'flex';
             passwordSetupPopup.style.display = 'none';
-
-            // Remove existing listener to prevent duplicates
-            confirmConfirmButton.replaceWith(confirmConfirmButton.cloneNode(true));
-            document.getElementById('confirm-confirm-button').addEventListener('click', handleConfirmPassword);
             
             confirmPasswordInput.focus();
         }
 
-        // 新增: 處理密碼驗證邏輯
+        // 處理密碼驗證邏輯
         function handleConfirmPassword() {
             const secondPwd = confirmPasswordInput.value;
             const t = translations[languageSelect.value];
@@ -787,10 +786,6 @@
             
             passwordSetupPopup.style.display = 'flex';
             passwordInputPopup.style.display = 'none';
-
-            // Remove existing listener to prevent duplicates
-            setupConfirmButton.replaceWith(setupConfirmButton.cloneNode(true));
-            document.getElementById('setup-confirm-button').addEventListener('click', handleSetPassword);
             
             newPasswordInput.focus();
         }
@@ -807,40 +802,42 @@
             }
         }
 
+        // BUG FIX 2: 使用全域回調函數來解決動態監聽器替換可能導致的錯誤
         function showPasswordInput(successCallback, failCallback = () => {}) {
             currentPasswordInput.value = '';
             inputError.textContent = '';
             passwordInputPopup.style.display = 'flex';
             passwordSetupPopup.style.display = 'none';
 
-            // Remove existing listener to prevent duplicates
-            inputConfirmButton.replaceWith(inputConfirmButton.cloneNode(true));
-            const newConfirmButton = document.getElementById('input-confirm-button');
+            currentPasswordSuccessCallback = successCallback;
             
-            newConfirmButton.addEventListener('click', (event) => {
-                event.stopPropagation(); // 防止誤觸
-                const currentPwd = currentPasswordInput.value;
-                const storedPwd = getPassword();
-                const t = translations[languageSelect.value];
-
-                if (currentPwd === storedPwd) {
-                    passwordInputPopup.style.display = 'none';
-                    successCallback();
-                } else {
-                    inputError.textContent = t.password_error_incorrect;
-                    failCallback();
-                }
-            });
-            
+            // 替換 inputCancelButton 監聽器，確保執行提供的 failCallback
             inputCancelButton.replaceWith(inputCancelButton.cloneNode(true));
             document.getElementById('input-cancel-button').addEventListener('click', (event) => {
-                event.stopPropagation(); // 防止誤觸
+                event.stopPropagation(); // BUG FIX 3b: 防止誤觸
                 passwordInputPopup.style.display = 'none';
-                failCallback();
+                failCallback(); 
             });
 
             currentPasswordInput.focus();
         }
+
+        // BUG FIX 2: 獨立的密碼確認按鈕監聽器，使用全域回調函數
+        inputConfirmButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // BUG FIX 3b: 防止誤觸
+            const currentPwd = currentPasswordInput.value;
+            const storedPwd = getPassword();
+            const t = translations[languageSelect.value];
+
+            if (currentPwd === storedPwd) {
+                passwordInputPopup.style.display = 'none';
+                // 執行儲存的成功回調
+                currentPasswordSuccessCallback(); 
+            } else {
+                inputError.textContent = t.password_error_incorrect;
+            }
+        });
+
 
         // --- IndexedDB and Settings Loading ---
         const request = indexedDB.open(dbName, 1);
@@ -888,7 +885,6 @@
             const savedDeviceEventDetect = localStorage.getItem('saverloopDeviceEventDetect');
             deviceEventDetectCheckbox.checked = savedDeviceEventDetect === 'true';
 
-            // 新增: Load Wake Lock and Mute Video settings
             const savedWakeLock = localStorage.getItem(WAKE_LOCK_KEY);
             wakeLockCheckbox.checked = savedWakeLock === 'true';
 
@@ -924,7 +920,6 @@
             localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
             localStorage.setItem('saverloopDeviceEventDetect', deviceEventDetectCheckbox.checked);
             
-            // 新增: Save Wake Lock and Mute Video settings
             localStorage.setItem(WAKE_LOCK_KEY, wakeLockCheckbox.checked);
             localStorage.setItem(MUTE_VIDEO_KEY, muteVideoCheckbox.checked);
 
@@ -943,7 +938,6 @@
             messageContainer.style.display = 'none';
             videoElement.style.display = 'block';
 
-            // 新增: Mute Video Logic
             videoElement.muted = muteVideoCheckbox.checked;
 
             videoElement.play().then(() => {
@@ -953,7 +947,6 @@
                     videoElement.webkitEnterFullscreen();
                 }
                 
-                // 新增: Acquire Wake Lock after successful play
                 acquireWakeLock();
 
             }).catch(e => {
@@ -962,7 +955,7 @@
                 videoElement.style.display = 'none';
                 messageElement.textContent = translations[languageSelect.value].playback_failed;
                 isPlaying = false;
-                releaseWakeLock(); // 播放失敗時釋放鎖定
+                releaseWakeLock();
             });
         }
         
@@ -972,13 +965,12 @@
             loadingPopup.style.display = 'flex';
             infoIframe.src = urlInput.value;
             
-            // 新增: Acquire Wake Lock when iframe starts loading
             acquireWakeLock();
 
             const loadTimer = setTimeout(() => {
                 loadingPopup.style.display = 'none';
                 showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
-                releaseWakeLock(); // 載入失敗時釋放鎖定
+                releaseWakeLock();
             }, 5000);
 
             infoIframe.onload = () => {
@@ -992,10 +984,48 @@
                 clearTimeout(loadTimer);
                 loadingPopup.style.display = 'none';
                 showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
-                releaseWakeLock(); // 載入失敗時釋放鎖定
+                releaseWakeLock();
             };
         }
         
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                startCountdown();
+            }, 30000);
+        }
+        
+        function resetIdleTimer() {
+            if (loadingPopup.style.display === 'flex' || customPopup.style.display === 'flex') {
+                return;
+            }
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            iframeOverlay.style.display = 'flex';
+            
+            countdownTimer = setInterval(() => {
+                const message = translations[languageSelect.value].continue_browsing_message.replace('{seconds}', seconds);
+                document.getElementById('continue-browsing-message').textContent = message;
+                
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(countdownTimer);
+                    iframeContainer.style.display = 'none';
+                    resetToStart();
+                }
+            }, 1000);
+        }
+        
+        function cancelCountdown() {
+            clearInterval(countdownTimer);
+            iframeOverlay.style.display = 'none';
+            resetIdleTimer();
+        }
+
         function resetToStart() {
             isPlaying = false;
             videoElement.currentTime = 0;
@@ -1003,13 +1033,13 @@
             videoElement.style.display = 'none';
             messageContainer.style.display = 'block';
             messageElement.textContent = translations[languageSelect.value].start_message;
-            releaseWakeLock(); // 回到起始狀態時釋放鎖定
+            releaseWakeLock();
         }
 
         // --- Event Listeners ---
 
         document.body.addEventListener('click', (event) => {
-            // 防止誤觸: 檢查是否有任何彈出視窗開啟，如果有則不執行任何操作
+            // 防止誤觸: 檢查是否有任何彈出視窗開啟
             const isPopupOpen = settingsPanel.style.display === 'flex' || 
                                 iframeContainer.style.display === 'block' || 
                                 customPopup.style.display === 'flex' || 
@@ -1017,7 +1047,7 @@
                                 deviceEventPopup.style.display === 'flex' || 
                                 passwordInputPopup.style.display === 'flex' || 
                                 passwordSetupPopup.style.display === 'flex' || 
-                                passwordConfirmPopup.style.display === 'flex'; // 新增
+                                passwordConfirmPopup.style.display === 'flex'; 
 
             if (isPopupOpen) {
                 return;
@@ -1080,53 +1110,34 @@
             );
         });
 
-        // 密碼設定取消按鈕 (防止誤觸)
+        // 密碼設定取消按鈕 
         setupCancelButton.addEventListener('click', (event) => {
             event.stopPropagation();
             passwordSetupPopup.style.display = 'none';
             setupError.textContent = '';
         });
 
-        // 密碼驗證取消按鈕 (新增, 防止誤觸)
+        // 密碼驗證取消按鈕 
         confirmCancelButton.addEventListener('click', (event) => {
             event.stopPropagation();
             passwordConfirmPopup.style.display = 'none';
             newPasswordTentative = '';
         });
-
-        closeButton.addEventListener('click', () => {
+        
+        // BUG FIX 3: 關閉按鈕事件處理
+        closeButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // 阻止事件冒泡到 document.body，防止誤觸播放
             saveSettings();
             settingsPanel.style.display = 'none';
         });
 
-        resetButton.addEventListener('click', () => {
-            // ... (Reset Logic)
-            const transaction = db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            store.delete('userVideo');
-            videoElement.src = defaultVideoUrl;
-            
-            // Reset password
-            removePassword();
-            
-            videoUrlInput.value = "";
-            urlInput.value = defaultRedirectUrl;
-            alwaysUseUrlCheckbox.checked = false;
-            useIframeCheckbox.checked = false;
-            deviceEventDetectCheckbox.checked = false;
-            wakeLockCheckbox.checked = false; // 新增: Reset Wake Lock
-            muteVideoCheckbox.checked = false; // 新增: Reset Mute Video
+        // BUG FIX 3b: 阻止密碼彈出視窗的點擊事件冒泡
+        passwordSetupPopup.addEventListener('click', (e) => e.stopPropagation());
+        passwordInputPopup.addEventListener('click', (e) => e.stopPropagation());
+        passwordConfirmPopup.addEventListener('click', (e) => e.stopPropagation());
 
-            toggleDeviceEventDetection();
-            releaseWakeLock(); // 確保重設時鎖定被釋放
 
-            localStorage.clear();
-            loadSettings(); // Reloads all settings, including language and button text
-        });
-        
-        // IFrame/Idle Timer/Device Motion/Other Handlers (Retained from α0.9)
-        // ... (Rest of the event handlers: fullscreenchange, iframeOverlay click, idleTimer, video pause, pageshow) ...
-
+        // 影片/iFrame 相關監聽器
         document.addEventListener('fullscreenchange', exitFullscreenHandler);
         document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
 
@@ -1146,9 +1157,12 @@
         iframeContainer.addEventListener('touchstart', resetIdleTimer);
         iframeContainer.addEventListener('scroll', resetIdleTimer);
 
+        // BUG FIX 1: 影片暫停後導向邏輯
         videoElement.addEventListener('pause', () => {
-            releaseWakeLock(); // 影片暫停時釋放鎖定
+            releaseWakeLock(); 
             if (isPlaying && !useIframeCheckbox.checked) {
+                // 修正：立即清除 isPlaying 狀態
+                isPlaying = false; 
                 window.location.href = urlInput.value;
             }
         });
@@ -1235,6 +1249,11 @@
         settingsPanel.addEventListener('click', (event) => {
             event.stopPropagation();
         });
+
+        // 密碼設定/更改的確認按鈕
+        setupConfirmButton.addEventListener('click', handleSetPassword);
+        // 密碼驗證的確認按鈕
+        confirmConfirmButton.addEventListener('click', handleConfirmPassword);
     </script>
 </body>
 </html>
