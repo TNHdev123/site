@@ -914,7 +914,17 @@
             }
         }
         
-        // BUG FIX: 影片播放和全螢幕的同步問題
+        // 新增輔助函數來處理播放失敗
+        function handlePlaybackFailure(e) {
+            console.error("Video playback failed: ", e);
+            messageContainer.style.display = 'block';
+            videoElement.style.display = 'none';
+            messageElement.textContent = translations[languageSelect.value].playback_failed;
+            isPlaying = false;
+            releaseWakeLock();
+        }
+
+        // BUG FIX: 影片播放和全螢幕的同步問題（積極重試機制）
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -924,37 +934,47 @@
 
             videoElement.muted = muteVideoCheckbox.checked;
 
-            // 1. 儲存全螢幕的 Promise
-            let fullscreenPromise = Promise.resolve();
-            if (videoElement.requestFullscreen) {
-                fullscreenPromise = videoElement.requestFullscreen();
-            } else if (videoElement.webkitEnterFullscreen) {
-                // webkitEnterFullscreen is synchronous and does not return a Promise,
-                // so we rely on the play Promise chain to handle it.
-                videoElement.webkitEnterFullscreen();
-            }
+            // 1. 建立一個 Promise 來處理全螢幕請求
+            const fullscreenPromise = new Promise(resolve => {
+                if (videoElement.requestFullscreen) {
+                    // 呼叫 requestFullscreen 並將其 Promise 結果傳遞給 resolve
+                    videoElement.requestFullscreen().then(resolve).catch(resolve);
+                } else if (videoElement.webkitEnterFullscreen) {
+                    // 對於 webkit，它可能是同步的，設置一個短暫延遲確保呼叫完成
+                    videoElement.webkitEnterFullscreen();
+                    setTimeout(resolve, 100); 
+                } else {
+                    resolve(); // 無法使用全螢幕時直接成功
+                }
+            });
 
             // 2. 啟動播放並等待全螢幕完成
             videoElement.play().then(() => {
-                // 播放成功，等待全螢幕完成 (如果適用)
                 return fullscreenPromise;
             }).then(() => {
-                // 全螢幕完成後，再次檢查是否需要播放 (這是修復的核心)
-                if (videoElement.paused) {
-                    console.log('Video paused after fullscreen transition, re-attempting play...');
-                    // 再次嘗試播放，解決 PWA 下卡住的問題
-                    return videoElement.play(); 
-                }
-            }).then(() => {
-                // 播放和全螢幕都成功了，鎖定螢幕
+                // 3. 播放和全螢幕都成功了，鎖定螢幕
                 acquireWakeLock();
+                
+                // 4. 設置延遲檢查，解決 PWA 卡頓問題
+                setTimeout(() => {
+                    // 檢查：如果影片未暫停 AND 播放時間仍卡在開頭
+                    if (!videoElement.paused && videoElement.currentTime < 0.1) {
+                        console.warn('Playback stalled after fullscreen, forcing reload and retry play.');
+                        
+                        // 強制影片重載 (重新建立媒體流)
+                        videoElement.load();
+                        
+                        // 再次嘗試播放
+                        videoElement.play().catch(e => {
+                            console.error("Forced play failed: ", e);
+                            handlePlaybackFailure(e);
+                        });
+                    }
+                }, 500); // 500ms 延遲以允許正常的開始或停滯檢測
+
             }).catch(e => {
-                console.error("Video playback failed: ", e);
-                messageContainer.style.display = 'block';
-                videoElement.style.display = 'none';
-                messageElement.textContent = translations[languageSelect.value].playback_failed;
-                isPlaying = false;
-                releaseWakeLock();
+                // 處理初次播放或全螢幕失敗
+                handlePlaybackFailure(e);
             });
         }
         
