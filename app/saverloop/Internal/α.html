@@ -435,7 +435,7 @@
     </div>
 
     <div id="device-event-popup">
-        <p id="device-event-message">DeviceEventDetect(debug)</p>
+        <p id="device-event-message">DeviceEventDetect(debug)</p> 
     </div>
 
     <script>
@@ -508,6 +508,8 @@
         
         // α0.10.2: 新增版本和偵測開關的 Key
         const VERSION_CODE = "0.10.2";
+        // 修正: 固定的版本隨機代碼
+        const FIXED_RANDOM_CODE = "G5wQz";
         const NAVIGATION_TEST_KEY = 'saverloopNavigationDetectionTest';
 
         let db;
@@ -533,8 +535,8 @@
                 'language_label': 'Language:',
                 'device_event_detect_label': 
                 'Device Event Detection(debug)',
-                // α0.10.2: 新增翻譯
-                'navigation_detection_test_label': 'Navigation Detection Test(debug)', 
+                // 修正: (debug) -> (Beta)
+                'navigation_detection_test_label': 'Navigation Detection Test(Beta)', 
                 'notifications_api_button': 'NotificationsAPI(debug)',
                 'set_password': 'Set up Password',
                 'change_password': 'Change Password',
@@ -584,8 +586,8 @@
                 'use_iframe_label': '嘗試使用iFrame (Beta)',
                 'language_label': '語言：',
                 'device_event_detect_label': '動作偵測(debug)',
-                // α0.10.2: 新增翻譯
-                'navigation_detection_test_label': '偵測跳轉功能測試(debug)',
+                // 修正: (debug) -> (Beta)
+                'navigation_detection_test_label': '偵測跳轉功能測試(Beta)',
                 'notifications_api_button': '發送通知(debug)',
                 'set_password': '設定密碼',
                 'change_password': '更改密碼',
@@ -636,8 +638,8 @@
                 'use_iframe_label': 'iFrameの使用を試みる (Beta)',
                 'language_label': '言語:',
                 'device_event_detect_label': 'デバイス動作検出(debug)',
-                // α0.10.2: 新增翻譯
-                'navigation_detection_test_label': 'ナビゲーション検出テスト(debug)',
+                // 修正: (debug) -> (Beta)
+                'navigation_detection_test_label': 'ナビゲーション検出テスト(Beta)',
                 'notifications_api_button': '通知の送信(debug)',
                 'set_password': 'パスワードを設定',
  
@@ -679,21 +681,12 @@
         };
 
         // α0.10.2: 版本代碼生成邏輯
-        function generateRandomCode(length = 5) {
-            const ALLOWED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*-+=[]{}|?<>~`';
-            
-            let code = '';
-            for (let i = 0; i < length; i++) {
-                const randomIndex = Math.floor(Math.random() * ALLOWED_CHARS.length);
-                code += ALLOWED_CHARS[randomIndex];
-            }
-            return code;
-        }
+        // FIX: 使用固定的隨機代碼 G5wQz
+        const FIXED_RANDOM_CODE = "G5wQz"; 
 
         function getFullVersionString() {
-            const randomCode = generateRandomCode(5);
             const VERSION_CODE = "0.10.2"; // 確保此處使用正確的代碼
-            return `version: Internal_α${VERSION_CODE}(${randomCode})`;
+            return `version: Internal_α${VERSION_CODE}(${FIXED_RANDOM_CODE})`;
         }
         // α0.10.2: 版本代碼生成邏輯結束
 
@@ -710,7 +703,7 @@
             document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
             document.getElementById('language-label').textContent = t.language_label;
             document.getElementById('device-event-detect-label').textContent = t.device_event_detect_label;
-            // α0.10.2: 新增翻譯設定
+            // α0.10.2: 修正翻譯設定 (debug -> Beta)
             document.getElementById('navigation-detection-test-label').textContent = t.navigation_detection_test_label;
             document.getElementById('notifications-api-button').textContent = t.notifications_api_button;
             resetButton.textContent = t.reset_button;
@@ -734,6 +727,9 @@
             // New feature labels
             document.getElementById('wake-lock-label').textContent = t.wake_lock_label;
             document.getElementById('mute-video-label').textContent = t.mute_video_label;
+            
+            // 修正: 確保 device-event-popup 訊息在語言變更時更新
+            document.getElementById('device-event-message').textContent = t.device_event_detect_label;
 
             updatePasswordButtonText();
         }
@@ -949,6 +945,9 @@
             // α0.10.2: 載入新開關狀態
             const savedNavigationTest = localStorage.getItem(NAVIGATION_TEST_KEY);
             navigationDetectionTestCheckbox.checked = savedNavigationTest === 'true';
+            
+            // 啟用/停用偵測功能
+            toggleNavigationDetection(); 
 
             updatePasswordButtonText();
             
@@ -1138,6 +1137,38 @@
             releaseWakeLock();
         }
 
+        // --- Navigation Detection Logic (α0.10.2 Beta) ---
+        function handleNavigationChange(event) {
+            if (!navigationDetectionTestCheckbox.checked) return;
+
+            console.log("NAV DETECTED: History/URL state change detected!", event);
+
+            const message = `[NAV DETECT Beta] Detected URL change or history manipulation. Location: ${window.location.href}`;
+            document.getElementById('device-event-message').textContent = message;
+            deviceEventPopup.style.display = 'flex';
+            
+            // Auto-hide the debug message after a short delay
+            setTimeout(() => {
+                deviceEventPopup.style.display = 'none';
+                // 修正: 恢復 device-event-popup 內的預設訊息
+                document.getElementById('device-event-message').textContent = translations[languageSelect.value].device_event_detect_label; 
+            }, 3000); 
+        }
+
+        function toggleNavigationDetection() {
+            window.removeEventListener('popstate', handleNavigationChange);
+            window.removeEventListener('hashchange', handleNavigationChange);
+            
+            if (navigationDetectionTestCheckbox.checked) {
+                window.addEventListener('popstate', handleNavigationChange);
+                window.addEventListener('hashchange', handleNavigationChange);
+                console.log("[NAV DETECT] Listener ON.");
+            } else {
+                console.log("[NAV DETECT] Listener OFF.");
+            }
+        }
+        // --- Navigation Detection Logic End ---
+
         // --- Event Listeners ---
 
         document.body.addEventListener('click', (event) => {
@@ -1276,16 +1307,23 @@
         // Device Event Detection (Retained from α0.8)
         let motionStoppedTimer;
         function handleDeviceMotion(event) {
+            if (!deviceEventDetectCheckbox.checked) return;
             const acceleration = event.accelerationIncludingGravity;
             const sumOfAcceleration = Math.abs(acceleration.x) + Math.abs(acceleration.y) + Math.abs(acceleration.z);
             const isMoving = sumOfAcceleration > 0.5;
+            
+            // 修正: 確保在偵測到動作時，不會清除其他原因造成的彈窗
             if (isMoving) {
+                document.getElementById('device-event-message').textContent = 'DeviceEventDetect(debug)';
                 deviceEventPopup.style.display = 'flex';
                 clearTimeout(motionStoppedTimer);
             } else {
                 clearTimeout(motionStoppedTimer);
                 motionStoppedTimer = setTimeout(() => {
-                    deviceEventPopup.style.display = 'none';
+                    // 只有當當前訊息是 DeviceEventDetect(debug) 時才隱藏
+                    if (document.getElementById('device-event-message').textContent === 'DeviceEventDetect(debug)') {
+                        deviceEventPopup.style.display = 'none';
+                    }
                 }, 1000);
             }
         }
@@ -1333,8 +1371,9 @@
             wakeLockCheckbox.checked = false;
             muteVideoCheckbox.checked = false;
             
-            // α0.10.2: 重設新開關狀態
+            // α0.10.2: 重設新開關狀態並重新掛載/卸載偵測器
             navigationDetectionTestCheckbox.checked = false;
+            toggleNavigationDetection(); // 執行切換
 
             toggleDeviceEventDetection();
             releaseWakeLock();
@@ -1346,10 +1385,11 @@
             setLanguage(event.target.value);
         });
         
-        // α0.10.2: 新開關的事件監聽器
+        // α0.10.2: 新開關的事件監聽器 (修正: 儲存狀態並呼叫 toggleNavigationDetection)
         navigationDetectionTestCheckbox.addEventListener('change', () => {
             const isChecked = navigationDetectionTestCheckbox.checked;
-            // 由於 saveSettings() 會在 closeButton 點擊時呼叫，這裡可以只做 log 輸出
+            localStorage.setItem(NAVIGATION_TEST_KEY, isChecked); 
+            toggleNavigationDetection();
             console.log(`[0.10.2 Test] Navigation Detection Test set to: ${isChecked ? 'Enabled' : 'Disabled'}`);
         });
 
@@ -1407,6 +1447,7 @@
         // α0.10.2: 在 DOMContentLoaded 後顯示版本號
         document.addEventListener('DOMContentLoaded', () => {
             if (versionDisplayElement) {
+                // FIX: 使用固定的版本字串
                 versionDisplayElement.textContent = getFullVersionString();
             }
         });
