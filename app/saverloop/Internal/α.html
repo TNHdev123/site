@@ -692,6 +692,7 @@
 
         function getFullVersionString() {
             const randomCode = generateRandomCode(5);
+            const VERSION_CODE = "0.10.2"; // 確保此處使用正確的代碼
             return `version: Internal_α${VERSION_CODE}(${randomCode})`;
         }
         // α0.10.2: 版本代碼生成邏輯結束
@@ -702,7 +703,8 @@
             settingsButton.textContent = t.settings_button;
             document.getElementById('settings-title').textContent = t.settings_title;
             document.getElementById('upload-video-label').textContent = t.upload_video_label;
-            document.getElementById('video-url-label').textContent = t.video_url_label;
+           
+             document.getElementById('video-url-label').textContent = t.video_url_label;
             document.getElementById('always-use-url-label').textContent = t.always_use_url_label;
             document.getElementById('guide-url-label').textContent = t.guide_url_label;
             document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
@@ -879,12 +881,16 @@
 
             currentPasswordSuccessCallback = successCallback;
             // 替換 inputCancelButton 監聽器，確保執行提供的 failCallback
-            inputCancelButton.replaceWith(inputCancelButton.cloneNode(true));
-            document.getElementById('input-cancel-button').addEventListener('click', (event) => {
+            // 為了不依賴 replaceWith，我們直接獲取元素並添加/替換事件
+            const currentCancelButton = document.getElementById('input-cancel-button');
+            const newCancelButton = currentCancelButton.cloneNode(true);
+            currentCancelButton.parentNode.replaceChild(newCancelButton, currentCancelButton);
+            newCancelButton.addEventListener('click', (event) => {
                 event.stopPropagation(); // 防止誤觸
                 passwordInputPopup.style.display = 'none';
                 failCallback(); 
             });
+
             currentPasswordInput.focus();
         }
 
@@ -1034,7 +1040,7 @@
                 acquireWakeLock();
 
                 // 4. iOS 
-                PWA 專用修復：檢查並延遲重試播放
+                // PWA 專用修復：檢查並延遲重試播放
                 // 如果影片在進入全螢幕後立即卡住 (paused 或 currentTime < 0.1)
                 if (videoElement.paused || videoElement.currentTime < 0.1) {
                     console.log('Video paused/stuck after fullscreen transition, performing delayed re-attempt.');
