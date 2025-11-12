@@ -924,7 +924,7 @@
             releaseWakeLock();
         }
 
-        // BUG FIX: 影片播放和全螢幕的同步問題（積極重試機制）
+        // BUG FIX: 影片播放和全螢幕的同步問題（Safest iOS PWA Retry）
         function startVideo() {
             if (isPlaying) return;
             isPlaying = true;
@@ -934,17 +934,21 @@
 
             videoElement.muted = muteVideoCheckbox.checked;
 
-            // 1. 建立一個 Promise 來處理全螢幕請求
+            // 1. 準備全螢幕 Promise (處理非 Promise 的 webkitEnterFullscreen 和失敗)
             const fullscreenPromise = new Promise(resolve => {
                 if (videoElement.requestFullscreen) {
-                    // 呼叫 requestFullscreen 並將其 Promise 結果傳遞給 resolve
-                    videoElement.requestFullscreen().then(resolve).catch(resolve);
+                    videoElement.requestFullscreen()
+                        .then(resolve)
+                        .catch(e => {
+                            console.warn('Fullscreen failed, continuing playback:', e);
+                            resolve(); // 即使失敗也要繼續
+                        });
                 } else if (videoElement.webkitEnterFullscreen) {
-                    // 對於 webkit，它可能是同步的，設置一個短暫延遲確保呼叫完成
+                    // iOS Webkit: 同步呼叫，但我們需要延遲確保它發生
                     videoElement.webkitEnterFullscreen();
                     setTimeout(resolve, 100); 
                 } else {
-                    resolve(); // 無法使用全螢幕時直接成功
+                    resolve(); // 無全螢幕 API
                 }
             });
 
@@ -952,28 +956,24 @@
             videoElement.play().then(() => {
                 return fullscreenPromise;
             }).then(() => {
-                // 3. 播放和全螢幕都成功了，鎖定螢幕
+                // 3. 鎖定螢幕
                 acquireWakeLock();
-                
-                // 4. 設置延遲檢查，解決 PWA 卡頓問題
-                setTimeout(() => {
-                    // 檢查：如果影片未暫停 AND 播放時間仍卡在開頭
-                    if (!videoElement.paused && videoElement.currentTime < 0.1) {
-                        console.warn('Playback stalled after fullscreen, forcing reload and retry play.');
-                        
-                        // 強制影片重載 (重新建立媒體流)
-                        videoElement.load();
-                        
-                        // 再次嘗試播放
-                        videoElement.play().catch(e => {
-                            console.error("Forced play failed: ", e);
-                            handlePlaybackFailure(e);
-                        });
-                    }
-                }, 500); // 500ms 延遲以允許正常的開始或停滯檢測
 
+                // 4. iOS PWA 專用修復：檢查並延遲重試播放
+                // 如果影片在進入全螢幕後立即卡住 (paused 或 currentTime < 0.1)
+                if (videoElement.paused || videoElement.currentTime < 0.1) {
+                    console.log('Video paused/stuck after fullscreen transition, performing delayed re-attempt.');
+                    
+                    // 使用 setTimeout 確保是在全螢幕渲染完成後再嘗試播放，這是 iOS 關鍵。
+                    setTimeout(() => {
+                        videoElement.play().catch(e => {
+                            console.error("Retry play failed: ", e);
+                            // 這裡不執行 handlePlaybackFailure，因為外層的 catch 已經處理了主要失敗。
+                        });
+                    }, 50); // 50ms 延遲
+                }
             }).catch(e => {
-                // 處理初次播放或全螢幕失敗
+                // 處理初次播放失敗（例如沒有使用者手勢）
                 handlePlaybackFailure(e);
             });
         }
@@ -1217,7 +1217,7 @@
                             window.addEventListener('devicemotion', handleDeviceMotion);
                         } else {
                             deviceEventDetectCheckbox.checked = false;
-                            showCustomPopup(translations[languageSelect.value].permission_denied_title, translations[languageSelect.value].permission_denied_message);
+                            showCustomPopup(translations[languageSelect.value].permission_denied_title, translations[languageLayout.value].permission_denied_message);
                         }
                     }).catch(console.error);
                 } else if (window.DeviceMotionEvent) {
