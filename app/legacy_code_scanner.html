@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>優化版 iOS 6 QR Code 掃描器</title>
+    <title>【修正版】iOS 6 QR Code 掃描器</title>
     <style>
-        /* 確保基本樣式相容舊版瀏覽器 */
+        /* (樣式保持不變，因為問題不在於 CSS) */
         body {
             font-family: sans-serif;
             text-align: center;
@@ -24,14 +24,14 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             max-width: 400px;
-            word-wrap: break-word; /* 避免長網址溢出 */
+            word-wrap: break-word;
         }
         .instructions {
             color: #666;
             margin-bottom: 15px;
             font-size: 0.9em;
         }
-        /* 隱藏原生檔案選擇器 */
+        /* 保持隱藏輸入框 */
         .hidden-input {
             opacity: 0;
             position: absolute;
@@ -50,7 +50,7 @@
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            -webkit-appearance: none; /* 移除 iOS 預設按鈕樣式 */
+            -webkit-appearance: none;
         }
         .scan-button:active {
             background-color: #0056b3;
@@ -70,8 +70,7 @@
     <h1>📱 iOS 6 QR Code 網頁掃描</h1>
 
     <div class="instructions">
-        此工具利用 HTML5 拍照功能，適合在舊版 iOS 6 瀏覽器上使用。<br>
-        **注意：每次掃描都需要手動拍照並確認上傳。**
+        **【已針對舊版瀏覽器優化】** 點擊按鈕，拍照並確認上傳以解碼。
     </div>
 
     <input type="file" id="cameraInput" accept="image/*" capture="camera" class="hidden-input">
@@ -98,17 +97,21 @@
         function updateOutput(html, color = 'black', isError = false) {
             outputElement.innerHTML = `<span style="color: ${color}; font-weight: ${isError ? 'normal' : 'bold'};">${html}</span>`;
         }
+        
+        // --- 核心改動：改用更穩定的內聯函數進行監聽 ---
+        
+        // 專門處理檔案變動的函數
+        window.handleFileChange = function(event) {
+            // 注意：我們在這裡不使用 event.target.files[0]，而是直接從傳入的 event 參數中獲取
+            const file = event.files[0]; 
 
-        cameraInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            
             if (!file) {
+                // 有時拍照取消也會觸發 change 事件
                 updateOutput('操作取消或未選擇照片。', 'orange');
                 previewImage.style.display = 'none';
                 return;
             }
 
-            // 顯示載入狀態
             updateOutput('照片處理中，請稍候...', '#007aff');
             previewImage.style.display = 'none';
 
@@ -118,46 +121,43 @@
                 const img = new Image();
                 
                 img.onload = function() {
-                    updateOutput('解碼中...', '#007aff');
+                    // **延遲處理：** 給舊版 Safari 渲染時間，增加穩定性
+                    setTimeout(function() {
+                        updateOutput('解碼中...', '#007aff');
 
-                    // 顯示預覽圖
-                    previewImage.src = img.src;
-                    previewImage.style.display = 'block';
+                        previewImage.src = img.src;
+                        previewImage.style.display = 'block';
 
-                    // 設定 Canvas 尺寸與圖片一致
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    
-                    // 繪製圖片到 Canvas
-                    ctx.drawImage(img, 0, 0, img.width, img.height);
-                    
-                    try {
-                        // 取得像素資料
-                        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                        // 設定 Canvas 尺寸與圖片一致
+                        canvas.width = img.width;
+                        canvas.height = img.height;
                         
-                        // 使用 jsQR 進行解碼
-                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                        
+                        try {
+                            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-                        if (code) {
-                            let resultData = code.data;
-                            let linkHtml;
-                            
-                            // 判斷是否為網址，如果是，製作成連結
-                            if (resultData.startsWith('http://') || resultData.startsWith('https://')) {
-                                linkHtml = `<a href="${resultData}" target="_self" style="color: #007aff;">點擊前往網址</a>`;
+                            if (code) {
+                                let resultData = code.data;
+                                let linkHtml;
+                                
+                                if (resultData.startsWith('http://') || resultData.startsWith('https://')) {
+                                    // target="_blank" 在舊版 iOS 上可能行為不一致，改用 _self
+                                    linkHtml = `<a href="${resultData}" target="_self" style="color: #007aff;">點擊前往網址</a>`;
+                                } else {
+                                    linkHtml = `<span style="color: #333;">${resultData}</span>`;
+                                }
+
+                                updateOutput(`✅ 成功解碼！<br>${linkHtml}`, 'green');
                             } else {
-                                linkHtml = `<span style="color: #333;">${resultData}</span>`;
+                                updateOutput('❌ 解碼失敗。請確保 QR Code 清晰。', 'red');
                             }
-
-                            updateOutput(`✅ 成功解碼！<br>${linkHtml}`, 'green');
-                        } else {
-                            updateOutput('❌ 解碼失敗。請確保 QR Code 清晰、光線充足，並重新拍攝。', 'red');
+                        } catch (error) {
+                             updateOutput('程序錯誤：無法處理圖片數據。', 'red');
+                             console.error('解碼錯誤:', error);
                         }
-                    } catch (error) {
-                         // 處理 Canvas/ImageData 相關的錯誤
-                         updateOutput('程序錯誤：無法處理圖片數據。', 'red');
-                         console.error('解碼錯誤:', error);
-                    }
+                    }, 100); // 100毫秒延遲
                 };
                 
                 img.onerror = function() {
@@ -173,7 +173,15 @@
             };
             
             reader.readAsDataURL(file);
-        });
+        };
+        
+        // 替換原來的 addEventListener，使用內聯屬性，並將 input 元素自身傳遞給處理函數
+        // 這是最簡單也最穩定的跨瀏覽器 (含舊版) 事件處理方式。
+        cameraInput.onchange = function() {
+            window.handleFileChange(cameraInput);
+        };
+        
+        // --- 核心改動結束 ---
     </script>
 </body>
 </html>
