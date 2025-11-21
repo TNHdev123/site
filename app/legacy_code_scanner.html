@@ -3,9 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>【修正版】iOS 6 QR Code 掃描器</title>
+    <title>【最終修正】iOS 6 QR Code 掃描器</title>
     <style>
-        /* (樣式保持不變，因為問題不在於 CSS) */
         body {
             font-family: sans-serif;
             text-align: center;
@@ -31,17 +30,10 @@
             margin-bottom: 15px;
             font-size: 0.9em;
         }
-        /* 保持隱藏輸入框 */
-        .hidden-input {
-            opacity: 0;
-            position: absolute;
-            z-index: -1;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-        }
-        .scan-button {
-            display: inline-block;
+        /* 讓輸入框看起來像一個大按鈕 */
+        #cameraInput {
+            display: block;
+            margin: 20px auto;
             padding: 12px 25px;
             font-size: 1.1em;
             color: #fff;
@@ -50,10 +42,11 @@
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            -webkit-appearance: none;
-        }
-        .scan-button:active {
-            background-color: #0056b3;
+            /* 這是關鍵：讓 input type="file" 在 iOS 上看起來像個按鈕 */
+            -webkit-appearance: button; 
+            width: 80%;
+            box-sizing: border-box;
+            line-height: normal; /* 確保文字居中 */
         }
         #preview {
             max-width: 100%;
@@ -70,25 +63,26 @@
     <h1>📱 iOS 6 QR Code 網頁掃描</h1>
 
     <div class="instructions">
-        **【已針對舊版瀏覽器優化】** 點擊按鈕，拍照並確認上傳以解碼。
+        請點擊下方的按鈕/區域，拍照上傳後會自動解碼。
     </div>
 
-    <input type="file" id="cameraInput" accept="image/*" capture="camera" class="hidden-input">
-
-    <button class="scan-button" onclick="document.getElementById('cameraInput').click();">
-        點擊拍照掃描 QR Code
-    </button>
+    <input 
+        type="file" 
+        id="cameraInput" 
+        accept="image/*" 
+        capture="camera"
+        value="點擊拍照掃描 QR Code" 
+        onchange="processImage(this);" 
+    />
 
     <div id="result">
-        **解碼結果：** <span id="output">點擊按鈕開始掃描...</span>
+        **解碼結果：** <span id="output">等待照片上傳...</span>
     </div>
 
     <canvas id="qrCanvas" style="display: none;"></canvas>
-    
     <img id="preview" src="" alt="拍攝預覽圖">
 
     <script>
-        const cameraInput = document.getElementById('cameraInput');
         const outputElement = document.getElementById('output');
         const previewImage = document.getElementById('preview');
         const canvas = document.getElementById('qrCanvas');
@@ -98,15 +92,11 @@
             outputElement.innerHTML = `<span style="color: ${color}; font-weight: ${isError ? 'normal' : 'bold'};">${html}</span>`;
         }
         
-        // --- 核心改動：改用更穩定的內聯函數進行監聽 ---
-        
-        // 專門處理檔案變動的函數
-        window.handleFileChange = function(event) {
-            // 注意：我們在這裡不使用 event.target.files[0]，而是直接從傳入的 event 參數中獲取
-            const file = event.files[0]; 
+        // 核心解碼函數，直接由 input 元素的 onchange 事件調用
+        window.processImage = function(inputElement) {
+            const file = inputElement.files[0];
 
             if (!file) {
-                // 有時拍照取消也會觸發 change 事件
                 updateOutput('操作取消或未選擇照片。', 'orange');
                 previewImage.style.display = 'none';
                 return;
@@ -121,14 +111,13 @@
                 const img = new Image();
                 
                 img.onload = function() {
-                    // **延遲處理：** 給舊版 Safari 渲染時間，增加穩定性
+                    // 再次使用延遲來緩解舊版 Safari 的 I/O 問題
                     setTimeout(function() {
                         updateOutput('解碼中...', '#007aff');
 
                         previewImage.src = img.src;
                         previewImage.style.display = 'block';
 
-                        // 設定 Canvas 尺寸與圖片一致
                         canvas.width = img.width;
                         canvas.height = img.height;
                         
@@ -143,8 +132,7 @@
                                 let linkHtml;
                                 
                                 if (resultData.startsWith('http://') || resultData.startsWith('https://')) {
-                                    // target="_blank" 在舊版 iOS 上可能行為不一致，改用 _self
-                                    linkHtml = `<a href="${resultData}" target="_self" style="color: #007aff;">點擊前往網址</a>`;
+                                    linkHtml = `<a href="${resultData}" target="_self" style="color: green;">點擊前往網址</a>`;
                                 } else {
                                     linkHtml = `<span style="color: #333;">${resultData}</span>`;
                                 }
@@ -154,10 +142,10 @@
                                 updateOutput('❌ 解碼失敗。請確保 QR Code 清晰。', 'red');
                             }
                         } catch (error) {
-                             updateOutput('程序錯誤：無法處理圖片數據。', 'red');
+                             updateOutput('程序錯誤：無法處理圖片數據（Canvas/imageData 兼容性問題）。', 'red');
                              console.error('解碼錯誤:', error);
                         }
-                    }, 100); // 100毫秒延遲
+                    }, 50); // 縮短延遲時間
                 };
                 
                 img.onerror = function() {
@@ -168,20 +156,12 @@
             };
             
             reader.onerror = function(error) {
-                updateOutput('檔案讀取錯誤：無法從裝置獲取圖片。', 'red');
+                updateOutput('FileReader 錯誤：無法從裝置獲取圖片。', 'red');
                 console.error('FileReader 錯誤:', error);
             };
             
             reader.readAsDataURL(file);
         };
-        
-        // 替換原來的 addEventListener，使用內聯屬性，並將 input 元素自身傳遞給處理函數
-        // 這是最簡單也最穩定的跨瀏覽器 (含舊版) 事件處理方式。
-        cameraInput.onchange = function() {
-            window.handleFileChange(cameraInput);
-        };
-        
-        // --- 核心改動結束 ---
     </script>
 </body>
 </html>
