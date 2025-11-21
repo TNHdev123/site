@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>【最終修正】iOS 6 QR Code 掃描器</title>
+    <title>【DEBUG】iOS 6 QR Code 掃描器</title>
     <style>
         body {
             font-family: sans-serif;
@@ -30,7 +30,6 @@
             margin-bottom: 15px;
             font-size: 0.9em;
         }
-        /* 讓輸入框看起來像一個大按鈕 */
         #cameraInput {
             display: block;
             margin: 20px auto;
@@ -42,11 +41,10 @@
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            /* 這是關鍵：讓 input type="file" 在 iOS 上看起來像個按鈕 */
             -webkit-appearance: button; 
             width: 80%;
             box-sizing: border-box;
-            line-height: normal; /* 確保文字居中 */
+            line-height: normal;
         }
         #preview {
             max-width: 100%;
@@ -54,6 +52,25 @@
             margin-top: 15px;
             border: 1px solid #ccc;
             display: none;
+        }
+        /* 新增 Log 介面樣式 */
+        #debugLog {
+            text-align: left;
+            margin: 20px auto;
+            padding: 10px;
+            max-width: 400px;
+            background-color: #333;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: monospace;
+            font-size: 0.75em;
+            height: 150px;
+            overflow-y: scroll;
+        }
+        #debugLog h3 {
+            color: yellow;
+            margin-top: 0;
+            font-size: 1em;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -63,7 +80,7 @@
     <h1>📱 iOS 6 QR Code 網頁掃描</h1>
 
     <div class="instructions">
-        請點擊下方的按鈕/區域，拍照上傳後會自動解碼。
+        **請注意底部的 DEBUG LOG 區域。** 它會記錄程式執行的每個步驟。
     </div>
 
     <input 
@@ -79,6 +96,10 @@
         **解碼結果：** <span id="output">等待照片上傳...</span>
     </div>
 
+    <div id="debugLog">
+        <h3>DEBUG LOG (請觀察此處)</h3>
+    </div>
+
     <canvas id="qrCanvas" style="display: none;"></canvas>
     <img id="preview" src="" alt="拍攝預覽圖">
 
@@ -87,47 +108,78 @@
         const previewImage = document.getElementById('preview');
         const canvas = document.getElementById('qrCanvas');
         const ctx = canvas.getContext('2d');
+        const logElement = document.getElementById('debugLog');
+
+        function log(message, isError = false) {
+            const time = new Date().toLocaleTimeString();
+            const logItem = document.createElement('div');
+            logItem.style.color = isError ? 'red' : 'white';
+            logItem.innerHTML = `[${time}] ${isError ? 'ERROR: ' : ''}${message}`;
+            logElement.appendChild(logItem);
+            // 保持捲軸在最底部
+            logElement.scrollTop = logElement.scrollHeight;
+        }
 
         function updateOutput(html, color = 'black', isError = false) {
             outputElement.innerHTML = `<span style="color: ${color}; font-weight: ${isError ? 'normal' : 'bold'};">${html}</span>`;
+            if (isError) {
+                log(`Output Error: ${html}`, true);
+            }
         }
         
-        // 核心解碼函數，直接由 input 元素的 onchange 事件調用
+        log('腳本初始化完成。');
+
         window.processImage = function(inputElement) {
+            log('--- 點擊事件觸發：開始處理圖片 ---');
+
             const file = inputElement.files[0];
 
             if (!file) {
                 updateOutput('操作取消或未選擇照片。', 'orange');
+                log('檔案讀取失敗 (可能取消或無選擇)。');
                 previewImage.style.display = 'none';
                 return;
             }
 
+            log(`成功讀取檔案。檔案名稱: ${file.name}, 大小: ${file.size} bytes。`, false);
             updateOutput('照片處理中，請稍候...', '#007aff');
             previewImage.style.display = 'none';
 
             const reader = new FileReader();
             
+            // --- FileReader 事件監聽 ---
+            
             reader.onload = function(e) {
+                log('FileReader ONLOAD 觸發。開始建立 Image 物件。');
+                
                 const img = new Image();
                 
                 img.onload = function() {
-                    // 再次使用延遲來緩解舊版 Safari 的 I/O 問題
+                    log('Image ONLOAD 觸發。圖片載入完成。');
+                    
+                    // 延遲處理 (再次確認)
                     setTimeout(function() {
-                        updateOutput('解碼中...', '#007aff');
+                        log('開始 CANVAS 處理與 QR 解碼。', false);
 
+                        updateOutput('解碼中...', '#007aff');
                         previewImage.src = img.src;
                         previewImage.style.display = 'block';
 
                         canvas.width = img.width;
                         canvas.height = img.height;
                         
-                        ctx.drawImage(img, 0, 0, img.width, img.height);
-                        
                         try {
+                            ctx.drawImage(img, 0, 0, img.width, img.height);
+                            log('成功將圖片繪製到 Canvas。');
+                            
                             const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                            log('成功獲取 ImageData。');
+                            
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
 
                             if (code) {
+                                log(`✅ 解碼成功。內容長度: ${code.data.length}`, false);
+                                
                                 let resultData = code.data;
                                 let linkHtml;
                                 
@@ -139,28 +191,32 @@
 
                                 updateOutput(`✅ 成功解碼！<br>${linkHtml}`, 'green');
                             } else {
+                                log('❌ jsQR 解碼失敗。', true);
                                 updateOutput('❌ 解碼失敗。請確保 QR Code 清晰。', 'red');
                             }
                         } catch (error) {
-                             updateOutput('程序錯誤：無法處理圖片數據（Canvas/imageData 兼容性問題）。', 'red');
-                             console.error('解碼錯誤:', error);
+                             log(`❌ 致命錯誤：CANVAS 或 ImageData 處理失敗。錯誤: ${error.message}`, true);
+                             updateOutput('程序錯誤：無法處理圖片數據（底層 API 兼容性問題）。', 'red', true);
                         }
-                    }, 50); // 縮短延遲時間
+                    }, 50);
                 };
                 
                 img.onerror = function() {
-                    updateOutput('檔案讀取錯誤：無法載入圖片。', 'red');
+                    log('❌ Image ONERROR 觸發。圖片載入失敗。', true);
+                    updateOutput('檔案讀取錯誤：無法載入圖片。', 'red', true);
                 };
                 
                 img.src = e.target.result;
             };
             
             reader.onerror = function(error) {
-                updateOutput('FileReader 錯誤：無法從裝置獲取圖片。', 'red');
-                console.error('FileReader 錯誤:', error);
+                log(`❌ FileReader ONERROR 觸發。錯誤: ${error.message}`, true);
+                updateOutput('FileReader 錯誤：無法從裝置獲取圖片。', 'red', true);
             };
             
+            // 開始讀取檔案
             reader.readAsDataURL(file);
+            log('調用 FileReader.readAsDataURL()。', false);
         };
     </script>
 </body>
