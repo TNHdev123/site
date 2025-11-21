@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>【伺服器版】iOS 6 QR Code 掃描器</title>
+    <title>【表單修正】iOS 6 QR Code 掃描器</title>
     <style>
         body {
             font-family: sans-serif;
@@ -21,9 +21,10 @@
             margin-bottom: 15px;
             font-size: 0.9em;
         }
+        /* 檔案輸入框的樣式，用於拍照 */
         #cameraInput {
             display: block;
-            margin: 20px auto;
+            margin: 20px auto 10px;
             padding: 12px 25px;
             font-size: 1.1em;
             color: #fff;
@@ -37,18 +38,31 @@
             box-sizing: border-box;
             line-height: normal;
         }
+        /* 提交按鈕的樣式，這次要強制顯示 */
+        #submitButton {
+            display: block; /* 確保顯示 */
+            margin: 10px auto 20px;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            color: #fff;
+            background-color: #28a745; /* 綠色，表示提交 */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            -webkit-appearance: button; 
+            width: 80%;
+            box-sizing: border-box;
+            line-height: normal;
+        }
     </style>
     <script>
-        function checkFileSelected() {
-            // 在提交前檢查是否有檔案，但這個檢查在舊版 iOS 上可能也不可靠
+        // 移除所有複雜的 JavaScript，僅保留最基本的表單邏輯
+        function validateForm() {
             var fileInput = document.getElementById('cameraInput');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                // 如果沒有檔案，強制打開相機
-                fileInput.click();
-                return false; 
-            }
-            // 提交表單，轉到伺服器處理頁面
-            return true;
+            // 由於我們無法可靠地檢查 files.length，我們假設使用者已經拍照
+            // 但如果 Safari 根本不允許提交空檔案，此處可能會彈出警告。
+            return true; // 總是嘗試提交
         }
     </script>
 </head>
@@ -57,11 +71,11 @@
     <h1>📱 iOS 6 QR Code 網頁掃描 (伺服器模式)</h1>
 
     <div class="instructions">
-        **注意：此版本需搭配伺服器腳本使用。** <br>
-        點擊按鈕，拍攝照片後，伺服器將直接解碼。
+        **最終嘗試：** 拍攝完成後，請**手動點擊下方的綠色按鈕**來發送圖片給伺服器解碼。
     </div>
 
-    <form action="decode.php" method="POST" enctype="multipart/form-data" onsubmit="return checkFileSelected();">
+    <form action="decode.php" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
+        
         <input 
             type="file" 
             id="cameraInput" 
@@ -71,11 +85,16 @@
             value="點擊拍照掃描 QR Code" 
         />
         
-        <input type="submit" value="開始解碼" style="display: none;">
+        <input 
+            type="submit" 
+            id="submitButton" 
+            value="✅ 點擊這裡：發送圖片並解碼"
+        />
+        
     </form>
     
-    <p>
-        <strong style="color: red;">提示：</strong> 拍攝完成後，您可能需要手動點擊頁面上的「開始解碼」按鈕，如果它沒有自動出現的話。
+    <p style="margin-top: 30px; font-size: 0.85em; color: #cc0000;">
+        **重要提示：** 此方案需要伺服器端 (例如 PHP, Python) 運行 **`decode.php`** 腳本來接收和處理圖片。
     </p>
 
 </body>
