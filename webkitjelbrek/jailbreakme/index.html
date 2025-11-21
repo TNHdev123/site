@@ -383,7 +383,8 @@ iframe {
 }
 
 </style>
-</head> <body> <iframe id="hax" src="about:blank"></iframe> <div class="container"> <div class="container-rounded"> <div class="navbar-container"> <div class="navbar"> <div id="back-taptarget"></div> <div id="back-container"> <div id="back-button"> <div id="back-text">Back</div> <div id="back-shadow"></div> </div> </div> <div class="navbar-label" id="first-label">JailbreakMe</div> <div class="navbar-label" id="second-label">More Information</div> </div> </div> <div class="navigation-view-container"> <div class="navigation-view-2-container"> <div class="navigation-view navigation-view-moreinfo body"> <div class="question-answer"> <p class="question">What's a jailbreak?</p> <p class="answer">Jailbreaking your device means installing a small program that removes restrictions in the default software.
+</head> <body> <iframe id="hax" src="about:blank"></iframe> <div class="container"> <div class="container-rounded"> <div class="navbar-container"> <div class="navbar"> <div id="back-taptarget"></div> <div id="back-container"> <div id="back-button"> <div id="back-text">Back</div> <div id="back-shadow"></div> </div> </div> <div class="navbar-label" id="first-label">JailbreakMe</div> <div class="navbar-label" id="second-label">More Information</div> </div> </div> <div class="navigation-view-container"> <div class="navigation-view-2-container"> 
+<div class="navigation-view navigation-view-moreinfo body" id="moreinfo"> <div class="question-answer"> <p class="question">What's a jailbreak?</p> <p class="answer">Jailbreaking your device means installing a small program that removes restrictions in the default software.
 removing restrictions in the default software. It's the only way to get third-party apps, like those in Cydia, that have been rejected by Apple or include functionality that Apple doesn't allow.</p> <p class="question">Is it safe?</p> <p class="answer">Jailbreaking is completely safe. The process is completely reversible: if you ever want to remove the jailbreak, just restore your device in iTunes.</p> <p class="question">Is it legal?</p> <p class="answer">Yes! The US Copyright Office ruled that jailbreaking your device is legal, so you're completely safe.</p> </div>
 <div class="notheader"> 
 
@@ -419,10 +420,10 @@ function goto(where) {
         var button = document.getElementById('button-title');
         button.innerHTML = {'moreinfo': 'Install', 'success': 'Thanks for Playing!', 'failure': 'Oops...', 'donate': 'Donate'}[where];
         setTimeout(function() {
-            container.className = 'container page2 ' + where + initial;
+            container.className = 'container page2 ' + where + (initial ? ' initial' : '');
         }, 0);
     } else {
-        container.className = 'container ' + old + initial;
+        container.className = 'container ' + old + (initial ? ' initial' : '');
     }
     setTimeout(scrollo, initial ? 0 : 450);
 
@@ -456,6 +457,10 @@ bbs.onmouseup = bbs.ontouchend = function() {
 }
 
 function resetButton() {}
+
+// 修正：在網頁載入時強制呼叫 goto() 來設定初始頁面
+goto(currentPage);
+initial = false; 
 
 </script>
 
