@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>【DEBUG】iOS 6 QR Code 掃描器</title>
+    <title>【伺服器版】iOS 6 QR Code 掃描器</title>
     <style>
         body {
             font-family: sans-serif;
@@ -15,15 +15,6 @@
         h1 {
             color: #333;
             font-size: 1.5em;
-        }
-        #result {
-            margin: 15px auto;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 400px;
-            word-wrap: break-word;
         }
         .instructions {
             color: #666;
@@ -46,178 +37,46 @@
             box-sizing: border-box;
             line-height: normal;
         }
-        #preview {
-            max-width: 100%;
-            height: auto;
-            margin-top: 15px;
-            border: 1px solid #ccc;
-            display: none;
-        }
-        /* 新增 Log 介面樣式 */
-        #debugLog {
-            text-align: left;
-            margin: 20px auto;
-            padding: 10px;
-            max-width: 400px;
-            background-color: #333;
-            color: #0f0;
-            border: 1px solid #0f0;
-            font-family: monospace;
-            font-size: 0.75em;
-            height: 150px;
-            overflow-y: scroll;
-        }
-        #debugLog h3 {
-            color: yellow;
-            margin-top: 0;
-            font-size: 1em;
-        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        function checkFileSelected() {
+            // 在提交前檢查是否有檔案，但這個檢查在舊版 iOS 上可能也不可靠
+            var fileInput = document.getElementById('cameraInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                // 如果沒有檔案，強制打開相機
+                fileInput.click();
+                return false; 
+            }
+            // 提交表單，轉到伺服器處理頁面
+            return true;
+        }
+    </script>
 </head>
 <body>
 
-    <h1>📱 iOS 6 QR Code 網頁掃描</h1>
+    <h1>📱 iOS 6 QR Code 網頁掃描 (伺服器模式)</h1>
 
     <div class="instructions">
-        **請注意底部的 DEBUG LOG 區域。** 它會記錄程式執行的每個步驟。
+        **注意：此版本需搭配伺服器腳本使用。** <br>
+        點擊按鈕，拍攝照片後，伺服器將直接解碼。
     </div>
 
-    <input 
-        type="file" 
-        id="cameraInput" 
-        accept="image/*" 
-        capture="camera"
-        value="點擊拍照掃描 QR Code" 
-        onchange="processImage(this);" 
-    />
-
-    <div id="result">
-        **解碼結果：** <span id="output">等待照片上傳...</span>
-    </div>
-
-    <div id="debugLog">
-        <h3>DEBUG LOG (請觀察此處)</h3>
-    </div>
-
-    <canvas id="qrCanvas" style="display: none;"></canvas>
-    <img id="preview" src="" alt="拍攝預覽圖">
-
-    <script>
-        const outputElement = document.getElementById('output');
-        const previewImage = document.getElementById('preview');
-        const canvas = document.getElementById('qrCanvas');
-        const ctx = canvas.getContext('2d');
-        const logElement = document.getElementById('debugLog');
-
-        function log(message, isError = false) {
-            const time = new Date().toLocaleTimeString();
-            const logItem = document.createElement('div');
-            logItem.style.color = isError ? 'red' : 'white';
-            logItem.innerHTML = `[${time}] ${isError ? 'ERROR: ' : ''}${message}`;
-            logElement.appendChild(logItem);
-            // 保持捲軸在最底部
-            logElement.scrollTop = logElement.scrollHeight;
-        }
-
-        function updateOutput(html, color = 'black', isError = false) {
-            outputElement.innerHTML = `<span style="color: ${color}; font-weight: ${isError ? 'normal' : 'bold'};">${html}</span>`;
-            if (isError) {
-                log(`Output Error: ${html}`, true);
-            }
-        }
+    <form action="decode.php" method="POST" enctype="multipart/form-data" onsubmit="return checkFileSelected();">
+        <input 
+            type="file" 
+            id="cameraInput" 
+            name="qr_image" 
+            accept="image/*" 
+            capture="camera"
+            value="點擊拍照掃描 QR Code" 
+        />
         
-        log('腳本初始化完成。');
+        <input type="submit" value="開始解碼" style="display: none;">
+    </form>
+    
+    <p>
+        <strong style="color: red;">提示：</strong> 拍攝完成後，您可能需要手動點擊頁面上的「開始解碼」按鈕，如果它沒有自動出現的話。
+    </p>
 
-        window.processImage = function(inputElement) {
-            log('--- 點擊事件觸發：開始處理圖片 ---');
-
-            const file = inputElement.files[0];
-
-            if (!file) {
-                updateOutput('操作取消或未選擇照片。', 'orange');
-                log('檔案讀取失敗 (可能取消或無選擇)。');
-                previewImage.style.display = 'none';
-                return;
-            }
-
-            log(`成功讀取檔案。檔案名稱: ${file.name}, 大小: ${file.size} bytes。`, false);
-            updateOutput('照片處理中，請稍候...', '#007aff');
-            previewImage.style.display = 'none';
-
-            const reader = new FileReader();
-            
-            // --- FileReader 事件監聽 ---
-            
-            reader.onload = function(e) {
-                log('FileReader ONLOAD 觸發。開始建立 Image 物件。');
-                
-                const img = new Image();
-                
-                img.onload = function() {
-                    log('Image ONLOAD 觸發。圖片載入完成。');
-                    
-                    // 延遲處理 (再次確認)
-                    setTimeout(function() {
-                        log('開始 CANVAS 處理與 QR 解碼。', false);
-
-                        updateOutput('解碼中...', '#007aff');
-                        previewImage.src = img.src;
-                        previewImage.style.display = 'block';
-
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        
-                        try {
-                            ctx.drawImage(img, 0, 0, img.width, img.height);
-                            log('成功將圖片繪製到 Canvas。');
-                            
-                            const imageData = ctx.getImageData(0, 0, img.width, img.height);
-                            log('成功獲取 ImageData。');
-                            
-                            const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-                            if (code) {
-                                log(`✅ 解碼成功。內容長度: ${code.data.length}`, false);
-                                
-                                let resultData = code.data;
-                                let linkHtml;
-                                
-                                if (resultData.startsWith('http://') || resultData.startsWith('https://')) {
-                                    linkHtml = `<a href="${resultData}" target="_self" style="color: green;">點擊前往網址</a>`;
-                                } else {
-                                    linkHtml = `<span style="color: #333;">${resultData}</span>`;
-                                }
-
-                                updateOutput(`✅ 成功解碼！<br>${linkHtml}`, 'green');
-                            } else {
-                                log('❌ jsQR 解碼失敗。', true);
-                                updateOutput('❌ 解碼失敗。請確保 QR Code 清晰。', 'red');
-                            }
-                        } catch (error) {
-                             log(`❌ 致命錯誤：CANVAS 或 ImageData 處理失敗。錯誤: ${error.message}`, true);
-                             updateOutput('程序錯誤：無法處理圖片數據（底層 API 兼容性問題）。', 'red', true);
-                        }
-                    }, 50);
-                };
-                
-                img.onerror = function() {
-                    log('❌ Image ONERROR 觸發。圖片載入失敗。', true);
-                    updateOutput('檔案讀取錯誤：無法載入圖片。', 'red', true);
-                };
-                
-                img.src = e.target.result;
-            };
-            
-            reader.onerror = function(error) {
-                log(`❌ FileReader ONERROR 觸發。錯誤: ${error.message}`, true);
-                updateOutput('FileReader 錯誤：無法從裝置獲取圖片。', 'red', true);
-            };
-            
-            // 開始讀取檔案
-            reader.readAsDataURL(file);
-            log('調用 FileReader.readAsDataURL()。', false);
-        };
-    </script>
 </body>
 </html>
