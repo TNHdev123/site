@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>SaverLoop</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            text-align: center;
+        }
+        #top-icon-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #top-icon {
+            width: 120px;
+            height: 120px;
+        }
+        #message-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        #message {
+            margin-bottom: 20px;
+        }
+        #settings-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        #settings-button {
+            color: black;
+            background-color: white;
+            font-size: 0.8em;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+        }
+        #settings-button:hover {
+            opacity: 0.8;
+        }
+        #version {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            z-index: 10;
+        }
+        #myVideo {
+            display: none;
+        }
+        /* 改善: 設定面板允許捲動，以適應更多內容和移動裝置 */
+        #settings-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start; /* 改變為 flex-start 配合捲動 */
+            align-items: center;
+            z-index: 20;
+            overflow-y: auto; /* 允許垂直捲動 */
+            box-sizing: border-box;
+        }
+        #settings-panel-top {
+            width: 90%;
+            max-width: 400px; /* 限制最大寬度，改善移動裝置顯示 */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px; /* 調整為更適合捲動的邊距 */
+            align-items: flex-start;
+        }
+        #settings-panel-bottom {
+            width: 90%;
+            max-width: 400px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        #settings-panel-top label, #settings-panel-top h3 {
+            align-self: flex-start;
+        }
+        #settings-panel-top input[type="text"], #settings-panel-top input[type="url"], #settings-panel-top select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+        }
+        #settings-panel button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-size: 1em;
+            background-color: #555;
+        }
+        #close-button {
+            width: 100%;
+            background-color: #777;
+        }
+        #reset-button {
+            width: auto;
+            align-self: flex-end;
+            background-color: #d9534f;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.9em;
+            width: 100%;
+        }
+        #iframe-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: none;
+            background-color: black;
+        }
+        #iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 12;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+        #iframe-overlay p {
+            background-color: rgba(128, 128, 128, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* Custom Popup (General Use) */
+        #custom-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 30;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        #custom-popup h4 {
+            margin: 0;
+            color: white;
+        }
+        #custom-popup p {
+            margin: 0;
+        }
+        #popup-button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .popup-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
+        #loading-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 31;
+            color: white;
+        }
+        #device-event-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 40;
+            color: white;
+        }
+        /* Password Setup/Input/Confirm Popups */
+        .password-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50; /* 高 z-index 防止誤觸 */
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            color: white;
+        }
+        .password-popup h4 {
+            margin: 0;
+        }
+        .password-popup input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .password-popup .error-message {
+            color: #d9534f;
+            font-size: 0.8em;
+            height: 1.2em;
+        }
+        .password-popup .button-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .password-popup .button-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            font-size: 1em;
+        }
+    </style>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div id="top-icon-container">
+        <img id="top-icon" src="https://tnhdev123.github.io/site/app/saverloop/Internal/SaverLoop_Internal_Alpha_icon.png" alt="SaverLoop Icon">
+    </div>
+    <div id="message-container">
+        <div id="message"></div>
+    </div>
+    <div id="settings-container">
+        <button id="settings-button"></button>
+    </div>
+    
+    <div id="version"></div>
+    
+    <video id="myVideo" playsinline loop></video>
+
+  
+    <div id="iframe-container">
+        <iframe id="info-iframe"></iframe>
+        <div id="iframe-overlay">
+            <p id="continue-browsing-message"></p>
+        </div>
+    </div>
+
+    <div id="settings-panel">
+        <div id="settings-panel-top">
+            <h3 id="settings-title"></h3>
+            
+            <button id="set-password-button"></button>
+  
+            <button id="turn-off-password-button"></button>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="wake-lock-enabled">
+                <label for="wake-lock-enabled" id="wake-lock-label"></label>
+            </div>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="navigation-detection-test">
+                <label for="navigation-detection-test" id="navigation-detection-test-label"></label>
+            </div>
+            <div class="checkbox-container">
+               
+             <input type="checkbox" id="mute-video-enabled">
+                <label for="mute-video-enabled" id="mute-video-label"></label>
+            </div>
+            
+            <label for="video-upload" id="upload-video-label"></label>
+            <input type="file" id="video-upload" accept="video/*">
+            
+            <label for="video-url-input" 
+             id="video-url-label"></label>
+            <input type="url" id="video-url-input" placeholder="https://">
+            <div class="checkbox-container">
+                <input type="checkbox" id="always-use-url">
+                <label for="always-use-url" id="always-use-url-label"></label>
+            </div>
+            
+            
+             <label for="url-input" id="guide-url-label"></label>
+            <input type="url" id="url-input" placeholder="https://www.apple.com">
+            <div class="checkbox-container">
+                <input type="checkbox" id="use-iframe">
+                <label for="use-iframe" id="use-iframe-label"></label>
+            </div>
+            
+          
+              <label for="language-select" id="language-label"></label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="zh-tw">中文</option>
+                <option value="ja">日本語</option>
+            </select>
+
+            <div class="checkbox-container">
+       
+                 <input type="checkbox" id="device-event-detect">
+                <label for="device-event-detect" id="device-event-detect-label"></label>
+            </div>
+
+            <button id="notifications-api-button"></button>
+
+            <button id="reset-button"></button>
+        </div>
+        <div id="settings-panel-bottom">
+            <button id="close-button"></button>
+   
+         </div>
+    </div>
+
+    <div id="password-setup-popup" class="password-popup">
+        <h4 id="setup-popup-title"></h4>
+        <p id="setup-popup-prompt"></p>
+        <input type="password" id="new-password-input" maxlength="30" placeholder="Password">
+        <div id="setup-error-message" class="error-message"></div>
+        <div class="button-container">
+            <button id="setup-cancel-button"></button>
+            <button id="setup-confirm-button"></button>
+        </div>
+  
+     </div>
+
+    <div id="password-input-popup" class="password-popup">
+        <h4 id="input-popup-title"></h4>
+        <input type="password" id="current-password-input" placeholder="Password">
+        <div id="input-error-message" class="error-message"></div>
+        <div class="button-container">
+            <button id="input-cancel-button"></button>
+            <button id="input-confirm-button"></button>
+        </div>
+    </div>
+
+    <div id="password-confirm-popup" class="password-popup">
+        <h4 
+         id="confirm-popup-title"></h4>
+        <p id="confirm-popup-prompt"></p>
+        <input type="password" id="confirm-password-input" maxlength="30" placeholder="Confirm Password">
+        <div id="confirm-error-message" class="error-message"></div>
+        <div class="button-container">
+            <button id="confirm-cancel-button"></button>
+            <button id="confirm-confirm-button"></button>
+        </div>
+    </div>
+    
+    <div id="custom-popup">
+        <h4 id="popup-title"></h4>
+   
+         <p id="popup-message"></p>
+        <div id="popup-button-container">
+            <button id="popup-close-button" class="popup-button"></button>
+            <button id="popup-exit-button" class="popup-button" style="display: none;"></button>
+        </div>
+    </div>
+
+    <div id="loading-popup">
+        <p id="loading-message"></p>
+    </div>
+
+    <div id="device-event-popup">
+        <p id="device-event-message">DeviceEventDetect(debug)</p>
+    </div>
+
+    <script>
+   
+      const videoElement = document.getElementById('myVideo');
+        const messageContainer = document.getElementById('message-container');
+        const messageElement = document.getElementById('message');
+        const settingsButton = document.getElementById('settings-button');
+        const settingsPanel = document.getElementById('settings-panel');
+        const closeButton = document.getElementById('close-button');
+        const videoUpload = document.getElementById('video-upload');
+        const videoUrlInput = document.getElementById('video-url-input');
+        const alwaysUseUrlCheckbox = document.getElementById('always-use-url');
+        const urlInput = document.getElementById('url-input');
+        const useIframeCheckbox = document.getElementById('use-iframe');
+        const resetButton = document.getElementById('reset-button');
+        const languageSelect = document.getElementById('language-select');
+        const iframeContainer = document.getElementById('iframe-container');
+        const infoIframe = document.getElementById('info-iframe');
+        const iframeOverlay = document.getElementById('iframe-overlay');
+        const customPopup = document.getElementById('custom-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseButton = document.getElementById('popup-close-button');
+        const popupExitButton = document.getElementById('popup-exit-button');
+        const loadingPopup = document.getElementById('loading-popup');
+        const loadingMessage = document.getElementById('loading-message');
+        const deviceEventDetectCheckbox = document.getElementById('device-event-detect');
+        const deviceEventPopup = document.getElementById('device-event-popup');
+        const notificationsApiButton = document.getElementById('notifications-api-button');
+        // Password Elements
+        const setPasswordButton = document.getElementById('set-password-button');
+        const turnOffPasswordButton = document.getElementById('turn-off-password-button');
+        const passwordSetupPopup = document.getElementById('password-setup-popup');
+        const passwordInputPopup = document.getElementById('password-input-popup');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const currentPasswordInput = document.getElementById('current-password-input');
+        const setupError = document.getElementById('setup-error-message');
+        const inputError = document.getElementById('input-error-message');
+        const setupCancelButton = document.getElementById('setup-cancel-button');
+        const setupConfirmButton = document.getElementById('setup-confirm-button');
+        const inputCancelButton = document.getElementById('input-cancel-button');
+        const inputConfirmButton = document.getElementById('input-confirm-button');
+        const setupPopupTitle = document.getElementById('setup-popup-title');
+        const setupPopupPrompt = document.getElementById('setup-popup-prompt');
+        const inputPopupTitle = document.getElementById('input-popup-title');
+        // 密碼驗證元素
+        const passwordConfirmPopup = document.getElementById('password-confirm-popup');
+        const confirmPasswordInput = document.getElementById('confirm-password-input');
+        const confirmError = document.getElementById('confirm-error-message');
+        const confirmConfirmButton = document.getElementById('confirm-confirm-button');
+        const confirmCancelButton = document.getElementById('confirm-cancel-button');
+        const confirmPopupTitle = document.getElementById('confirm-popup-title');
+        const confirmPopupPrompt = document.getElementById('confirm-popup-prompt');
+        // Wake Lock 和 Mute Video 元素
+        const wakeLockCheckbox = document.getElementById('wake-lock-enabled');
+        const muteVideoCheckbox = document.getElementById('mute-video-enabled');
+        
+        // α0.10.2: 新增元素獲取
+        const navigationDetectionTestCheckbox = document.getElementById('navigation-detection-test');
+        const versionDisplayElement = document.getElementById('version');
+
+        const defaultVideoUrl = "https://archive.org/download/iphone_portrait_202402/iPad_Portrait.m4v";
+        const defaultRedirectUrl = "https://www.apple.com";
+        const dbName = 'SaverLoopDB';
+        const storeName = 'videos';
+        const PASSWORD_KEY = 'saverloopPassword';
+        const WAKE_LOCK_KEY = 'saverloopWakeLock';
+        const MUTE_VIDEO_KEY = 'saverloopMuteVideo';
+        
+        // α0.10.2: 新增版本和偵測開關的 Key
+        const VERSION_CODE = "0.10.2";
+        const NAVIGATION_TEST_KEY = 'saverloopNavigationDetectionTest';
+
+        let db;
+        let isPlaying = false;
+        let idleTimer;
+        let countdownTimer;
+        let wakeLockSentinel = null;
+        let newPasswordTentative = '';
+        // 全域變數用於儲存密碼輸入成功後的回調函數
+        let currentPasswordSuccessCallback = () => {};
+
+        const translations = {
+            'en': {
+                'start_message': 'Tap the screen to start',
+                'settings_button': 'Settings',
+                'settings_title': 'Settings',
+                'upload_video_label': 'Upload Video:',
+           
+             'video_url_label': 'Video URL:',
+                'always_use_url_label': 'Always use Video URL',
+                'guide_url_label': 'Guide URL:',
+                'use_iframe_label': 'Try to use iFrame (Beta)',
+                'language_label': 'Language:',
+                'device_event_detect_label': 
+                'Device Event Detection(debug)',
+                // α0.10.2: 新增翻譯
+                'navigation_detection_test_label': 'Navigation Detection Test(debug)', 
+                'notifications_api_button': 'NotificationsAPI(debug)',
+                'set_password': 'Set up Password',
+                'change_password': 'Change Password',
+                'turn_off_password': 'Turn off Password',
+                'wake_lock_label': 'Always Prevent Screen Lock',
+     
+                'mute_video_label': 'Mute Video (Beta)',
+                'password_setup_title': 'Set/Change Password',
+                'password_input_title': 'Enter Password',
+                'password_confirm_title': 'Confirm New Password',
+                'password_prompt': 'Enter a new password (A-Z, 0-9, Punctuation only, max 30 chars)',
+    
+                 'password_confirm_prompt': 'Please re-enter the new password.',
+                'password_confirm': 'Confirm',
+                'password_cancel': 'Cancel',
+                'password_error_invalid_chars': 'Invalid characters. Use A-Z, 0-9, and English punctuation.',
+                'password_error_empty': 'Password cannot be empty or contain spaces.',
+                'password_error_length': 'Password must be 30 characters or less.',
+                'password_error_incorrect': 'Incorrect Password.',
+                'password_error_mismatch': 'Passwords do not match.',
+           
+             'reset_button': 'Reset to Default',
+                'close_button': 'Close',
+                'loading_message': 'Loading...',
+                'continue_browsing_message': 'Do you want to continue browsing? The page will be closed in {seconds} seconds. Click on the screen to cancel',
+                'playback_failed': 'Playback failed, please try again.',
+                'iframe_load_title': 'Load Failed',
+                'iframe_load_message': 'This website cannot be displayed in an iframe due to security restrictions.',
+                'notifications_title': 'Notification Not Supported',
+ 
+                'notifications_message': 'Your browser does not support Notifications API.',
+                'permission_denied_title': 'Permission Denied',
+                'permission_denied_message': 'You have denied access to device motion. Please enable it in your browser settings.',
+                'popup_ok': 'OK',
+                'popup_exit': 'Exit'
+            },
+            'zh-tw': {
+                'start_message': '點擊螢幕開始',
+                'settings_button': '設定',
+ 
+                'settings_title': '設定',
+                'upload_video_label': '上傳影片：',
+                'video_url_label': '影片URL：',
+                'always_use_url_label': '永遠使用影片URL',
+                'guide_url_label': '導向URL：',
+                
+                'use_iframe_label': '嘗試使用iFrame (Beta)',
+                'language_label': '語言：',
+                'device_event_detect_label': '動作偵測(debug)',
+                // α0.10.2: 新增翻譯
+                'navigation_detection_test_label': '偵測跳轉功能測試(debug)',
+                'notifications_api_button': '發送通知(debug)',
+                'set_password': '設定密碼',
+                'change_password': '更改密碼',
+             
+                'turn_off_password': '關閉密碼',
+                'wake_lock_label': '永遠防止螢幕鎖定',
+                'mute_video_label': '靜音影片 (Beta)',
+                'password_setup_title': '設定/更改密碼',
+                'password_input_title': '輸入密碼',
+                'password_confirm_title': '確認新密碼',
+          
+               'password_prompt': '請輸入新密碼 (限英數字元與英文標點符號，最多30字)',
+                'password_confirm_prompt': '請再次輸入新密碼。',
+                'password_confirm': '確認',
+                'password_cancel': '取消',
+                'password_error_invalid_chars': '字元無效。請使用英數字元和英文標點符號。',
+                'password_error_empty': '密碼不可留空或包含空格。',
+       
+                'password_error_length': '密碼必須在 30 個字元以內。',
+                'password_error_incorrect': '密碼錯誤。',
+                'password_error_mismatch': '兩次輸入的密碼不符。',
+                'reset_button': '重設為預設',
+                'close_button': '關閉',
+                'loading_message': '載入中...',
+   
+                'continue_browsing_message': '您想繼續瀏覽嗎？頁面將在 {seconds} 秒後關閉。點擊螢幕取消',
+                'playback_failed': '播放失敗，請再試一次。',
+                'iframe_load_title': '載入失敗',
+                'iframe_load_message': '此網站因安全限制無法在iFrame中顯示。',
+                'notifications_title': '通知不支援',
+                
+                'notifications_message': '你的瀏覽器不支援通知API。',
+                'permission_denied_title': '權限拒絕',
+                'permission_denied_message': '您已拒絕裝置動作的權限。請在瀏覽器設定中啟用。',
+                'popup_ok': '確定',
+                'popup_exit': '退出'
+            },
+            'ja': {
+      
+                'start_message': '画面をタップして開始',
+                'settings_button': '設定',
+                'settings_title': '設定',
+                'upload_video_label': '動画をアップロード:',
+                'video_url_label': '動画URL:',
+                'always_use_url_label': '常に動画URLを使用',
+    
+                'guide_url_label': '誘導先URL:',
+                'use_iframe_label': 'iFrameの使用を試みる (Beta)',
+                'language_label': '言語:',
+                'device_event_detect_label': 'デバイス動作検出(debug)',
+                // α0.10.2: 新增翻譯
+                'navigation_detection_test_label': 'ナビゲーション検出テスト(debug)',
+                'notifications_api_button': '通知の送信(debug)',
+                'set_password': 'パスワードを設定',
+ 
+                'change_password': 'パスワードを変更',
+                'turn_off_password': 'パスワードを解除',
+                'wake_lock_label': '常に画面ロックを防止',
+                'mute_video_label': '動画をミュート (Beta)',
+                'password_setup_title': 'パスワードの設定/変更',
+               
+                'password_input_title': 'パスワードを入力',
+                'password_confirm_title': '新しいパスワードを確認',
+                'password_prompt': '新しいパスワードを入力してください (英数字、句読点のみ、最大30文字)',
+                'password_confirm_prompt': 'もう一度新しいパスワードを入力してください。',
+                'password_confirm': '確認',
+                'password_cancel': 'キャンセル',
+            
+                'password_error_invalid_chars': '無効な文字が含まれています。英数字と句読点のみ使用してください。',
+                'password_error_empty': 'パスワードは空またはスペースのみにできません。',
+                'password_error_length': 'パスワードは30文字以下である必要があります。',
+                'password_error_incorrect': 'パスワードが違います。',
+                'password_error_mismatch': 'パスワードが一致しません。',
+                'reset_button': 'デフォルトに戻す',
+          
+                'close_button': '閉じる',
+                'loading_message': 'ロード中...',
+                'continue_browsing_message': 'ブラウジングを続行しますか？ページは {seconds} 秒後に閉じます。画面をクリックしてキャンセル',
+                'playback_failed': '再生に失敗しました。もう一度お試しください。',
+                'iframe_load_title': '読み込み失敗',
+                'iframe_load_message': 'このウェブサイトはセキュリティ上の制限によりiFrameに表示できません。',
+      
+                'notifications_title': '通知非対応',
+                'notifications_message': 'お使いのブラウザは通知APIをサポートしていません。',
+                'permission_denied_title': '権限が拒否されました',
+                'permission_denied_message': 'デバイスの動作へのアクセスが拒否されました。ブラウザの設定で有効にしてください。',
+                'popup_ok': 'OK',
+                'popup_exit': '終了'
+    
+            }
+        };
+
+        // α0.10.2: 版本代碼生成邏輯
+        function generateRandomCode(length = 5) {
+            const ALLOWED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*-+=[]{}|?<>~`';
+            
+            let code = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * ALLOWED_CHARS.length);
+                code += ALLOWED_CHARS[randomIndex];
+            }
+            return code;
+        }
+
+        function getFullVersionString() {
+            const randomCode = generateRandomCode(5);
+            const VERSION_CODE = "0.10.2"; // 確保此處使用正確的代碼
+            return `version: Internal_α${VERSION_CODE}(${randomCode})`;
+        }
+        // α0.10.2: 版本代碼生成邏輯結束
+
+        function setLanguage(lang) {
+            const t = translations[lang];
+            messageElement.textContent = t.start_message;
+            settingsButton.textContent = t.settings_button;
+            document.getElementById('settings-title').textContent = t.settings_title;
+            document.getElementById('upload-video-label').textContent = t.upload_video_label;
+           
+             document.getElementById('video-url-label').textContent = t.video_url_label;
+            document.getElementById('always-use-url-label').textContent = t.always_use_url_label;
+            document.getElementById('guide-url-label').textContent = t.guide_url_label;
+            document.getElementById('use-iframe-label').textContent = t.use_iframe_label;
+            document.getElementById('language-label').textContent = t.language_label;
+            document.getElementById('device-event-detect-label').textContent = t.device_event_detect_label;
+            // α0.10.2: 新增翻譯設定
+            document.getElementById('navigation-detection-test-label').textContent = t.navigation_detection_test_label;
+            document.getElementById('notifications-api-button').textContent = t.notifications_api_button;
+            resetButton.textContent = t.reset_button;
+            closeButton.textContent = t.close_button;
+            loadingMessage.textContent = t.loading_message;
+            document.getElementById('popup-close-button').textContent = t.popup_ok;
+            document.getElementById('popup-exit-button').textContent = t.popup_exit;
+            // Password button labels
+            setupConfirmButton.textContent = t.password_confirm;
+            setupCancelButton.textContent = t.password_cancel;
+            inputConfirmButton.textContent = t.password_confirm;
+            inputCancelButton.textContent = t.password_cancel;
+            confirmConfirmButton.textContent = t.password_confirm;
+            confirmCancelButton.textContent = t.password_cancel;
+
+            setupPopupTitle.textContent = t.password_setup_title;
+            setupPopupPrompt.textContent = t.password_prompt;
+            inputPopupTitle.textContent = t.password_input_title;
+            confirmPopupTitle.textContent = t.password_confirm_title;
+            confirmPopupPrompt.textContent = t.password_confirm_prompt;
+            // New feature labels
+            document.getElementById('wake-lock-label').textContent = t.wake_lock_label;
+            document.getElementById('mute-video-label').textContent = t.mute_video_label;
+
+            updatePasswordButtonText();
+        }
+
+        function updatePasswordButtonText() {
+            const lang = languageSelect.value;
+            const t = translations[lang];
+            if (getPassword()) {
+                setPasswordButton.textContent = t.change_password;
+                turnOffPasswordButton.style.display = 'block';
+            } else {
+                setPasswordButton.textContent = t.set_password;
+                turnOffPasswordButton.style.display = 'none';
+            }
+            turnOffPasswordButton.textContent = t.turn_off_password;
+        }
+
+        // --- Wake Lock Logic ---
+        async function acquireWakeLock() {
+            if (!wakeLockCheckbox.checked || wakeLockSentinel !== null || !('wakeLock' in navigator)) return;
+            try {
+                wakeLockSentinel = await navigator.wakeLock.request('screen');
+                wakeLockSentinel.addEventListener('release', () => {
+                    console.log('Wake Lock released by system.');
+                    wakeLockSentinel = null;
+                });
+                console.log('Wake Lock acquired.');
+            } catch (err) {
+                console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+                wakeLockSentinel = null;
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLockSentinel) {
+                wakeLockSentinel.release();
+                wakeLockSentinel = null;
+                console.log('Wake Lock released by application.');
+            }
+        }
+
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLockSentinel !== null && document.visibilityState === 'visible') {
+                acquireWakeLock();
+            }
+        });
+        // --- Wake Lock Logic End ---
+
+        // --- Password Logic ---
+        function getPassword() {
+            return localStorage.getItem(PASSWORD_KEY);
+        }
+        
+        function savePassword(pwd) {
+            localStorage.setItem(PASSWORD_KEY, pwd);
+        }
+        
+        function removePassword() {
+            localStorage.removeItem(PASSWORD_KEY);
+        }
+        
+        function isValidPassword(pwd) {
+            const t = translations[languageSelect.value];
+            const trimmedPwd = pwd.trim();
+            
+            if (!pwd || trimmedPwd === "") {
+                return t.password_error_empty;
+            }
+            // Check for whitespace anywhere
+            if (/\s/.test(pwd)) {
+                 return t.password_error_empty;
+            }
+            
+            if (pwd.length > 30) {
+                return t.password_error_length;
+            }
+            
+            // Check for English letters, numbers, and common English punctuation
+            const strictPattern = /^[a-zA-Z0-9!@#$%^&*()_+=\-\[\]{}|\\:;"'<>,.?/~`]+$/;
+            if (!strictPattern.test(pwd)) {
+                 return t.password_error_invalid_chars;
+            }
+        
+            return true; // Valid
+        }
+
+        // 顯示密碼驗證視窗
+        function showPasswordConfirmation(firstPwd) {
+            newPasswordTentative = firstPwd;
+            confirmPasswordInput.value = '';
+            confirmError.textContent = '';
+            
+            passwordConfirmPopup.style.display = 'flex';
+            passwordSetupPopup.style.display = 'none';
+            
+            confirmPasswordInput.focus();
+        }
+
+        // 處理密碼驗證邏輯
+        function handleConfirmPassword() {
+            const secondPwd = confirmPasswordInput.value;
+      
+            const t = translations[languageSelect.value];
+
+            if (secondPwd === newPasswordTentative) {
+                // Success: Save the password
+                savePassword(secondPwd);
+                passwordConfirmPopup.style.display = 'none';
+                updatePasswordButtonText();
+                newPasswordTentative = '';
+            } else {
+                // Failure: Show error
+                confirmError.textContent = t.password_error_mismatch;
+            }
+        }
+
+        function showPasswordSetup() {
+            newPasswordInput.value = '';
+            setupError.textContent = '';
+            
+            passwordSetupPopup.style.display = 'flex';
+            passwordInputPopup.style.display = 'none';
+            
+            newPasswordInput.focus();
+        }
+        
+        function handleSetPassword() {
+            const newPwd = newPasswordInput.value;
+            const validationResult = isValidPassword(newPwd);
+            
+            if (validationResult === true) {
+                // Success in first validation, proceed to confirmation
+                showPasswordConfirmation(newPwd);
+            } else {
+                setupError.textContent = validationResult;
+            }
+        }
+
+        // 使用全域回調函數來解決動態監聽器替換可能導致的錯誤
+        function showPasswordInput(successCallback, failCallback = () => {}) {
+            currentPasswordInput.value = '';
+            inputError.textContent = '';
+            passwordInputPopup.style.display = 'flex';
+            passwordSetupPopup.style.display = 'none';
+
+            currentPasswordSuccessCallback = successCallback;
+            // 替換 inputCancelButton 監聽器，確保執行提供的 failCallback
+            // 為了不依賴 replaceWith，我們直接獲取元素並添加/替換事件
+            const currentCancelButton = document.getElementById('input-cancel-button');
+            const newCancelButton = currentCancelButton.cloneNode(true);
+            currentCancelButton.parentNode.replaceChild(newCancelButton, currentCancelButton);
+            newCancelButton.addEventListener('click', (event) => {
+                event.stopPropagation(); // 防止誤觸
+                passwordInputPopup.style.display = 'none';
+                failCallback(); 
+            });
+
+            currentPasswordInput.focus();
+        }
+
+        // --- IndexedDB and Settings Loading ---
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            db.createObjectStore(storeName, { keyPath: 'id' });
+        };
+        
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSettings();
+        };
+
+        function showCustomPopup(title, message, showExit = false) {
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            popupExitButton.style.display = showExit ? 'inline-block' : 'none';
+            customPopup.style.display = 'flex';
+        }
+
+        function loadSettings() {
+            const savedLanguage = localStorage.getItem('saverloopLanguage') ||
+            'en';
+            languageSelect.value = savedLanguage;
+            setLanguage(savedLanguage);
+
+            const savedRedirectUrl = localStorage.getItem('saverloopRedirectUrl');
+            if (savedRedirectUrl) {
+                urlInput.value = savedRedirectUrl;
+            } else {
+                urlInput.value = defaultRedirectUrl;
+            }
+
+            const savedVideoUrl = localStorage.getItem('saverloopVideoUrl');
+            if (savedVideoUrl) {
+                videoUrlInput.value = savedVideoUrl;
+            }
+
+            const savedAlwaysUseUrl = localStorage.getItem('saverloopAlwaysUseUrl');
+            alwaysUseUrlCheckbox.checked = savedAlwaysUseUrl === 'true';
+
+            const savedUseIframe = localStorage.getItem('saverloopUseIframe');
+            useIframeCheckbox.checked = savedUseIframe === 'true';
+
+            const savedDeviceEventDetect = localStorage.getItem('saverloopDeviceEventDetect');
+            deviceEventDetectCheckbox.checked = savedDeviceEventDetect === 'true';
+
+            const savedWakeLock = localStorage.getItem(WAKE_LOCK_KEY);
+            wakeLockCheckbox.checked = savedWakeLock === 'true';
+
+            const savedMuteVideo = localStorage.getItem(MUTE_VIDEO_KEY);
+            muteVideoCheckbox.checked = savedMuteVideo === 'true';
+            
+            // α0.10.2: 載入新開關狀態
+            const savedNavigationTest = localStorage.getItem(NAVIGATION_TEST_KEY);
+            navigationDetectionTestCheckbox.checked = savedNavigationTest === 'true';
+
+            updatePasswordButtonText();
+            
+            if (alwaysUseUrlCheckbox.checked && videoUrlInput.value) {
+                videoElement.src = videoUrlInput.value;
+            } else {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const getRequest = store.get('userVideo');
+                
+                getRequest.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result && result.videoBlob) {
+                        const videoUrl = URL.createObjectURL(result.videoBlob);
+                        videoElement.src = videoUrl;
+                    } else {
+                        videoElement.src = defaultVideoUrl;
+                    }
+                };
+            }
+        }
+        
+        function saveSettings() {
+            localStorage.setItem('saverloopLanguage', languageSelect.value);
+            localStorage.setItem('saverloopRedirectUrl', urlInput.value);
+            localStorage.setItem('saverloopVideoUrl', videoUrlInput.value);
+            localStorage.setItem('saverloopAlwaysUseUrl', alwaysUseUrlCheckbox.checked);
+            localStorage.setItem('saverloopUseIframe', useIframeCheckbox.checked);
+            localStorage.setItem('saverloopDeviceEventDetect', deviceEventDetectCheckbox.checked);
+            
+            localStorage.setItem(WAKE_LOCK_KEY, wakeLockCheckbox.checked);
+            localStorage.setItem(MUTE_VIDEO_KEY, muteVideoCheckbox.checked);
+            
+            // α0.10.2: 儲存新開關狀態
+            localStorage.setItem(NAVIGATION_TEST_KEY, navigationDetectionTestCheckbox.checked);
+            
+            if (!alwaysUseUrlCheckbox.checked && videoUpload.files.length > 0) {
+                const file = videoUpload.files[0];
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                store.put({ id: 'userVideo', videoBlob: file });
+            }
+        }
+        
+        // 新增輔助函數來處理播放失敗
+        function handlePlaybackFailure(e) {
+            console.error("Video playback failed: ", e);
+            messageContainer.style.display = 'block';
+            videoElement.style.display = 'none';
+            messageElement.textContent = translations[languageSelect.value].playback_failed;
+            isPlaying = false;
+            releaseWakeLock();
+        }
+
+        // BUG FIX: 影片播放和全螢幕的同步問題（Safest iOS PWA Retry）
+        function startVideo() {
+            if (isPlaying) return;
+            isPlaying = true;
+            
+            messageContainer.style.display = 'none';
+            videoElement.style.display = 'block';
+
+            videoElement.muted = muteVideoCheckbox.checked;
+            // 1. 準備全螢幕 Promise (處理非 Promise 的 webkitEnterFullscreen 和失敗)
+            const fullscreenPromise = new Promise(resolve => {
+                if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen()
+                        .then(resolve)
+            
+                        .catch(e => {
+                            console.warn('Fullscreen failed, continuing playback:', e);
+                            resolve(); // 即使失敗也要繼續
+                        
+                        });
+                } else if (videoElement.webkitEnterFullscreen) {
+                    // iOS Webkit: 同步呼叫，但我們需要延遲確保它發生
+                    videoElement.webkitEnterFullscreen();
+                    setTimeout(resolve, 100); 
+               
+                } else {
+                    resolve(); // 無全螢幕 API
+                }
+            });
+            // 2. 啟動播放並等待全螢幕完成
+            videoElement.play().then(() => {
+                return fullscreenPromise;
+            }).then(() => {
+                // 3. 鎖定螢幕
+                acquireWakeLock();
+
+                // 4. iOS 
+                // PWA 專用修復：檢查並延遲重試播放
+                // 如果影片在進入全螢幕後立即卡住 (paused 或 currentTime < 0.1)
+                if (videoElement.paused || videoElement.currentTime < 0.1) {
+                    console.log('Video paused/stuck after fullscreen transition, performing delayed re-attempt.');
+                    
+        
+                    // 使用 setTimeout 確保是在全螢幕渲染完成後再嘗試播放，這是 iOS 關鍵。
+                    setTimeout(() => {
+                        videoElement.play().catch(e => {
+                            console.error("Retry play failed: ", e);
+   
+                            // 這裡不執行 handlePlaybackFailure，因為外層的 catch 已經處理了主要失敗。
+                        });
+                    }, 50); // 50ms 延遲
+                }
+       
+            }).catch(e => {
+                // 處理初次播放失敗（例如沒有使用者手勢）
+                handlePlaybackFailure(e);
+            });
+        }
+        
+        function handleIframeLoad() {
+            iframeContainer.style.display = 'none';
+            videoElement.style.display = 'none';
+            loadingPopup.style.display = 'flex';
+            infoIframe.src = urlInput.value;
+            
+            acquireWakeLock();
+            const loadTimer = setTimeout(() => {
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+                releaseWakeLock();
+            }, 5000);
+            infoIframe.onload = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                iframeContainer.style.display = 'block';
+                startIdleTimer();
+            };
+
+            infoIframe.onerror = () => {
+                clearTimeout(loadTimer);
+                loadingPopup.style.display = 'none';
+                showCustomPopup(translations[languageSelect.value].iframe_load_title, translations[languageSelect.value].iframe_load_message, true);
+                releaseWakeLock();
+            };
+        }
+        
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                startCountdown();
+            }, 30000);
+        }
+        
+        function resetIdleTimer() {
+            if (loadingPopup.style.display === 'flex' || customPopup.style.display === 'flex') {
+                return;
+            }
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            iframeOverlay.style.display = 'flex';
+            
+            countdownTimer = setInterval(() => {
+                const message = translations[languageSelect.value].continue_browsing_message.replace('{seconds}', seconds);
+                document.getElementById('continue-browsing-message').textContent = message;
+                
+                seconds--;
+                if (seconds < 0) {
+   
+                     clearInterval(countdownTimer);
+                    iframeContainer.style.display = 'none';
+                    resetToStart();
+                }
+            }, 1000);
+        }
+        
+        function cancelCountdown() {
+            clearInterval(countdownTimer);
+            iframeOverlay.style.display = 'none';
+            resetIdleTimer();
+        }
+
+        function resetToStart() {
+            isPlaying = false;
+            videoElement.currentTime = 0;
+            videoElement.pause();
+            videoElement.style.display = 'none';
+            messageContainer.style.display = 'block';
+            messageElement.textContent = translations[languageSelect.value].start_message;
+            releaseWakeLock();
+        }
+
+        // --- Event Listeners ---
+
+        document.body.addEventListener('click', (event) => {
+            // 防止誤觸: 檢查是否有任何彈出視窗開啟
+            const isPopupOpen = settingsPanel.style.display === 'flex' || 
+                                iframeContainer.style.display === 'block' || 
+        
+                                customPopup.style.display === 'flex' || 
+                                loadingPopup.style.display === 'flex' || 
+                                deviceEventPopup.style.display === 'flex' || 
+        
+                                passwordInputPopup.style.display === 'flex' || 
+                                passwordSetupPopup.style.display === 'flex' || 
+                            
+                passwordConfirmPopup.style.display === 'flex'; 
+
+            if (isPopupOpen) {
+                return;
+            }
+            if (!isPlaying) {
+                startVideo();
+            } else {
+       
+                 if (useIframeCheckbox.checked) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    videoElement.currentTime = 0;
+                    videoElement.pause();
+                    videoElement.style.display = 'none';
+                    handleIframeLoad();
+                } else {
+                    videoElement.pause();
+                }
+            }
+        });
+        // Main Settings Button Handler (with Password Protection)
+        settingsButton.addEventListener('click', () => {
+            if (getPassword()) {
+                showPasswordInput(
+                    () => { settingsPanel.style.display = 'flex'; }, // Success: Open settings
+                    () => 
+                    { /* Failure: Do nothing */ }
+                );
+            } else {
+                settingsPanel.style.display = 'flex';
+            }
+        });
+        // Password Button Event Listeners
+        setPasswordButton.addEventListener('click', () => {
+            if (getPassword()) {
+                // Change Password flow: Ask for current password first
+                showPasswordInput(
+                    () => { showPasswordSetup(); }, // Success: Open Setup/Change window
+  
+                    () => { /* Failure: Do nothing */ }
+                );
+            } else {
+                // Set Password flow: Go straight to Setup window
+                showPasswordSetup();
+    
+            }
+        });
+        turnOffPasswordButton.addEventListener('click', () => {
+            if (!getPassword()) return;
+            
+            // Turn off Password flow: Ask for current password
+            showPasswordInput(
+                () => { // Success: Delete password
+                 
+                    removePassword();
+                    updatePasswordButtonText();
+                },
+                () => { /* Failure: Do nothing */ }
+            );
+        });
+        // 密碼設定取消按鈕 
+        setupCancelButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            passwordSetupPopup.style.display = 'none';
+            setupError.textContent = '';
+        });
+        // 密碼驗證取消按鈕 
+        confirmCancelButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            passwordConfirmPopup.style.display = 'none';
+            newPasswordTentative = '';
+        });
+        // 關閉按鈕事件處理 (阻止誤觸播放)
+        closeButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // 阻止事件冒泡到 document.body，防止誤觸播放
+            saveSettings();
+            settingsPanel.style.display = 'none';
+        });
+        // 阻止密碼彈出視窗的點擊事件冒泡
+        passwordSetupPopup.addEventListener('click', (e) => e.stopPropagation());
+        passwordInputPopup.addEventListener('click', (e) => e.stopPropagation());
+        passwordConfirmPopup.addEventListener('click', (e) => e.stopPropagation());
+
+
+        // 影片/iFrame 相關監聽器
+        document.addEventListener('fullscreenchange', exitFullscreenHandler);
+        document.addEventListener('webkitfullscreenchange', exitFullscreenHandler);
+        function exitFullscreenHandler() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!isFullscreen && isPlaying && useIframeCheckbox.checked) {
+                 handleIframeLoad();
+            }
+        }
+        
+        iframeOverlay.addEventListener('click', (event) => {
+            event.stopPropagation();
+            cancelCountdown();
+        });
+        iframeContainer.addEventListener('mousemove', resetIdleTimer);
+        iframeContainer.addEventListener('touchstart', resetIdleTimer);
+        iframeContainer.addEventListener('scroll', resetIdleTimer);
+
+        // 影片暫停後導向邏輯
+        videoElement.addEventListener('pause', () => {
+            releaseWakeLock(); 
+            if (isPlaying && !useIframeCheckbox.checked) {
+                isPlaying = false; 
+                window.location.href = urlInput.value;
+            }
+    
+        });
+
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                resetToStart();
+            }
+        });
+        // Device Event Detection (Retained from α0.8)
+        let motionStoppedTimer;
+        function handleDeviceMotion(event) {
+            const acceleration = event.accelerationIncludingGravity;
+            const sumOfAcceleration = Math.abs(acceleration.x) + Math.abs(acceleration.y) + Math.abs(acceleration.z);
+            const isMoving = sumOfAcceleration > 0.5;
+            if (isMoving) {
+                deviceEventPopup.style.display = 'flex';
+                clearTimeout(motionStoppedTimer);
+            } else {
+                clearTimeout(motionStoppedTimer);
+                motionStoppedTimer = setTimeout(() => {
+                    deviceEventPopup.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        function toggleDeviceEventDetection() {
+            if (deviceEventDetectCheckbox.checked) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission().then(permissionState => {
+                        if 
+                        (permissionState === 'granted') {
+                            window.addEventListener('devicemotion', handleDeviceMotion);
+                        } else {
+                            deviceEventDetectCheckbox.checked = false;
+            
+                            showCustomPopup(translations[languageSelect.value].permission_denied_title, translations[languageSelect.value].permission_denied_message);
+                        }
+                    }).catch(console.error);
+                } else if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', handleDeviceMotion);
+                } else {
+                    deviceEventDetectCheckbox.checked = false;
+                    alert('DeviceMotion is not supported on this device.');
+                }
+            } else {
+                window.removeEventListener('devicemotion', handleDeviceMotion);
+                deviceEventPopup.style.display = 'none';
+            }
+        }
+        
+        // 其他監聽器
+        resetButton.addEventListener('click', () => {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete('userVideo');
+            videoElement.src = defaultVideoUrl;
+    
+            removePassword();
+            
+            videoUrlInput.value = "";
+            urlInput.value = defaultRedirectUrl;
+            alwaysUseUrlCheckbox.checked = false;
+            useIframeCheckbox.checked = false;
+            
+            deviceEventDetectCheckbox.checked = false;
+            wakeLockCheckbox.checked = false;
+            muteVideoCheckbox.checked = false;
+            
+            // α0.10.2: 重設新開關狀態
+            navigationDetectionTestCheckbox.checked = false;
+
+            toggleDeviceEventDetection();
+            releaseWakeLock();
+
+            localStorage.clear();
+            loadSettings();
+        });
+        languageSelect.addEventListener('change', (event) => {
+            setLanguage(event.target.value);
+        });
+        
+        // α0.10.2: 新開關的事件監聽器
+        navigationDetectionTestCheckbox.addEventListener('change', () => {
+            const isChecked = navigationDetectionTestCheckbox.checked;
+            // 由於 saveSettings() 會在 closeButton 點擊時呼叫，這裡可以只做 log 輸出
+            console.log(`[0.10.2 Test] Navigation Detection Test set to: ${isChecked ? 'Enabled' : 'Disabled'}`);
+        });
+
+        deviceEventDetectCheckbox.addEventListener('change', toggleDeviceEventDetection);
+
+        notificationsApiButton.addEventListener('click', () => {
+            if (!('Notification' in window)) {
+                showCustomPopup(translations[languageSelect.value].notifications_title, translations[languageSelect.value].notifications_message);
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') 
+                {
+                    new Notification('saverloop(debug)', {
+                        body: 'NotificationsAPI testing'
+                    });
+                }
+            });
+    
+        });
+        
+        popupCloseButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+            if (popupExitButton.style.display === 'inline-block') {
+                resetToStart();
+            }
+        });
+        popupExitButton.addEventListener('click', () => {
+            customPopup.style.display = 'none';
+            resetToStart();
+        });
+        settingsPanel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+        // 密碼輸入的確認按鈕 (使用全域回調函數)
+        inputConfirmButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            const currentPwd = currentPasswordInput.value;
+            const storedPwd = getPassword();
+            const t = translations[languageSelect.value];
+
+            if (currentPwd === storedPwd) {
+             
+                passwordInputPopup.style.display = 'none';
+                currentPasswordSuccessCallback(); 
+            } else {
+                inputError.textContent = t.password_error_incorrect;
+            }
+        });
+        // 密碼設定/更改的確認按鈕
+        setupConfirmButton.addEventListener('click', handleSetPassword);
+        // 密碼驗證的確認按鈕
+        confirmConfirmButton.addEventListener('click', handleConfirmPassword);
+        
+        // α0.10.2: 在 DOMContentLoaded 後顯示版本號
+        document.addEventListener('DOMContentLoaded', () => {
+            if (versionDisplayElement) {
+                versionDisplayElement.textContent = getFullVersionString();
+            }
+        });
+    </script>
+</body>
+</html>
