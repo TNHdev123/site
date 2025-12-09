@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰術與方塊研究所 | Tactics & Blocks Research</title>
+    <style>
+        /* == 基礎重置與佈局 == */
+        :root {
+            --primary-color: #0056b3;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* == Header 專業化設計 == */
+        header {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        header p {
+            margin-top: 10px;
+            font-size: 1.1em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        /* 作者欄位 */
+        .author-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            backdrop-filter: blur(5px);
+        }
+        .author-badge img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid white;
+        }
+        .author-badge span {
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        /* == 搜尋框設計 == */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            transition: box-shadow 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 4px 20px rgba(0,86,179,0.2);
+        }
+
+        /* == 首頁網格排版 (Grid Layout) == */
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .article-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #eee;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #eee;
+        }
+
+        .card-body {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-tag {
+            align-self: flex-start;
+            background-color: #f0f2f5;
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-main);
+            text-decoration: none;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+        .card-title:hover {
+            color: var(--primary-color);
+        }
+
+        .read-more-btn {
+            margin-top: 15px;
+            color: var(--primary-color);
+            font-size: 0.9em;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        /* == 文章內頁樣式 == */
+        .article-section {
+            display: none;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            animation: fadeIn 0.4s ease;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .article-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        .article-header h2 {
+            font-size: 2em;
+            color: var(--text-main);
+            margin-bottom: 15px;
+        }
+        .article-info {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        .article-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #eee;
+        }
+
+        .cover-image-large {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .article-body p {
+            font-size: 1.1em;
+            color: #444;
+            margin-bottom: 1.8em;
+            text-align: justify;
+        }
+
+        /* == 惡作劇誘餌區塊 (Prank Lure) == */
+        .prank-lure {
+            margin-top: 50px;
+            padding: 30px;
+            background: linear-gradient(to right, #fff5f5, #fff);
+            border-left: 5px solid var(--accent-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .prank-lure p {
+            color: #c0392b;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .prank-lure a {
+            display: inline-block;
+            padding: 14px 30px;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+            transition: all 0.2s;
+        }
+        .prank-lure a:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* == 頁面切換邏輯 (:target) == */
+        .article-section:target {
+            display: block;
+        }
+        .article-section:target ~ #homepage {
+            display: none;
+        }
+        .article-section:target ~ header {
+            display: none; /* 閱讀文章時隱藏大標題，更專注 */
+        }
+        
+        .back-nav {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .back-to-home {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-to-home::before {
+            content: "←";
+            margin-right: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* RWD */
+        @media (max-width: 768px) {
+            .article-grid { grid-template-columns: 1fr; }
+            .cover-image-large { height: 250px; }
+            header { padding: 30px 20px; }
+            .article-section { padding: 20px; }
+        }
+        
+        /* 隱藏搜尋不到的項目 */
+        .hidden-item {
+            display: none !important;
+        }
+        
+        /* 搜尋無結果提示 */
+        #no-result {
+            display: none;
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sport-ft1" class="article-section">
+        <div class="article-header">
+            <h2>解構邊路衛的隱藏跑位：現代足球的關鍵戰術解析</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/12/09 &bull; 足球戰術</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=1200&q=80" alt="足球戰術" class="cover-image-large">
+        <div class="article-body">
+            <p>邊路衛內收中場，這無疑是當代足球戰術中最引人入勝的一步棋。他們不再是單純的邊路工人，而是戰術調度大師手裡最鋒利的匕首。當他們潛入中場，瞬間形成三角站位，這是對對手區域防守的一次致命「降維打擊」。想想看，當你試圖在中路建立防線時，突然發現曼城或阿森納的邊路衛已經在你的中場組織進攻，這種壓力是毀滅性的。</p>
+            <p>然而，這套戰術的代價極高：一旦中場被搶斷，後防線就會暴露出一大片真空地帶。這種高風險、高回報的戰術博弈，正是現代頂級聯賽的魅力所在。這需要邊路衛具備出色的傳球視野和控球技術。</p>
+            <div class="prank-lure">
+                <p>⚠️ 這篇文章只揭示了表面戰術！真正的戰術密碼，隱藏在分析師的內部數據中。</p>
+                <a href="https://tnttc2.github.io/iog.github.io/http520.html" target="_self">查看艾倫私藏！核心數據報告（機密）</a>
+            </div>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="sport-bt1" class="article-section">
+        <div class="article-header">
+            <h2>高階技巧：如何利用「假動作」破解頂級防守</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/28 &bull; 羽毛球技巧</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1611250282006-e35370e3a60e?auto=format&fit=crop&w=1200&q=80" alt="羽毛球技巧" class="cover-image-large">
+        <div class="article-body">
+            <p>羽毛球，看似輕盈優雅，實則是毫秒之間的心理與物理博弈。當雙方的身體條件與技術都達到頂級時，決定勝負的就只剩下「欺騙」。一個成功的假動作，關鍵在於一致性。你必須讓你的手臂、身體和眼神保持一個「中立」的狀態，讓對手以為你要進行殺球或挑球，但卻在最後一瞬間，利用手腕的細微調整，輕輕將球推向對手意想不到的空檔。</p>
+            <p>真正的羽毛球大師，比的不是蠻力，而是誰能更早讓對手「啟動」錯誤。讓對手誤判一毫秒，就足以讓他成為救不到球的局外人。這需要數以千計次的訓練，才能把「欺騙」變成身體的本能反應。</p>
+            <div class="prank-lure">
+                <p>🔥 技巧的背後，是瘋狂的訓練！想知道如何將假動作融入本能？</p>
+                <a href="https://tnttc2.github.io/iog.github.io/http520.html" target="_self">獨家公開！史密斯教練的機密訓練菜單</a>
+            </div>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-fg1" class="article-section">
+        <div class="article-header">
+            <h2>次世代足球遊戲：2026 年潛力新秀數據深度解析</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/12/01 &bull; 足球遊戲</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="遊戲數據分析" class="cover-image-large">
+        <div class="article-body">
+            <p>在足球遊戲的生涯模式中，尋找潛力新秀就像是在股市裡尋找未上市的獨角獸。單看 OVR 是新手才做的事！真正影響一名年輕球員能否在遊戲世界中成為傳奇的，是那些心理與戰術意識的隱性數據。預計在 2026 年版本，遊戲將會大幅提升「冷靜」（Composure）和「決心」（Determination）這類數值的權重。</p>
+            <p>這類數值過低的球員，即使技術再好，在比賽的關鍵時刻也會頻頻失誤。我們預測，來自南美和東歐聯賽中，那些總評在 70-75 之間但潛力在 90 以上的新秀，將會是遊戲生涯模式中最具投資價值的選擇。</p>
+            <div class="prank-lure">
+                <p>⚡ 這些分析都來自遊戲核心！我們取得了遊戲引擎的內部代碼。</p>
+                <a href="https://tnttc2.github.io/iog.github.io/http520.html" target="_self">點擊下載遊戲引擎的內部機密代碼文件</a>
+            </div>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-mc1" class="article-section">
+        <div class="article-header">
+            <h2>1.25.0 更新預覽：被官方雪藏的隱藏生物與機制</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/15 &bull; Minecraft</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=1200&q=80" alt="神秘生物" class="cover-image-large">
+        <div class="article-body">
+            <p>我必須告訴你一個令人振奮的消息：據可靠消息來源透露，官方在 1.25.0 版本中悄悄植入了一個名為「時間扭曲（Time Warp）」的機制。這個機制與一個名為「古代守護者幽靈」的新生物有關。這個幽靈只在特定的 Y 軸高度和月相下出現。</p>
+            <p>如果這個機制被證實，它將徹底顛覆資源收集和地圖探索的邏輯。據傳擊敗它可以掉落一種能逆轉方塊生成時間的稀有材料。目前官方僅釋出了部分相關的代碼片段，但其完整的生成條件和行為模式仍是個謎團。</p>
+            <div class="prank-lure">
+                <p>💎 別錯過這個機會！我們已經取得了這個隱藏生物的生成代碼！</p>
+                <a href="https://tnttc2.github.io/iog.github.io/http520.html" target="_self">獨家解鎖！艾倫的私密設計圖紙與種子碼</a>
+            </div>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="sport-ft2" class="article-section">
+        <div class="article-header">
+            <h2>數據盲區：頂級聯賽中場傳球成功率與勝率的關係</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/05 &bull; 數據分析</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1200&q=80" alt="足球數據" class="cover-image-large">
+        <div class="article-body">
+            <p>如果你只看中場傳球成功率，來判斷一位球員的優劣，那你只看到了冰山一角。我見過太多數據上接近 95% 傳球成功率的中場，踢出的比賽卻像一潭死水。這些「安全球」只是在後場進行無意義的橫傳，對撕裂對手防線毫無貢獻。真正的勝率提升，來自於那些敢於、並且精準完成的前向傳球（Forward Passes）。一名中場球員如果能在每場比賽中完成高風險、高難度、但能直接創造得分機會的傳球，即使成功率降至 85%，其對勝利的貢獻也遠超那些只求穩定的傳球手。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="sport-ft3" class="article-section">
+        <div class="article-header">
+            <h2>經典戰術回顧：義大利鏈式防守的現代應用與限制</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/10/25 &bull; 戰術歷史</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1200&q=80" alt="經典足球" class="cover-image-large">
+        <div class="article-body">
+            <p>鏈式防守（Catenaccio）絕不是一個過時的名詞，它是一種永不過時的足球哲學——紀律性與犧牲。雖然在當代，純粹的「清道夫」角色已經消失，但鏈式防守對區域防守的嚴密要求，仍被許多強隊吸收。然而，它最大的限制在於：當全隊過於專注防守時，中場控制力就會徹底喪失。面對傳控大師，你的防線會長時間暴露在持續的壓力之下，最終總會崩潰。如何在保持防守穩固的同時，利用中場球員的快速轉移能力，才是現代教練真正需要思考的。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="sport-bt2" class="article-section">
+        <div class="article-header">
+            <h2>專業訓練：羽毛球運動員的力量訓練與爆發力養成</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/20 &bull; 體能訓練</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80" alt="爆發力訓練" class="cover-image-large">
+        <div class="article-body">
+            <p>如果你認為羽毛球只是一項「揮揮手」的運動，那你就大錯特錯了。它對運動員的爆發力要求，甚至不亞於短跑選手。從靜止到啟動的瞬間加速，到跳躍扣殺時核心肌群的穩定與發力，都需要經過系統性的訓練。光是練習耐力跑是遠遠不夠的，我們更專注於增強式訓練（Plyometrics），例如各類型的深蹲跳、箭步跳，以提高腿部肌肉的反應速度。當你的對手在第三局氣喘吁吁時，你的爆發力會成為壓倒駱駝的最後一根稻草。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="sport-bt3" class="article-section">
+        <div class="article-header">
+            <h2>器材選擇：解析不同磅數球線對擊球手感的影響</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/10/01 &bull; 器材裝備</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1613918108466-292b78a8ef95?auto=format&fit=crop&w=1200&q=80" alt="球拍磅數" class="cover-image-large">
+        <div class="article-body">
+            <p>球線磅數的選擇，是每個羽毛球手都必須面對的個人哲學課題。這不僅僅是技術問題，更是一種對手感的追求。高磅數（通常指 27 磅以上）能給你極致的控制力和清脆的擊球聲，讓擊球變得精準；但它對使用者的發力要求也極高。相反地，低磅數（22-25 磅）則能提供更大的彈性，幫助初學者或力量較小的選手輕鬆將球打遠。你的磅數選擇，應該誠實地反映你當前的技術水平。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-fg2" class="article-section">
+        <div class="article-header">
+            <h2>戰術板設定：如何在遊戲中有效運用高位逼搶的參數設定</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/24 &bull; 遊戲戰術</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?auto=format&fit=crop&w=1200&q=80" alt="遊戲戰術" class="cover-image-large">
+        <div class="article-body">
+            <p>高位逼搶（High Pressing）在遊戲中是把雙刃劍，用得好，你的對手連喘息的機會都沒有；用不好，你的後防線就會像紙糊的一樣。關鍵不在於是否選擇高位逼搶，而在於壓迫深度（Depth）的精確調整。我建議將深度設定在 70-80 之間，配合「持續施壓」的防守風格。但你必須隨時準備好手動控制後衛進行補位和造越位，否則你將會因為戰術板上的激進設置而付出慘痛的代價。記住，有效的逼搶，從來都不是盲目的。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-fg3" class="article-section">
+        <div class="article-header">
+            <h2>遊戲物理學：解析次世代引擎中射門與傳球的真實物理模型</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/10 &bull; 遊戲物理</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1200&q=80" alt="物理引擎" class="cover-image-large">
+        <div class="article-body">
+            <p>隨著遊戲引擎的進步，足球遊戲已經從「輸入指令」變成了「模擬物理」。現在你必須像對待真實足球一樣，考慮腳背的角度、旋轉的強度以及空氣動力學的影響。抱怨射門不準之前，先檢查你的球員是否在高速跑動中嘗試低角度射門？這種違反物理的行為，在遊戲中會得到最真實的懲罰。傳球力量的精確控制，決定了球的滾動速度和衰減距離。掌握這些真實物理模型，你才能真正體會到次世代足球遊戲的細膩和挑戰性。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-mc2" class="article-section">
+        <div class="article-header">
+            <h2>終極生存基地建造：防禦與資源整合的高效設計</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/12/03 &bull; 生存指南</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1599507593499-a3f7d7d97667?auto=format&fit=crop&w=1200&q=80" alt="生存基地" class="cover-image-large">
+        <div class="article-body">
+            <p>一個頂級的 Minecraft 生存基地，不僅是視覺上的藝術品，更應該是一台高效率的生存機器。如果你還在手動整理箱子，那你已經浪費了大量的遊戲時間！終極基地設計的精髓在於垂直一體化。將你的熔爐陣列、紅石自動化、和儲物分類系統全部集中在一個垂直軸線上。當你從地表回來時，所有的礦物已經自動分類、冶煉完畢。別再蓋那種佔地面積巨大的平面基地了，向上或向下發展才是王道！</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <div id="game-mc3" class="article-section">
+        <div class="article-header">
+            <h2>紅石電路進階應用：設計自動化農場與分類系統</h2>
+            <div class="article-info">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>艾倫．史密斯 &bull; 2025/11/20 &bull; 紅石科技</span>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80" alt="紅石電路" class="cover-image-large">
+        <div class="article-body">
+            <p>紅石電路，是 Minecraft 世界的現代工業之魂。如果你仍認為紅石只是用來開關燈的工具，那你錯失了太多！進階紅石的應用，能夠讓你設計出幾乎完全自動化的農場，從收割、傳送到分類，全部由紅石完成。核心在於時鐘電路的精準控制和物品過濾器的聰明運用。通過使用比較器和漏斗，你可以設計出複雜的邏輯門，確保每個物品都能準確無誤地進入對應的儲物箱。掌握紅石的邏輯，你就打開了一個全新的世界。</p>
+        </div>
+        <div class="back-nav"><a href="#homepage" class="back-to-home">返回首頁</a></div>
+    </div>
+
+    <header>
+        <div class="container">
+            <h1>戰術與方塊研究所</h1>
+            <p>Tactics & Blocks Research | 艾倫．史密斯專欄</p>
+            <div class="author-badge">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="艾倫">
+                <span>首席分析師：Allen Smith</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" id="homepage">
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋文章 (例如: 足球, Minecraft, 戰術...)">
+        </div>
+
+        <ul class="article-grid" id="articleGrid">
+            
+            <li class="article-card" data-title="解構邊路衛的隱藏跑位：現代足球的關鍵戰術解析 足球戰術" data-category="足球">
+                <img src="https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=600&q=80" class="card-img" alt="足球">
+                <div class="card-body">
+                    <span class="category-tag">⚽ 足球戰術</span>
+                    <a href="#sport-ft1" class="card-title">解構邊路衛的隱藏跑位：現代足球的關鍵戰術解析</a>
+                    <a href="#sport-ft1" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="高階技巧：如何利用「假動作」破解頂級防守 羽毛球" data-category="羽毛球">
+                <img src="https://images.unsplash.com/photo-1611250282006-e35370e3a60e?auto=format&fit=crop&w=600&q=80" class="card-img" alt="羽球">
+                <div class="card-body">
+                    <span class="category-tag">🏸 羽球技巧</span>
+                    <a href="#sport-bt1" class="card-title">高階技巧：如何利用「假動作」破解頂級防守</a>
+                    <a href="#sport-bt1" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="次世代足球遊戲：2026 年潛力新秀數據深度解析 遊戲" data-category="遊戲">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" class="card-img" alt="遊戲">
+                <div class="card-body">
+                    <span class="category-tag">🎮 足球遊戲</span>
+                    <a href="#game-fg1" class="card-title">次世代足球遊戲：2026 年潛力新秀數據深度解析</a>
+                    <a href="#game-fg1" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="1.25.0 更新預覽：被官方雪藏的隱藏生物與機制 Minecraft" data-category="Minecraft">
+                <img src="https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=600&q=80" class="card-img" alt="MC">
+                <div class="card-body">
+                    <span class="category-tag">⛏️ Minecraft</span>
+                    <a href="#game-mc1" class="card-title">1.25.0 更新預覽：被官方雪藏的隱藏生物與機制</a>
+                    <a href="#game-mc1" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="數據盲區：頂級聯賽中場傳球成功率與勝率的關係 足球" data-category="足球">
+                <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=600&q=80" class="card-img" alt="數據">
+                <div class="card-body">
+                    <span class="category-tag">⚽ 數據分析</span>
+                    <a href="#sport-ft2" class="card-title">數據盲區：頂級聯賽中場傳球成功率與勝率的關係</a>
+                    <a href="#sport-ft2" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="經典戰術回顧：義大利鏈式防守的現代應用與限制 足球" data-category="足球">
+                <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=600&q=80" class="card-img" alt="戰術">
+                <div class="card-body">
+                    <span class="category-tag">⚽ 戰術歷史</span>
+                    <a href="#sport-ft3" class="card-title">經典戰術回顧：義大利鏈式防守的現代應用與限制</a>
+                    <a href="#sport-ft3" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="專業訓練：羽毛球運動員的力量訓練與爆發力養成 羽毛球" data-category="羽毛球">
+                <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80" class="card-img" alt="訓練">
+                <div class="card-body">
+                    <span class="category-tag">🏸 體能訓練</span>
+                    <a href="#sport-bt2" class="card-title">專業訓練：羽毛球運動員的力量訓練與爆發力養成</a>
+                    <a href="#sport-bt2" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="器材選擇：解析不同磅數球線對擊球手感的影響 羽毛球" data-category="羽毛球">
+                <img src="https://images.unsplash.com/photo-1613918108466-292b78a8ef95?auto=format&fit=crop&w=600&q=80" class="card-img" alt="球拍">
+                <div class="card-body">
+                    <span class="category-tag">🏸 器材裝備</span>
+                    <a href="#sport-bt3" class="card-title">器材選擇：解析不同磅數球線對擊球手感的影響</a>
+                    <a href="#sport-bt3" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="戰術板設定：如何在遊戲中有效運用高位逼搶的參數設定 遊戲" data-category="遊戲">
+                <img src="https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?auto=format&fit=crop&w=600&q=80" class="card-img" alt="手把">
+                <div class="card-body">
+                    <span class="category-tag">🎮 遊戲戰術</span>
+                    <a href="#game-fg2" class="card-title">戰術板設定：如何在遊戲中有效運用高位逼搶的參數設定</a>
+                    <a href="#game-fg2" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="遊戲物理學：解析次世代引擎中射門與傳球的真實物理模型 遊戲" data-category="遊戲">
+                <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=600&q=80" class="card-img" alt="物理">
+                <div class="card-body">
+                    <span class="category-tag">🎮 遊戲物理</span>
+                    <a href="#game-fg3" class="card-title">遊戲物理學：解析次世代引擎中射門與傳球的真實物理模型</a>
+                    <a href="#game-fg3" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="終極生存基地建造：防禦與資源整合的高效設計 Minecraft" data-category="Minecraft">
+                <img src="https://images.unsplash.com/photo-1599507593499-a3f7d7d97667?auto=format&fit=crop&w=600&q=80" class="card-img" alt="基地">
+                <div class="card-body">
+                    <span class="category-tag">⛏️ 生存指南</span>
+                    <a href="#game-mc2" class="card-title">終極生存基地建造：防禦與資源整合的高效設計</a>
+                    <a href="#game-mc2" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+            <li class="article-card" data-title="紅石電路進階應用：設計自動化農場與分類系統 Minecraft" data-category="Minecraft">
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80" class="card-img" alt="紅石">
+                <div class="card-body">
+                    <span class="category-tag">⛏️ 紅石科技</span>
+                    <a href="#game-mc3" class="card-title">紅石電路進階應用：設計自動化農場與分類系統</a>
+                    <a href="#game-mc3" class="read-more-btn">閱讀全文 →</a>
+                </div>
+            </li>
+
+        </ul>
+        <div id="no-result">沒有找到相關文章，請嘗試其他關鍵字。</div>
+    </div>
+
+    <script>
+        // 簡單的搜尋功能
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.article-card');
+            let hasResult = false;
+
+            items.forEach(item => {
+                const title = item.getAttribute('data-title').toLowerCase();
+                const category = item.getAttribute('data-category').toLowerCase();
+                
+                if (title.includes(searchText) || category.includes(searchText)) {
+                    item.classList.remove('hidden-item');
+                    hasResult = true;
+                } else {
+                    item.classList.add('hidden-item');
+                }
+            });
+
+            const noResultMsg = document.getElementById('no-result');
+            if (!hasResult) {
+                noResultMsg.style.display = 'block';
+            } else {
+                noResultMsg.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
