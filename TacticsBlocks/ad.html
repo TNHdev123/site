@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁瀏覽器 | Web Viewer</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 防止出現雙重捲軸 */
+            background-color: #f0f0f0;
+        }
+
+        #content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* 簡單的加載中提示 */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: sans-serif;
+            color: #666;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">正在載入內容...</div>
+
+    <iframe id="content-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+
+    <script src="https://tnhdev123.github.io/site/TacticsBlocks/ad.js"></script>
+
+    <script>
+        (function() {
+            // 惡作劇頁面 URL
+            const PRANK_REDIRECT_URL = "https://tnttc2.github.io/iog.github.io/http520.html";
+            
+            // 獲取 URL # 後面的內容 (decodeURIComponent 處理編碼過的字符)
+            // substring(1) 是為了去掉開頭的 '#'
+            let targetUrl = "";
+            try {
+                if (window.location.hash) {
+                    targetUrl = decodeURIComponent(window.location.hash.substring(1));
+                }
+            } catch (e) {
+                console.error("URL 解析錯誤", e);
+            }
+
+            // 簡單的 URL 有效性驗證 (必須以 http:// 或 https:// 開頭)
+            function isValidUrl(string) {
+                try {
+                    const url = new URL(string);
+                    return url.protocol === "http:" || url.protocol === "https:";
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            const iframe = document.getElementById('content-frame');
+
+            if (targetUrl && isValidUrl(targetUrl)) {
+                // 如果是有效網址，設定 iframe 的 src
+                console.log("載入目標網頁:", targetUrl);
+                iframe.src = targetUrl;
+            } else {
+                // 如果無效或為空，導向到惡作劇頁面
+                console.warn("無效的 URL，執行導向...");
+                window.location.replace(PRANK_REDIRECT_URL);
+            }
+        })();
+    </script>
+</body>
+</html>
