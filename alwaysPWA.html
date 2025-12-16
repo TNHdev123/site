@@ -12,199 +12,207 @@
     <link id="dynamic-icon" rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
 
     <style>
-        /* CSS Variables based on your design */
         :root {
-            --primary-blue: #3b82f6; /* Matching the blue in your image */
-            --border-color: #000000;
-            --border-width: 5px; /* Thick border */
-            --bg-color: #ffffff;
-            --text-color: #000000;
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --border-color: #ffffff;
+            --accent-blue: #007AFF; /* iOS Blue */
+            --border-width: 4px;
         }
 
         body, html {
             margin: 0; padding: 0; height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden; /* Prevent scrolling on main container */
         }
 
-        /* --- Typography --- */
+        /* --- Layout Containers --- */
+        .view-container {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+            padding-top: 15vh;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .visible { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- Components --- */
         h1 {
-            font-size: 42px;
-            font-weight: 800;
-            margin-top: 60px;
-            margin-bottom: 0;
-            text-align: center;
+            font-size: 48px;
+            font-weight: 900;
+            margin: 0 0 10px 0;
+            letter-spacing: -1px;
         }
 
         .subtitle {
             font-size: 16px;
-            margin-top: 60px; /* Spacing from title */
-            margin-bottom: 10px;
-            text-align: center;
+            color: #888;
+            margin-bottom: 60px;
             font-weight: 400;
         }
 
-        .preview-text-bottom {
-            margin-top: 20px;
-            font-size: 16px;
-            text-align: center;
+        /* Input Field (Thick Border Style) */
+        .input-wrapper {
+            width: 80%;
+            max-width: 320px;
+            margin-bottom: 40px;
         }
 
-        /* --- Components --- */
-        
-        /* The Input Box */
-        .input-box {
-            width: 80%;
-            max-width: 350px;
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            background: #000;
             border: var(--border-width) solid var(--border-color);
+            color: #fff;
             padding: 15px;
             font-size: 18px;
             text-align: center;
             outline: none;
-            color: #888; /* Placeholder color style */
+            border-radius: 0; /* Sharp corners like concept */
+            box-sizing: border-box;
+            font-weight: 600;
         }
-        .input-box:focus, .input-box:not(:placeholder-shown) {
-            color: #000;
-        }
+        
+        input::placeholder { color: #555; }
 
-        /* The Image Preview Box */
-        .image-preview-box {
-            width: 200px;
-            height: 180px; /* Rectangular aspect from image */
+        /* Preview Box (For View 2) */
+        .preview-box {
+            width: 160px;
+            height: 160px;
             border: var(--border-width) solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
+            background: #111;
+            margin-bottom: 20px;
             position: relative;
-            background: #fff;
         }
 
-        .image-preview-box img {
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
-            display: none; /* Hidden until loaded */
-        }
-        
-        .placeholder-text {
-            padding: 10px;
-            font-size: 14px;
-            text-align: center;
-            line-height: 1.4;
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Fill the box */
+            display: none;
         }
 
-        /* The Blue Button */
-        .btn-blue {
-            background-color: var(--primary-blue);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 15px 0;
+        .site-title {
             font-size: 20px;
             font-weight: 700;
-            width: 180px;
+            margin-bottom: 40px;
             text-align: center;
+            padding: 0 20px;
+        }
+
+        /* Action Button */
+        .btn {
+            background-color: var(--accent-blue);
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 16px 0;
+            width: 80%;
+            max-width: 320px;
             cursor: pointer;
-            margin-top: 60px; /* Spacing from input/preview */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            transition: transform 0.1s;
         }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
 
-        .btn-blue:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        /* --- Views Logic --- */
-        .view-section {
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .visible {
-            display: flex;
-        }
-
-        /* PWA Fullscreen Iframe */
-        #pwa-frame {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            border: none; z-index: 9999; display: none; background: #fff;
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-blue);
-            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
-            display: none;
+        /* Spinner */
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* --- PWA Fullscreen Iframe --- */
+        #pwa-frame {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            border: none; z-index: 9999; background: #fff;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="view-home" class="view-section">
+    <div id="view-home" class="view-container">
         <h1>alwaysPWA</h1>
-        
-        <div class="subtitle">Enter URL to get a PWA</div>
-        
-        <input type="text" id="url-input" class="input-box" placeholder="http://example.com" autocomplete="off" autocorrect="off" autocapitalize="off">
-        
-        <button class="btn-blue" onclick="openPwaGen()">Get PWA!</button>
+        <div class="subtitle">Dark Mode Edition</div>
+
+        <div class="input-wrapper">
+            <input type="text" id="url-input" placeholder="youtube.com" autocomplete="off" autocorrect="off" autocapitalize="off">
+        </div>
+
+        <button class="btn" onclick="generatePWA()">Get PWA!</button>
     </div>
 
-    <div id="view-preview" class="view-section">
+    <div id="view-preview" class="view-container">
         <h1>alwaysPWA</h1>
+        <div class="subtitle">Ready to Install</div>
 
-        <div style="height: 50px;"></div>
-
-        <div class="image-preview-box">
-            <div class="spinner" id="loading-spinner"></div>
-            <div class="placeholder-text" id="placeholder-text">
-                (Icon will appear here)
-            </div>
-            <img id="result-icon" src="" alt="Site Icon">
+        <div class="preview-box">
+            <div id="spinner" class="loader"></div>
+            <img id="result-icon" src="" alt="Icon">
         </div>
 
-        <div class="preview-text-bottom" id="result-title">
-            (Site Name will appear here)
-        </div>
+        <div id="result-title" class="site-title">Fetching Info...</div>
 
-        <button class="btn-blue" id="share-btn" onclick="triggerShare()">Share PWA!</button>
+        <button class="btn" onclick="shareInstructions()">Share PWA!</button>
+        
+        <div style="margin-top: 20px; color: #555; font-size: 14px; max-width: 280px; text-align: center; line-height: 1.5;">
+            Wait for icon to load, then tap the Share icon below and select "Add to Home Screen".
+        </div>
     </div>
 
     <iframe id="pwa-frame"></iframe>
 
     <script>
-        // --- LOGIC ---
-
+        // --- 1. ROUTING LOGIC ---
         const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        // Clean hash: remove the '#'
-        const rawHash = window.location.hash.substring(1); 
-        // Decode it in case browsers auto-encode specific chars
+        const rawHash = window.location.hash.substring(1);
         const targetUrl = rawHash ? decodeURIComponent(rawHash) : "";
 
-        const viewHome = document.getElementById('view-home');
-        const viewPreview = document.getElementById('view-preview');
+        const homeView = document.getElementById('view-home');
+        const previewView = document.getElementById('view-preview');
         const pwaFrame = document.getElementById('pwa-frame');
 
-        // 1. ROUTING
         if (isStandalone && targetUrl) {
-            // MODE: PWA (Fullscreen)
+            // MODE: PWA App (Fullscreen)
             enterPwaMode(targetUrl);
         } else if (targetUrl) {
-            // MODE: PREVIEW (Setup)
+            // MODE: Preview / Setup (New Tab)
             enterPreviewMode(targetUrl);
         } else {
-            // MODE: HOME
-            viewHome.classList.add('visible');
+            // MODE: Home
+            homeView.classList.add('visible');
         }
 
-        // --- FUNCTIONS ---
+        // --- 2. CORE FUNCTIONS ---
+
+        function generatePWA() {
+            const input = document.getElementById('url-input');
+            let val = input.value.trim();
+            if (!val) { alert("Please enter a URL"); return; }
+            
+            // Build the URL for the new tab
+            const currentPath = window.location.href.split('#')[0];
+            const newUrl = currentPath + '#' + encodeURIComponent(val);
+            
+            // OPEN IN NEW TAB (As requested)
+            window.open(newUrl, '_blank');
+        }
 
         function enterPwaMode(url) {
             // Normalize URL
@@ -213,68 +221,55 @@
             pwaFrame.src = finalUrl;
             pwaFrame.style.display = 'block';
             
-            // Hide other views
-            viewHome.classList.remove('visible');
-            viewPreview.classList.remove('visible');
-
-            // Fallback for X-Frame-Options blocking
+            // Fallback if site refuses iframe
             pwaFrame.onerror = function() {
-                window.location.href = finalUrl;
+                window.location.replace(finalUrl);
             };
         }
 
         async function enterPreviewMode(url) {
-            viewHome.classList.remove('visible');
-            viewPreview.classList.add('visible');
-
-            const spinner = document.getElementById('loading-spinner');
-            const placeholder = document.getElementById('placeholder-text');
-            const imgEl = document.getElementById('result-icon');
-            const titleEl = document.getElementById('result-title');
+            previewView.classList.add('visible');
             
-            spinner.style.display = 'block';
-            placeholder.style.display = 'none';
-
             let finalUrl = url.startsWith('http') ? url : 'https://' + url;
             let hostname = "";
-            try {
-                hostname = new URL(finalUrl).hostname;
-            } catch (e) {
-                hostname = finalUrl;
-            }
+            try { hostname = new URL(finalUrl).hostname; } catch(e){ hostname = finalUrl; }
 
-            // A. SET TITLE (Default to hostname first)
-            titleEl.innerText = hostname; 
+            // UI Elements
+            const titleEl = document.getElementById('result-title');
+            const imgEl = document.getElementById('result-icon');
+            const spinner = document.getElementById('spinner');
+
+            // Default UI while loading
+            titleEl.innerText = hostname;
             document.title = hostname;
 
-            // B. FETCH TITLE & ICON (Robust Method)
             try {
-                // 1. Fetch Title via AllOrigins (To bypass CORS)
+                // --- STEP A: Fetch Title (using AllOrigins proxy) ---
                 const titleApi = `https://api.allorigins.win/get?url=${encodeURIComponent(finalUrl)}`;
                 
-                // 2. Fetch Icon via Google V2 API (High Res) passed through AllOrigins (To get Base64)
-                // We use Google's service because it's smarter than just looking for /favicon.ico
-                const googleIconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(finalUrl)}&size=256`;
-                const iconProxyApi = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleIconUrl)}`;
-
-                // Run fetches
                 fetch(titleApi)
-                    .then(response => response.json())
+                    .then(r => r.json())
                     .then(data => {
                         if (data.contents) {
-                            // Extract <title> tag using regex
-                            const matches = data.contents.match(/<title>(.*?)<\/title>/i);
-                            if (matches && matches[1]) {
-                                const realTitle = matches[1].trim();
+                            const match = data.contents.match(/<title>(.*?)<\/title>/i);
+                            if (match && match[1]) {
+                                const realTitle = match[1].trim();
                                 titleEl.innerText = realTitle;
-                                document.title = realTitle;
+                                document.title = realTitle; // Updates the Bookmark Name
                             }
                         }
-                    }).catch(e => console.log("Title fetch warning:", e));
+                    }).catch(e => console.log("Title fetch silent fail"));
 
-                // Process Icon
-                const response = await fetch(iconProxyApi);
-                if (!response.ok) throw new Error("Icon fetch failed");
+                // --- STEP B: Fetch High-Res Icon (The Fix for TNTExplorer) ---
+                // We use Google V2 API (t3.gstatic.com) because it hunts down icons better than anything else.
+                // We request size=256 for high quality on iPhone.
+                const googleIconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(finalUrl)}&size=256`;
+                
+                // We wrap it in AllOrigins to get the raw data (Blob) instead of just an image link
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleIconUrl)}`;
+
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Icon fetch error");
                 
                 const blob = await response.blob();
                 const reader = new FileReader();
@@ -282,50 +277,32 @@
                 reader.onloadend = function() {
                     const base64data = reader.result;
                     
-                    // Update UI
-                    spinner.style.display = 'none';
+                    // 1. Show in Preview Box
                     imgEl.src = base64data;
                     imgEl.style.display = 'block';
+                    spinner.style.display = 'none';
 
-                    // Update Apple Touch Icon Link (CRITICAL FOR PWA)
+                    // 2. INJECT into Head (Critical for iOS Install)
                     const linkTag = document.getElementById('dynamic-icon');
                     linkTag.href = base64data;
                 }
                 reader.readAsDataURL(blob);
 
             } catch (error) {
-                console.error("Extraction failed", error);
+                console.error(error);
                 spinner.style.display = 'none';
-                placeholder.innerText = "Icon not found";
-                placeholder.style.display = 'block';
-                // Even if failed, we keep the hostname as title
+                titleEl.innerText = hostname + " (Icon not found)";
             }
         }
 
-        function openPwaGen() {
-            const input = document.getElementById('url-input');
-            const val = input.value.trim();
-            if (!val) {
-                alert("Please enter a URL");
-                return;
-            }
-            
-            // Construct full URL for this page + hash
-            // User requested NEW TAB for this action
-            const currentPath = window.location.href.split('#')[0];
-            const newUrl = currentPath + '#' + encodeURIComponent(val);
-            
-            window.open(newUrl, '_blank');
-        }
-
-        function triggerShare() {
+        function shareInstructions() {
             if (navigator.share) {
                 navigator.share({
                     title: document.title,
                     url: window.location.href
-                }).catch(console.error);
+                });
             } else {
-                alert("Tap the Share button below in Safari, then select 'Add to Home Screen'.");
+                alert("Tap the Share icon in Safari (bottom center), then scroll down to 'Add to Home Screen'.");
             }
         }
     </script>
