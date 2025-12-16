@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -12,242 +12,320 @@
     <link id="dynamic-icon" rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
 
     <style>
+        /* CSS Variables based on your design */
         :root {
-            --bg-color: #f2f2f7;
-            --card-bg: #ffffff;
+            --primary-blue: #3b82f6; /* Matching the blue in your image */
+            --border-color: #000000;
+            --border-width: 5px; /* Thick border */
+            --bg-color: #ffffff;
             --text-color: #000000;
-            --btn-blue: #007aff;
-            --btn-text: #ffffff;
         }
 
-        /* 深色模式支援 */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #000000;
-                --card-bg: #1c1c1e;
-                --text-color: #ffffff;
-            }
-        }
-
-        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); overflow: hidden; }
-
-        /* --- UI 容器樣式 --- */
-        .container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; padding: 20px; box-sizing: border-box; text-align: center;
-            transition: opacity 0.3s ease;
-        }
-
-        h1 { font-size: 28px; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
-        p { font-size: 15px; color: #888; margin-bottom: 30px; line-height: 1.4; max-width: 300px; }
-
-        /* 輸入框樣式 */
-        .input-group { width: 100%; max-width: 350px; margin-bottom: 20px; }
-        input[type="url"], input[type="text"] {
-            width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 17px;
-            background: var(--card-bg); color: var(--text-color); outline: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; text-align: center;
-        }
-
-        /* 按鈕樣式 */
-        .btn {
-            background-color: var(--btn-blue); color: var(--btn-text);
-            border: none; padding: 16px 32px; border-radius: 14px; font-size: 17px; font-weight: 600;
-            cursor: pointer; width: 100%; max-width: 350px;
-            box-shadow: 0 4px 12px rgba(0,122,255,0.3); transition: transform 0.1s;
-        }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
-        .btn-secondary { background-color: #8e8e93; box-shadow: none; margin-top: 10px; }
-
-        /* --- 預覽卡片樣式 --- */
-        .preview-card {
-            background: var(--card-bg); padding: 30px; border-radius: 24px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 30px;
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
         }
-        .app-icon-preview {
-            width: 80px; height: 80px; border-radius: 18px; background: #eee;
-            object-fit: cover; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .app-name-preview { font-size: 17px; font-weight: 600; }
-        .app-url-preview { font-size: 13px; color: #888; margin-top: 5px; }
 
-        /* --- PWA 全螢幕 Iframe --- */
-        #pwa-container {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #fff; z-index: 9999; display: none;
+        /* --- Typography --- */
+        h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-top: 60px;
+            margin-bottom: 0;
+            text-align: center;
         }
-        iframe { width: 100%; height: 100%; border: none; }
+
+        .subtitle {
+            font-size: 16px;
+            margin-top: 60px; /* Spacing from title */
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .preview-text-bottom {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* --- Components --- */
         
-        /* 讀取動畫 */
-        .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--btn-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 0 auto; display: none;}
+        /* The Input Box */
+        .input-box {
+            width: 80%;
+            max-width: 350px;
+            border: var(--border-width) solid var(--border-color);
+            padding: 15px;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            color: #888; /* Placeholder color style */
+        }
+        .input-box:focus, .input-box:not(:placeholder-shown) {
+            color: #000;
+        }
+
+        /* The Image Preview Box */
+        .image-preview-box {
+            width: 200px;
+            height: 180px; /* Rectangular aspect from image */
+            border: var(--border-width) solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            position: relative;
+            background: #fff;
+        }
+
+        .image-preview-box img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            display: none; /* Hidden until loaded */
+        }
+        
+        .placeholder-text {
+            padding: 10px;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* The Blue Button */
+        .btn-blue {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 0;
+            font-size: 20px;
+            font-weight: 700;
+            width: 180px;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 60px; /* Spacing from input/preview */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-blue:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        /* --- Views Logic --- */
+        .view-section {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .visible {
+            display: flex;
+        }
+
+        /* PWA Fullscreen Iframe */
+        #pwa-frame {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            border: none; z-index: 9999; display: none; background: #fff;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-blue);
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
+            display: none;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 隱藏元素 */
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="view-home" class="container">
+    <div id="view-home" class="view-section">
         <h1>alwaysPWA</h1>
-        <p>輸入網址，將任何網頁變成擁有自訂圖示的 iPhone App。</p>
         
-        <div class="input-group">
-            <input type="url" id="url-input" placeholder="例如: youtube.com" autocomplete="off" autocorrect="off">
-        </div>
-        <button class="btn" onclick="goToPreview()">Get PWA!</button>
+        <div class="subtitle">Enter URL to get a PWA</div>
+        
+        <input type="text" id="url-input" class="input-box" placeholder="http://example.com" autocomplete="off" autocorrect="off" autocapitalize="off">
+        
+        <button class="btn-blue" onclick="openPwaGen()">Get PWA!</button>
     </div>
 
-    <div id="view-preview" class="container hidden">
-        <div class="preview-card">
-            <img id="preview-img" class="app-icon-preview" src="">
-            <div id="preview-title" class="app-name-preview">正在提取資訊...</div>
-            <div class="loader" id="loader"></div>
+    <div id="view-preview" class="view-section">
+        <h1>alwaysPWA</h1>
+
+        <div style="height: 50px;"></div>
+
+        <div class="image-preview-box">
+            <div class="spinner" id="loading-spinner"></div>
+            <div class="placeholder-text" id="placeholder-text">
+                (Icon will appear here)
+            </div>
+            <img id="result-icon" src="" alt="Site Icon">
         </div>
 
-        <div style="text-align: left; margin-bottom: 20px; font-size: 14px; color:#666; padding: 0 20px;">
-            1. 等待上方圖示更新<br>
-            2. 點擊下方按鈕<br>
-            3. 選擇「加入主畫面」
+        <div class="preview-text-bottom" id="result-title">
+            (Site Name will appear here)
         </div>
 
-        <button class="btn" id="share-btn" onclick="sharePwa()">Share PWA!</button>
-        <button class="btn btn-secondary" onclick="resetApp()">返回</button>
+        <button class="btn-blue" id="share-btn" onclick="triggerShare()">Share PWA!</button>
     </div>
 
-    <div id="pwa-container">
-        <iframe id="target-frame" allow="geolocation; microphone; camera; midi; encrypted-media;"></iframe>
-    </div>
+    <iframe id="pwa-frame"></iframe>
 
     <script>
-        // --- 核心邏輯區 ---
+        // --- LOGIC ---
 
-        // 1. 初始化檢查：我們在哪個模式？
         const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        const hashUrl = window.location.hash.substring(1); // 取得 # 後面的字串
+        // Clean hash: remove the '#'
+        const rawHash = window.location.hash.substring(1); 
+        // Decode it in case browsers auto-encode specific chars
+        const targetUrl = rawHash ? decodeURIComponent(rawHash) : "";
 
-        if (isStandalone && hashUrl) {
-            // [模式 A] PWA 模式啟動：隱藏所有 UI，只顯示 Iframe
-            enterPwaMode(hashUrl);
-        } else if (hashUrl) {
-            // [模式 B] 預覽模式：使用者透過連結進入，準備安裝
-            enterPreviewMode(hashUrl);
+        const viewHome = document.getElementById('view-home');
+        const viewPreview = document.getElementById('view-preview');
+        const pwaFrame = document.getElementById('pwa-frame');
+
+        // 1. ROUTING
+        if (isStandalone && targetUrl) {
+            // MODE: PWA (Fullscreen)
+            enterPwaMode(targetUrl);
+        } else if (targetUrl) {
+            // MODE: PREVIEW (Setup)
+            enterPreviewMode(targetUrl);
         } else {
-            // [模式 C] 首頁：等待輸入
-            // 預設顯示 view-home
+            // MODE: HOME
+            viewHome.classList.add('visible');
         }
 
-        // --- 功能函式 ---
+        // --- FUNCTIONS ---
 
         function enterPwaMode(url) {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-preview').classList.add('hidden');
-            const container = document.getElementById('pwa-container');
-            const iframe = document.getElementById('target-frame');
-            
-            // 處理 URL 協議
+            // Normalize URL
             let finalUrl = url.startsWith('http') ? url : 'https://' + url;
             
-            iframe.src = finalUrl;
-            container.style.display = 'block';
+            pwaFrame.src = finalUrl;
+            pwaFrame.style.display = 'block';
+            
+            // Hide other views
+            viewHome.classList.remove('visible');
+            viewPreview.classList.remove('visible');
 
-            // 處理 iframe 載入錯誤 (部分網站擋 iframe)
-            iframe.onerror = function() {
-                alert("此網站不允許在 PWA 模式中嵌入，將嘗試在新視窗開啟。");
+            // Fallback for X-Frame-Options blocking
+            pwaFrame.onerror = function() {
                 window.location.href = finalUrl;
             };
         }
 
         async function enterPreviewMode(url) {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-preview').classList.remove('hidden');
-            
-            const loader = document.getElementById('loader');
-            const titleEl = document.getElementById('preview-title');
-            const imgEl = document.getElementById('preview-img');
-            const shareBtn = document.getElementById('share-btn');
+            viewHome.classList.remove('visible');
+            viewPreview.classList.add('visible');
 
-            loader.style.display = 'block';
-            shareBtn.disabled = true;
-            shareBtn.style.opacity = 0.5;
+            const spinner = document.getElementById('loading-spinner');
+            const placeholder = document.getElementById('placeholder-text');
+            const imgEl = document.getElementById('result-icon');
+            const titleEl = document.getElementById('result-title');
+            
+            spinner.style.display = 'block';
+            placeholder.style.display = 'none';
 
             let finalUrl = url.startsWith('http') ? url : 'https://' + url;
-            let hostname = new URL(finalUrl).hostname;
+            let hostname = "";
+            try {
+                hostname = new URL(finalUrl).hostname;
+            } catch (e) {
+                hostname = finalUrl;
+            }
 
-            // 1. 設定暫時標題 (Hostname)
-            titleEl.innerText = hostname;
+            // A. SET TITLE (Default to hostname first)
+            titleEl.innerText = hostname; 
             document.title = hostname;
 
-            // 2. 嘗試透過 API 抓取圖示 (整合了你提供的 Copilot 邏輯)
+            // B. FETCH TITLE & ICON (Robust Method)
             try {
-                // 使用 Google Favicon API 獲取高品質圖示 (sz=180 對應 iPhone)
-                const googleFavApi = `https://www.google.com/s2/favicons?domain=${hostname}&sz=180`;
+                // 1. Fetch Title via AllOrigins (To bypass CORS)
+                const titleApi = `https://api.allorigins.win/get?url=${encodeURIComponent(finalUrl)}`;
                 
-                // 透過 AllOrigins 代理跨域抓取圖片數據
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleFavApi)}`;
+                // 2. Fetch Icon via Google V2 API (High Res) passed through AllOrigins (To get Base64)
+                // We use Google's service because it's smarter than just looking for /favicon.ico
+                const googleIconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(finalUrl)}&size=256`;
+                const iconProxyApi = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleIconUrl)}`;
+
+                // Run fetches
+                fetch(titleApi)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.contents) {
+                            // Extract <title> tag using regex
+                            const matches = data.contents.match(/<title>(.*?)<\/title>/i);
+                            if (matches && matches[1]) {
+                                const realTitle = matches[1].trim();
+                                titleEl.innerText = realTitle;
+                                document.title = realTitle;
+                            }
+                        }
+                    }).catch(e => console.log("Title fetch warning:", e));
+
+                // Process Icon
+                const response = await fetch(iconProxyApi);
+                if (!response.ok) throw new Error("Icon fetch failed");
                 
-                const response = await fetch(proxyUrl);
                 const blob = await response.blob();
-                
-                // 將 Blob 轉為 Base64 (這是最關鍵的一步，讓圖示能「存」在 HTML 裡)
                 const reader = new FileReader();
+                
                 reader.onloadend = function() {
                     const base64data = reader.result;
                     
-                    // A. 更新畫面預覽
+                    // Update UI
+                    spinner.style.display = 'none';
                     imgEl.src = base64data;
-                    
-                    // B. 狠狠地更新 iOS 抓取的標籤
-                    let linkTag = document.getElementById('dynamic-icon');
-                    linkTag.href = base64data;
+                    imgEl.style.display = 'block';
 
-                    // C. 嘗試抓取網頁標題 (選擇性，若失敗則保留 Hostname)
-                    // 這裡為了速度，我們簡單用 Hostname，或者你可以再呼叫一次 API 抓 Title
-                    
-                    loader.style.display = 'none';
-                    shareBtn.disabled = false;
-                    shareBtn.style.opacity = 1;
-                    
-                    // 強制重繪確保 Safari 抓到新標籤
-                    document.title = document.title + " "; 
-                    document.title = document.title.trim();
+                    // Update Apple Touch Icon Link (CRITICAL FOR PWA)
+                    const linkTag = document.getElementById('dynamic-icon');
+                    linkTag.href = base64data;
                 }
                 reader.readAsDataURL(blob);
 
             } catch (error) {
-                console.error("Icon fetch failed", error);
-                titleEl.innerText = "提取失敗，將使用預設圖示";
-                loader.style.display = 'none';
-                shareBtn.disabled = false;
-                shareBtn.style.opacity = 1;
+                console.error("Extraction failed", error);
+                spinner.style.display = 'none';
+                placeholder.innerText = "Icon not found";
+                placeholder.style.display = 'block';
+                // Even if failed, we keep the hostname as title
             }
         }
 
-        function goToPreview() {
+        function openPwaGen() {
             const input = document.getElementById('url-input');
-            let val = input.value.trim();
-            if (!val) { alert("請輸入網址"); return; }
+            const val = input.value.trim();
+            if (!val) {
+                alert("Please enter a URL");
+                return;
+            }
             
-            // 重新整理頁面並帶上 Hash，觸發 enterPreviewMode
-            window.location.hash = val;
-            window.location.reload();
+            // Construct full URL for this page + hash
+            // User requested NEW TAB for this action
+            const currentPath = window.location.href.split('#')[0];
+            const newUrl = currentPath + '#' + encodeURIComponent(val);
+            
+            window.open(newUrl, '_blank');
         }
 
-        function resetApp() {
-            window.location.hash = "";
-            window.location.reload();
-        }
-
-        function sharePwa() {
-            // 調用原生分享選單
+        function triggerShare() {
             if (navigator.share) {
                 navigator.share({
-                    title: document.title, // 這時候標題已經被改成目標網站了
-                    url: window.location.href // 包含 # 的完整網址
+                    title: document.title,
+                    url: window.location.href
                 }).catch(console.error);
             } else {
-                alert("請點擊瀏覽器下方的分享按鈕 (箭頭向上圖示)，然後選擇「加入主畫面」。");
+                alert("Tap the Share button below in Safari, then select 'Add to Home Screen'.");
             }
         }
     </script>
