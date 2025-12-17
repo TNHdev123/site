@@ -2,309 +2,331 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=no">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>alwaysPWA</title>
-    <link id="dynamic-icon" rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-
     <style>
+        /* 定義變數與自動深色模式 (System Adaptive)
+           --------------------------------------------------
+        */
         :root {
-            --bg-color: #000000;
-            --text-color: #ffffff;
-            --border-color: #ffffff;
-            --accent-blue: #007AFF; /* iOS Blue */
-            --border-width: 4px;
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --border-color: #000000;
+            --accent-color: #007AFF; /* iOS Blue */
+            --input-bg: #ffffff;
         }
 
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+        /* 當裝置設定為深色模式時，自動切換變數 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --text-color: #ffffff;
+                --border-color: #ffffff;
+                --input-bg: #000000;
+            }
+        }
+
+        body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            overflow: hidden; /* Prevent scrolling on main container */
-        }
-
-        /* --- Layout Containers --- */
-        .view-container {
-            display: none; /* Hidden by default */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            height: 100%;
-            padding-top: 15vh;
-            box-sizing: border-box;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .visible { display: flex; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- Components --- */
-        h1 {
-            font-size: 48px;
-            font-weight: 900;
-            margin: 0 0 10px 0;
-            letter-spacing: -1px;
-        }
-
-        .subtitle {
-            font-size: 16px;
-            color: #888;
-            margin-bottom: 60px;
-            font-weight: 400;
-        }
-
-        /* Input Field (Thick Border Style) */
-        .input-wrapper {
-            width: 80%;
-            max-width: 320px;
-            margin-bottom: 40px;
-        }
-
-        input[type="text"], input[type="url"] {
-            width: 100%;
-            background: #000;
-            border: var(--border-width) solid var(--border-color);
-            color: #fff;
-            padding: 15px;
-            font-size: 18px;
-            text-align: center;
-            outline: none;
-            border-radius: 0; /* Sharp corners like concept */
-            box-sizing: border-box;
-            font-weight: 600;
-        }
-        
-        input::placeholder { color: #555; }
-
-        /* Preview Box (For View 2) */
-        .preview-box {
-            width: 160px;
-            height: 160px;
-            border: var(--border-width) solid var(--border-color);
-            display: flex;
-            align-items: center;
             justify-content: center;
-            background: #111;
-            margin-bottom: 20px;
-            position: relative;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        .preview-box img {
+        /* 極簡標題設計 */
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            letter-spacing: -1.5px;
+            line-height: 1;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 輸入框：粗邊框風格 */
+        input {
             width: 100%;
-            height: 100%;
-            object-fit: cover; /* Fill the box */
-            display: none;
+            padding: 16px;
+            font-size: 1.1rem;
+            background: var(--input-bg);
+            color: var(--text-color);
+            border: 4px solid var(--border-color);
+            border-radius: 0; /* 保持方正或可根據喜好調整 */
+            box-sizing: border-box;
+            outline: none;
+            font-weight: 700;
+            transition: border-color 0.3s;
         }
 
-        .site-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 40px;
-            text-align: center;
-            padding: 0 20px;
+        input::placeholder {
+            color: var(--text-color);
+            opacity: 0.4;
+            font-weight: 500;
         }
 
-        /* Action Button */
-        .btn {
-            background-color: var(--accent-blue);
-            color: #fff;
-            border: none;
-            font-size: 18px;
-            font-weight: 700;
-            padding: 16px 0;
-            width: 80%;
-            max-width: 320px;
+        /* 按鈕：粗邊框 + 藍色背景 */
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: 4px solid var(--border-color);
             cursor: pointer;
-            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             transition: transform 0.1s;
         }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
 
-        /* Spinner */
-        .loader {
-            border: 4px solid #333;
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        button:active {
+            transform: scale(0.98);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- PWA Fullscreen Iframe --- */
-        #pwa-frame {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            border: none; z-index: 9999; background: #fff;
-            display: none;
+        /* 狀態文字 */
+        #status {
+            margin-top: 20px;
+            height: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0.7;
         }
     </style>
 </head>
 <body>
 
-    <div id="view-home" class="view-container">
-        <h1>alwaysPWA</h1>
-        <div class="subtitle">Dark Mode Edition</div>
+    <h1>alwaysPWA</h1>
 
-        <div class="input-wrapper">
-            <input type="text" id="url-input" placeholder="youtube.com" autocomplete="off" autocorrect="off" autocapitalize="off">
-        </div>
-
-        <button class="btn" onclick="generatePWA()">Get PWA!</button>
+    <div class="container">
+        <input type="url" id="targetUrl" placeholder="https://example.com" autocomplete="off">
+        <button id="getBtn">Get PWA!</button>
     </div>
 
-    <div id="view-preview" class="view-container">
-        <h1>alwaysPWA</h1>
-        <div class="subtitle">Ready to Install</div>
-
-        <div class="preview-box">
-            <div id="spinner" class="loader"></div>
-            <img id="result-icon" src="" alt="Icon">
-        </div>
-
-        <div id="result-title" class="site-title">Fetching Info...</div>
-
-        <button class="btn" onclick="shareInstructions()">Share PWA!</button>
-        
-        <div style="margin-top: 20px; color: #555; font-size: 14px; max-width: 280px; text-align: center; line-height: 1.5;">
-            Wait for icon to load, then tap the Share icon below and select "Add to Home Screen".
-        </div>
-    </div>
-
-    <iframe id="pwa-frame"></iframe>
+    <div id="status"></div>
 
     <script>
-        // --- 1. ROUTING LOGIC ---
-        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        const rawHash = window.location.hash.substring(1);
-        const targetUrl = rawHash ? decodeURIComponent(rawHash) : "";
+        const getBtn = document.getElementById('getBtn');
+        const statusDiv = document.getElementById('status');
+        const urlInput = document.getElementById('targetUrl');
 
-        const homeView = document.getElementById('view-home');
-        const previewView = document.getElementById('view-preview');
-        const pwaFrame = document.getElementById('pwa-frame');
-
-        if (isStandalone && targetUrl) {
-            // MODE: PWA App (Fullscreen)
-            enterPwaMode(targetUrl);
-        } else if (targetUrl) {
-            // MODE: Preview / Setup (New Tab)
-            enterPreviewMode(targetUrl);
-        } else {
-            // MODE: Home
-            homeView.classList.add('visible');
+        // 輔助函式：確保網址是絕對路徑
+        // 這能解決 TNTExplorer (icon.jpeg) 或 SaverLoop (/icon.png) 的問題
+        function resolveUrl(base, relative) {
+            try {
+                return new URL(relative, base).href;
+            } catch (e) {
+                return relative;
+            }
         }
 
-        // --- 2. CORE FUNCTIONS ---
-
-        function generatePWA() {
-            const input = document.getElementById('url-input');
-            let val = input.value.trim();
-            if (!val) { alert("Please enter a URL"); return; }
-            
-            // Build the URL for the new tab
-            const currentPath = window.location.href.split('#')[0];
-            const newUrl = currentPath + '#' + encodeURIComponent(val);
-            
-            // OPEN IN NEW TAB (As requested)
-            window.open(newUrl, '_blank');
+        // 輔助函式：清理標題
+        // 解決「潮州武館中學 – 首頁」這類重複問題
+        function cleanTitle(title) {
+            if (!title) return "My PWA";
+            // 使用正規表示法切分： " - ", " | ", " – "
+            const parts = title.split(/\s[–|—\-]\s/); 
+            return parts[0].trim();
         }
 
-        function enterPwaMode(url) {
-            // Normalize URL
-            let finalUrl = url.startsWith('http') ? url : 'https://' + url;
+        getBtn.addEventListener('click', async () => {
+            let targetUrl = urlInput.value.trim();
             
-            pwaFrame.src = finalUrl;
-            pwaFrame.style.display = 'block';
-            
-            // Fallback if site refuses iframe
-            pwaFrame.onerror = function() {
-                window.location.replace(finalUrl);
-            };
-        }
+            if (!targetUrl) {
+                statusDiv.innerText = "Please enter a URL.";
+                return;
+            }
 
-        async function enterPreviewMode(url) {
-            previewView.classList.add('visible');
-            
-            let finalUrl = url.startsWith('http') ? url : 'https://' + url;
-            let hostname = "";
-            try { hostname = new URL(finalUrl).hostname; } catch(e){ hostname = finalUrl; }
+            // 自動補全 https
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                targetUrl = 'https://' + targetUrl;
+            }
 
-            // UI Elements
-            const titleEl = document.getElementById('result-title');
-            const imgEl = document.getElementById('result-icon');
-            const spinner = document.getElementById('spinner');
-
-            // Default UI while loading
-            titleEl.innerText = hostname;
-            document.title = hostname;
+            statusDiv.innerText = "Scanning Manifest & HTML...";
 
             try {
-                // --- STEP A: Fetch Title (using AllOrigins proxy) ---
-                const titleApi = `https://api.allorigins.win/get?url=${encodeURIComponent(finalUrl)}`;
+                // 使用 AllOrigins Proxy 繞過 CORS
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                const response = await fetch(proxyUrl);
                 
-                fetch(titleApi)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.contents) {
-                            const match = data.contents.match(/<title>(.*?)<\/title>/i);
-                            if (match && match[1]) {
-                                const realTitle = match[1].trim();
-                                titleEl.innerText = realTitle;
-                                document.title = realTitle; // Updates the Bookmark Name
+                if (!response.ok) throw new Error("Network error");
+                
+                const data = await response.json();
+                const htmlContent = data.contents;
+                
+                // 解析 HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+
+                let finalName = "";
+                let finalIcon = "";
+
+                // ==========================================
+                // 1. 最高優先級：Manifest.json
+                // ==========================================
+                const manifestLink = doc.querySelector('link[rel="manifest"]');
+                if (manifestLink) {
+                    try {
+                        const manifestUrl = resolveUrl(targetUrl, manifestLink.getAttribute('href'));
+                        statusDiv.innerText = "Found Manifest, parsing...";
+                        
+                        const mResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(manifestUrl)}`);
+                        const mData = await mResponse.json();
+                        // 有些 server 會回傳字串形式的 JSON
+                        const manifest = JSON.parse(mData.contents);
+
+                        // 提取名稱
+                        finalName = manifest.short_name || manifest.name;
+
+                        // 提取圖示 (找最大的)
+                        if (manifest.icons && Array.isArray(manifest.icons)) {
+                            // 簡單排序找最大尺寸
+                            const bestIconObj = manifest.icons.sort((a, b) => {
+                                const sizeA = parseInt(a.sizes?.split('x')[0]) || 0;
+                                const sizeB = parseInt(b.sizes?.split('x')[0]) || 0;
+                                return sizeB - sizeA;
+                            })[0];
+                            
+                            if (bestIconObj) {
+                                finalIcon = resolveUrl(manifestUrl, bestIconObj.src);
                             }
                         }
-                    }).catch(e => console.log("Title fetch silent fail"));
-
-                // --- STEP B: Fetch High-Res Icon (The Fix for TNTExplorer) ---
-                // We use Google V2 API (t3.gstatic.com) because it hunts down icons better than anything else.
-                // We request size=256 for high quality on iPhone.
-                const googleIconUrl = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(finalUrl)}&size=256`;
-                
-                // We wrap it in AllOrigins to get the raw data (Blob) instead of just an image link
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleIconUrl)}`;
-
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error("Icon fetch error");
-                
-                const blob = await response.blob();
-                const reader = new FileReader();
-                
-                reader.onloadend = function() {
-                    const base64data = reader.result;
-                    
-                    // 1. Show in Preview Box
-                    imgEl.src = base64data;
-                    imgEl.style.display = 'block';
-                    spinner.style.display = 'none';
-
-                    // 2. INJECT into Head (Critical for iOS Install)
-                    const linkTag = document.getElementById('dynamic-icon');
-                    linkTag.href = base64data;
+                    } catch (e) {
+                        console.warn("Manifest parsing failed, falling back to HTML tags.");
+                    }
                 }
-                reader.readAsDataURL(blob);
+
+                // ==========================================
+                // 2. 次要優先級：HTML Tags (Apple Touch / OG / Title)
+                // ==========================================
+                
+                // 如果 Manifest 沒抓到名字，從 Title 抓並清理
+                if (!finalName) {
+                    finalName = cleanTitle(doc.title);
+                }
+
+                // 如果 Manifest 沒抓到圖示，依序尋找
+                if (!finalIcon) {
+                    const appleIcon = doc.querySelector('link[rel="apple-touch-icon"]') || 
+                                      doc.querySelector('link[rel="apple-touch-icon-precomposed"]');
+                    const ogImage = doc.querySelector('meta[property="og:image"]');
+                    const favicon = doc.querySelector('link[rel="icon"][sizes="192x192"]') || 
+                                    doc.querySelector('link[rel="icon"]');
+
+                    if (appleIcon) {
+                        finalIcon = resolveUrl(targetUrl, appleIcon.getAttribute('href'));
+                    } else if (favicon) {
+                        finalIcon = resolveUrl(targetUrl, favicon.getAttribute('href'));
+                    } else if (ogImage) {
+                        finalIcon = resolveUrl(targetUrl, ogImage.getAttribute('content'));
+                    } else {
+                        // 最後備案：猜測根目錄圖示
+                        finalIcon = resolveUrl(targetUrl, "/favicon.ico");
+                    }
+                }
+
+                // ==========================================
+                // 3. 生成安裝頁面 (新分頁)
+                // ==========================================
+                statusDiv.innerText = "Generating Installer...";
+
+                const pwaWindow = window.open("", "_blank");
+                
+                if (!pwaWindow) {
+                    statusDiv.innerText = "Pop-up blocked! Please allow pop-ups.";
+                    return;
+                }
+
+                pwaWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>${finalName}</title>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+                        
+                        <meta name="apple-mobile-web-app-capable" content="yes">
+                        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+                        <meta name="apple-mobile-web-app-title" content="${finalName}">
+                        
+                        <link rel="apple-touch-icon" href="${finalIcon}">
+                        <link rel="icon" href="${finalIcon}">
+
+                        <style>
+                            :root {
+                                --bg: #f2f2f7;
+                                --text: #000;
+                            }
+                            @media (prefers-color-scheme: dark) {
+                                :root { --bg: #000; --text: #fff; }
+                            }
+                            body {
+                                background-color: var(--bg);
+                                color: var(--text);
+                                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                height: 100vh;
+                                margin: 0;
+                                text-align: center;
+                            }
+                            .icon-preview {
+                                width: 120px;
+                                height: 120px;
+                                border-radius: 22px;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                                margin-bottom: 20px;
+                                object-fit: cover;
+                                background: #fff;
+                            }
+                            h2 { margin: 0 0 10px 0; font-weight: 700; }
+                            p { opacity: 0.7; font-size: 0.95rem; margin-top: 5px; max-width: 80%; line-height: 1.4; }
+                            .arrow { font-size: 2rem; margin-top: 20px; animation: bounce 2s infinite; }
+                            @keyframes bounce {
+                                0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+                                40% {transform: translateY(-10px);}
+                                60% {transform: translateY(-5px);}
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <img src="${finalIcon}" class="icon-preview" onerror="this.style.display='none'">
+                        <h2>${finalName}</h2>
+                        <p>To install this app:</p>
+                        <p>1. Tap the <strong>Share</strong> button below <br>2. Select <strong>"Add to Home Screen"</strong></p>
+                        <div class="arrow">↓</div>
+                        
+                        <script>
+                            if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+                                window.location.replace("${targetUrl}");
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                
+                statusDiv.innerText = "Done! Check the new tab.";
 
             } catch (error) {
                 console.error(error);
-                spinner.style.display = 'none';
-                titleEl.innerText = hostname + " (Icon not found)";
+                statusDiv.innerText = "Error: " + error.message;
             }
-        }
-
-        function shareInstructions() {
-            if (navigator.share) {
-                navigator.share({
-                    title: document.title,
-                    url: window.location.href
-                });
-            } else {
-                alert("Tap the Share icon in Safari (bottom center), then scroll down to 'Add to Home Screen'.");
-            }
-        }
+        });
     </script>
 </body>
 </html>
