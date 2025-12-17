@@ -2,33 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>alwaysPWA</title>
     <style>
-        /* 定義變數與自動深色模式 (System Adaptive)
-           --------------------------------------------------
+        /* 核心設計：自動適應深色模式 
+           System Adaptive Dark Mode
         */
         :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --border-color: #000000;
-            --accent-color: #007AFF; /* iOS Blue */
+            --bg: #ffffff;
+            --text: #000000;
+            --border: #000000;
+            --accent: #007AFF;
             --input-bg: #ffffff;
         }
 
-        /* 當裝置設定為深色模式時，自動切換變數 */
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #000000;
-                --text-color: #ffffff;
-                --border-color: #ffffff;
+                --bg: #000000;
+                --text: #ffffff;
+                --border: #ffffff;
                 --input-bg: #000000;
             }
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
@@ -36,297 +35,247 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease;
         }
 
-        /* 極簡標題設計 */
+        /* 主頁 UI */
+        .main-container {
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            display: none; /* 預設隱藏，由 JS 決定顯示 */
+        }
+
         h1 {
             font-size: 3.5rem;
             font-weight: 900;
             margin-bottom: 2rem;
             letter-spacing: -1.5px;
-            line-height: 1;
         }
 
-        .container {
-            width: 90%;
-            max-width: 450px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        /* 輸入框：粗邊框風格 */
         input {
             width: 100%;
             padding: 16px;
             font-size: 1.1rem;
             background: var(--input-bg);
-            color: var(--text-color);
-            border: 4px solid var(--border-color);
-            border-radius: 0; /* 保持方正或可根據喜好調整 */
+            color: var(--text);
+            border: 4px solid var(--border);
+            border-radius: 0;
             box-sizing: border-box;
             outline: none;
             font-weight: 700;
-            transition: border-color 0.3s;
+            margin-bottom: 15px;
         }
 
-        input::placeholder {
-            color: var(--text-color);
-            opacity: 0.4;
-            font-weight: 500;
-        }
-
-        /* 按鈕：粗邊框 + 藍色背景 */
         button {
             width: 100%;
             padding: 16px;
             font-size: 1.2rem;
             font-weight: 900;
-            background-color: var(--accent-color);
+            background-color: var(--accent);
             color: #ffffff;
-            border: 4px solid var(--border-color);
+            border: 4px solid var(--border);
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: transform 0.1s;
         }
 
         button:active {
             transform: scale(0.98);
         }
 
-        /* 狀態文字 */
-        #status {
-            margin-top: 20px;
-            height: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
+        /* 預覽/安裝頁 UI */
+        .preview-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
-            opacity: 0.7;
+            width: 85%;
         }
+
+        .icon-preview {
+            width: 140px;
+            height: 140px;
+            border-radius: 28px;
+            border: 3px solid var(--border);
+            margin-bottom: 25px;
+            object-fit: cover;
+            background-color: #f0f0f0;
+        }
+
+        h2 { margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 800; }
+        p { opacity: 0.8; line-height: 1.5; margin-bottom: 30px; }
+        
+        .arrow { 
+            font-size: 2.5rem; 
+            font-weight: bold;
+            animation: bounce 2s infinite; 
+            margin-top: 20px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        .loader {
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
-    <h1>alwaysPWA</h1>
-
-    <div class="container">
-        <input type="url" id="targetUrl" placeholder="https://example.com" autocomplete="off">
-        <button id="getBtn">Get PWA!</button>
+    <div class="main-container" id="inputView">
+        <h1>alwaysPWA</h1>
+        <input type="url" id="urlInput" placeholder="https://example.com" autocomplete="off">
+        <button id="goBtn">Get PWA!</button>
     </div>
 
-    <div id="status"></div>
+    <div class="preview-container" id="loadingView">
+        <div class="loader"></div>
+        <p style="margin-top:20px; font-weight:bold;">Extracting Manifest...</p>
+    </div>
+
+    <div class="preview-container" id="installView">
+        <img id="finalIcon" class="icon-preview" src="">
+        <h2 id="finalName">App Name</h2>
+        <p>To install, tap the <strong>Share</strong> button below and select <strong>"Add to Home Screen"</strong>.</p>
+        <div class="arrow">↓</div>
+    </div>
 
     <script>
-        const getBtn = document.getElementById('getBtn');
-        const statusDiv = document.getElementById('status');
-        const urlInput = document.getElementById('targetUrl');
+        // === 核心邏輯開始 ===
+        
+        // 1. 檢查 URL 參數
+        const params = new URLSearchParams(window.location.search);
+        const targetSite = params.get('site');
 
-        // 輔助函式：確保網址是絕對路徑
-        // 這能解決 TNTExplorer (icon.jpeg) 或 SaverLoop (/icon.png) 的問題
+        const inputView = document.getElementById('inputView');
+        const loadingView = document.getElementById('loadingView');
+        const installView = document.getElementById('installView');
+
+        // 輔助：路徑解析 (解決 icon.png 或 /icon.jpeg 問題)
         function resolveUrl(base, relative) {
             try {
                 return new URL(relative, base).href;
-            } catch (e) {
-                return relative;
-            }
+            } catch (e) { return relative; }
         }
 
-        // 輔助函式：清理標題
-        // 解決「潮州武館中學 – 首頁」這類重複問題
-        function cleanTitle(title) {
-            if (!title) return "My PWA";
-            // 使用正規表示法切分： " - ", " | ", " – "
-            const parts = title.split(/\s[–|—\-]\s/); 
-            return parts[0].trim();
+        // 輔助：標題清理 (解決 "Name - Home" 問題)
+        function cleanTitle(t) {
+            if (!t) return "My PWA";
+            return t.split(/\s[–|—\-]\s/)[0].trim();
         }
 
-        getBtn.addEventListener('click', async () => {
-            let targetUrl = urlInput.value.trim();
-            
-            if (!targetUrl) {
-                statusDiv.innerText = "Please enter a URL.";
-                return;
+        // === 狀態判斷 ===
+
+        if (!targetSite) {
+            // [狀態 A] 主頁：顯示輸入框
+            inputView.style.display = 'block';
+
+            document.getElementById('goBtn').onclick = () => {
+                let url = document.getElementById('urlInput').value.trim();
+                if (!url) return;
+                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+                
+                // 重新整理頁面，進入狀態 B
+                window.location.search = `?site=${encodeURIComponent(url)}`;
+            };
+
+        } else {
+            // [狀態 B] 提取頁：開始工作
+            inputView.style.display = 'none';
+            loadingView.style.display = 'flex';
+
+            // 啟動 PWA 跳轉邏輯 (若已安裝)
+            if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+                window.location.replace(targetSite);
             }
 
-            // 自動補全 https
-            if (!/^https?:\/\//i.test(targetUrl)) {
-                targetUrl = 'https://' + targetUrl;
-            }
+            (async function extractData() {
+                try {
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetSite)}`;
+                    const res = await fetch(proxyUrl);
+                    if (!res.ok) throw new Error("Network error");
+                    const data = await res.json();
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data.contents, 'text/html');
 
-            statusDiv.innerText = "Scanning Manifest & HTML...";
+                    let pwaName = "";
+                    let pwaIcon = "";
 
-            try {
-                // 使用 AllOrigins Proxy 繞過 CORS
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) throw new Error("Network error");
-                
-                const data = await response.json();
-                const htmlContent = data.contents;
-                
-                // 解析 HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
+                    // --- 步驟 1: Manifest 最優先 (Highest Priority) ---
+                    const manifestLink = doc.querySelector('link[rel="manifest"]');
+                    if (manifestLink) {
+                        try {
+                            const manifestUrl = resolveUrl(targetSite, manifestLink.getAttribute('href'));
+                            const mRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(manifestUrl)}`);
+                            const mData = await mRes.json();
+                            const manifest = JSON.parse(mData.contents);
 
-                let finalName = "";
-                let finalIcon = "";
+                            // 取名
+                            pwaName = manifest.short_name || manifest.name;
 
-                // ==========================================
-                // 1. 最高優先級：Manifest.json
-                // ==========================================
-                const manifestLink = doc.querySelector('link[rel="manifest"]');
-                if (manifestLink) {
-                    try {
-                        const manifestUrl = resolveUrl(targetUrl, manifestLink.getAttribute('href'));
-                        statusDiv.innerText = "Found Manifest, parsing...";
-                        
-                        const mResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(manifestUrl)}`);
-                        const mData = await mResponse.json();
-                        // 有些 server 會回傳字串形式的 JSON
-                        const manifest = JSON.parse(mData.contents);
-
-                        // 提取名稱
-                        finalName = manifest.short_name || manifest.name;
-
-                        // 提取圖示 (找最大的)
-                        if (manifest.icons && Array.isArray(manifest.icons)) {
-                            // 簡單排序找最大尺寸
-                            const bestIconObj = manifest.icons.sort((a, b) => {
-                                const sizeA = parseInt(a.sizes?.split('x')[0]) || 0;
-                                const sizeB = parseInt(b.sizes?.split('x')[0]) || 0;
-                                return sizeB - sizeA;
-                            })[0];
-                            
-                            if (bestIconObj) {
-                                finalIcon = resolveUrl(manifestUrl, bestIconObj.src);
+                            // 取圖 (找最大尺寸)
+                            if (manifest.icons && manifest.icons.length) {
+                                const best = manifest.icons.sort((a, b) => {
+                                    const sA = parseInt(a.sizes?.split('x')[0] || 0);
+                                    const sB = parseInt(b.sizes?.split('x')[0] || 0);
+                                    return sB - sA;
+                                })[0];
+                                if (best) pwaIcon = resolveUrl(manifestUrl, best.src);
                             }
-                        }
-                    } catch (e) {
-                        console.warn("Manifest parsing failed, falling back to HTML tags.");
+                        } catch (e) { console.warn("Manifest failed, using HTML fallback"); }
                     }
-                }
 
-                // ==========================================
-                // 2. 次要優先級：HTML Tags (Apple Touch / OG / Title)
-                // ==========================================
-                
-                // 如果 Manifest 沒抓到名字，從 Title 抓並清理
-                if (!finalName) {
-                    finalName = cleanTitle(doc.title);
-                }
+                    // --- 步驟 2: HTML 備援 (Fallback) ---
+                    if (!pwaName) pwaName = cleanTitle(doc.title);
 
-                // 如果 Manifest 沒抓到圖示，依序尋找
-                if (!finalIcon) {
-                    const appleIcon = doc.querySelector('link[rel="apple-touch-icon"]') || 
-                                      doc.querySelector('link[rel="apple-touch-icon-precomposed"]');
-                    const ogImage = doc.querySelector('meta[property="og:image"]');
-                    const favicon = doc.querySelector('link[rel="icon"][sizes="192x192"]') || 
-                                    doc.querySelector('link[rel="icon"]');
+                    if (!pwaIcon) {
+                        const apple = doc.querySelector('link[rel="apple-touch-icon"]') || doc.querySelector('link[rel="apple-touch-icon-precomposed"]');
+                        const icon = doc.querySelector('link[rel="icon"][sizes="192x192"]') || doc.querySelector('link[rel="icon"]');
+                        const og = doc.querySelector('meta[property="og:image"]');
 
-                    if (appleIcon) {
-                        finalIcon = resolveUrl(targetUrl, appleIcon.getAttribute('href'));
-                    } else if (favicon) {
-                        finalIcon = resolveUrl(targetUrl, favicon.getAttribute('href'));
-                    } else if (ogImage) {
-                        finalIcon = resolveUrl(targetUrl, ogImage.getAttribute('content'));
-                    } else {
-                        // 最後備案：猜測根目錄圖示
-                        finalIcon = resolveUrl(targetUrl, "/favicon.ico");
+                        if (apple) pwaIcon = resolveUrl(targetSite, apple.getAttribute('href'));
+                        else if (icon) pwaIcon = resolveUrl(targetSite, icon.getAttribute('href'));
+                        else if (og) pwaIcon = resolveUrl(targetSite, og.getAttribute('content'));
+                        else pwaIcon = resolveUrl(targetSite, "/favicon.ico");
                     }
+
+                    // --- 步驟 3: 更新當前頁面資訊 (重要！) ---
+                    // 為了讓 "Add to Home Screen" 抓到正確資訊，我們必須修改當前頁面的 Head
+                    document.title = pwaName;
+                    
+                    // 移除舊 icon 標籤，注入新標籤
+                    const existingIcons = document.querySelectorAll('link[rel*="icon"]');
+                    existingIcons.forEach(el => el.remove());
+
+                    const link = document.createElement('link');
+                    link.rel = 'apple-touch-icon';
+                    link.href = pwaIcon;
+                    document.head.appendChild(link);
+
+                    // 顯示結果
+                    document.getElementById('finalName').innerText = pwaName;
+                    document.getElementById('finalIcon').src = pwaIcon;
+                    
+                    loadingView.style.display = 'none';
+                    installView.style.display = 'flex';
+
+                } catch (err) {
+                    loadingView.innerHTML = `<p>Error: ${err.message}</p><button onclick="window.location.search=''">Try Again</button>`;
                 }
-
-                // ==========================================
-                // 3. 生成安裝頁面 (新分頁)
-                // ==========================================
-                statusDiv.innerText = "Generating Installer...";
-
-                const pwaWindow = window.open("", "_blank");
-                
-                if (!pwaWindow) {
-                    statusDiv.innerText = "Pop-up blocked! Please allow pop-ups.";
-                    return;
-                }
-
-                pwaWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>${finalName}</title>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-                        
-                        <meta name="apple-mobile-web-app-capable" content="yes">
-                        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-                        <meta name="apple-mobile-web-app-title" content="${finalName}">
-                        
-                        <link rel="apple-touch-icon" href="${finalIcon}">
-                        <link rel="icon" href="${finalIcon}">
-
-                        <style>
-                            :root {
-                                --bg: #f2f2f7;
-                                --text: #000;
-                            }
-                            @media (prefers-color-scheme: dark) {
-                                :root { --bg: #000; --text: #fff; }
-                            }
-                            body {
-                                background-color: var(--bg);
-                                color: var(--text);
-                                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                                display: flex;
-                                flex-direction: column;
-                                align-items: center;
-                                justify-content: center;
-                                height: 100vh;
-                                margin: 0;
-                                text-align: center;
-                            }
-                            .icon-preview {
-                                width: 120px;
-                                height: 120px;
-                                border-radius: 22px;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                                margin-bottom: 20px;
-                                object-fit: cover;
-                                background: #fff;
-                            }
-                            h2 { margin: 0 0 10px 0; font-weight: 700; }
-                            p { opacity: 0.7; font-size: 0.95rem; margin-top: 5px; max-width: 80%; line-height: 1.4; }
-                            .arrow { font-size: 2rem; margin-top: 20px; animation: bounce 2s infinite; }
-                            @keyframes bounce {
-                                0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-                                40% {transform: translateY(-10px);}
-                                60% {transform: translateY(-5px);}
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <img src="${finalIcon}" class="icon-preview" onerror="this.style.display='none'">
-                        <h2>${finalName}</h2>
-                        <p>To install this app:</p>
-                        <p>1. Tap the <strong>Share</strong> button below <br>2. Select <strong>"Add to Home Screen"</strong></p>
-                        <div class="arrow">↓</div>
-                        
-                        <script>
-                            if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
-                                window.location.replace("${targetUrl}");
-                            }
-                        <\/script>
-                    </body>
-                    </html>
-                `);
-                
-                statusDiv.innerText = "Done! Check the new tab.";
-
-            } catch (error) {
-                console.error(error);
-                statusDiv.innerText = "Error: " + error.message;
-            }
-        });
+            })();
+        }
     </script>
 </body>
 </html>
