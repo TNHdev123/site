@@ -5,161 +5,189 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
     <title>alwaysPWA</title>
     <style>
         :root {
-            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF;
+            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; --card: #f2f2f7;
         }
         @media (prefers-color-scheme: dark) {
-            :root { --bg: #000000; --text: #ffffff; --border: #ffffff; }
+            :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --card: #1c1c1e; }
         }
         body {
             background-color: var(--bg); color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0; overflow: hidden;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
         }
-        .view { width: 85%; max-width: 400px; text-align: center; display: none; }
-        h1 { font-size: 3rem; font-weight: 900; margin-bottom: 2rem; letter-spacing: -1.5px; }
-        input {
-            width: 100%; padding: 16px; font-size: 1.1rem; background: transparent;
-            color: var(--text); border: 4px solid var(--border); box-sizing: border-box;
-            outline: none; font-weight: 700; margin-bottom: 15px;
+        .view { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; }
+        h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
+        
+        /* 表單樣式 */
+        label { font-weight: bold; font-size: 0.9rem; margin-bottom: -10px; }
+        input[type="text"], input[type="url"] {
+            width: 100%; padding: 14px; font-size: 1rem; background: transparent;
+            color: var(--text); border: 3px solid var(--border); box-sizing: border-box;
+            outline: none; font-weight: 600;
         }
+        /* 自定義上傳按鈕 */
+        .file-input-wrapper {
+            border: 3px dashed var(--border); padding: 20px; text-align: center; cursor: pointer;
+            position: relative; transition: opacity 0.2s;
+        }
+        .file-input-wrapper:active { opacity: 0.6; }
+        #iconPreview { width: 60px; height: 60px; border-radius: 12px; display: none; margin: 10px auto; object-fit: cover; border: 1px solid var(--border); }
+        
         button {
             width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 900;
-            background-color: var(--accent); color: #fff; border: 4px solid var(--border);
-            cursor: pointer;
+            background-color: var(--accent); color: #fff; border: 3px solid var(--border);
+            cursor: pointer; margin-top: 10px;
         }
-        .icon-preview {
-            width: 120px; height: 120px; border-radius: 26px;
-            border: 3px solid var(--border); margin-bottom: 20px;
-            object-fit: cover; background: #fff;
-        }
-        h2 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+
+        /* 安裝頁 UI */
+        .install-card { text-align: center; }
+        .final-icon { width: 120px; height: 120px; border-radius: 26px; border: 3px solid var(--border); margin-bottom: 20px; }
         .arrow { font-size: 2.5rem; animation: bounce 2s infinite; margin-top: 20px; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
-        .loader { border: 5px solid var(--border); border-top: 5px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="inputView" class="view">
+    <div id="homeView" class="view">
         <h1>alwaysPWA</h1>
-        <input type="url" id="urlInput" placeholder="Enter URL..." autocomplete="off">
-        <button id="goBtn">Get PWA!</button>
+        
+        <label>TARGET URL</label>
+        <input type="url" id="targetUrl" placeholder="https://example.com" autocomplete="off">
+        
+        <label>PWA NAME</label>
+        <input type="text" id="targetName" placeholder="My Awesome App" autocomplete="off">
+        
+        <label>APP ICON</label>
+        <div class="file-input-wrapper" onclick="document.getElementById('iconFile').click()">
+            <span id="uploadText">Click to upload icon</span>
+            <img id="iconPreview">
+            <input type="file" id="iconFile" accept="image/*" style="display:none">
+        </div>
+        
+        <button id="generateBtn">Get PWA!</button>
     </div>
 
-    <div id="loadingView" class="view" style="flex-direction: column; align-items: center;">
-        <div class="loader"></div>
-        <p>Analyzing Website...</p>
-    </div>
-
-    <div id="installView" class="view">
-        <img id="finalIcon" class="icon-preview" src="">
-        <h2 id="finalName">App</h2>
+    <div id="installView" class="view install-card">
+        <img id="displayIcon" class="final-icon">
+        <h2 id="displayName">App Name</h2>
         <p>1. Tap the <strong>Share</strong> button ↓<br>2. Select <strong>Add to Home Screen</strong></p>
         <div class="arrow">↓</div>
+        <button onclick="window.location.hash=''" style="background: transparent; color: var(--text); border-width: 1px; font-size: 0.9rem;">Back</button>
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const targetSite = params.get('site');
+        const homeView = document.getElementById('homeView');
+        const installView = document.getElementById('installView');
+        const iconFile = document.getElementById('iconFile');
+        const iconPreview = document.getElementById('iconPreview');
+        const uploadText = document.getElementById('uploadText');
+        
+        let base64Icon = "";
 
-        // 輔助函式
-        const resolveUrl = (base, rel) => { try { return new URL(rel, base).href; } catch(e) { return rel; } };
-        const cleanTitle = (t) => t ? t.split(/\s[–|—\-]\s/)[0].trim() : "";
+        // --- 1. 處理圖片上傳與縮小 (重要：防止 URL 過長) ---
+        iconFile.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        function injectPwaMeta(name, iconUrl) {
-            document.title = name;
-            // Apple Meta
-            let appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]') || document.createElement('meta');
-            appleTitle.name = "apple-mobile-web-app-title"; appleTitle.content = name; document.head.appendChild(appleTitle);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 使用 Canvas 縮小圖片到 180x180 (iOS 標準)
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 180;
+                    canvas.height = 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 180, 180);
+                    base64Icon = canvas.toDataURL('image/png');
+                    
+                    // 更新 UI 預覽
+                    iconPreview.src = base64Icon;
+                    iconPreview.style.display = 'block';
+                    uploadText.style.display = 'none';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
-            let appleIcon = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
-            appleIcon.rel = "apple-touch-icon"; appleIcon.href = iconUrl; document.head.appendChild(appleIcon);
+        // --- 2. 生成 PWA URL 並跳轉 ---
+        document.getElementById('generateBtn').onclick = () => {
+            const url = document.getElementById('targetUrl').value.trim();
+            const name = document.getElementById('targetName').value.trim();
+            
+            if (!url || !name || !base64Icon) {
+                alert("Please fill in all fields and upload an icon.");
+                return;
+            }
 
-            // Manifest Blob (全螢幕關鍵)
+            const formattedUrl = /^https?:\/\//i.test(url) ? url : 'https://' + url;
+            
+            // 使用 Hash 傳遞參數
+            const params = new URLSearchParams();
+            params.set('url', formattedUrl);
+            params.set('name', name);
+            // 注意：Base64 可能很大，有些瀏覽器限制網址長度（約 8k-12k 字元）
+            // 縮小到 180x180 後的 Base64 通常在 5k 左右，是安全的。
+            location.hash = params.toString() + "&icon=" + encodeURIComponent(base64Icon);
+            location.reload(); // 重新載入以觸發 Hash 解析
+        };
+
+        // --- 3. 解析 Hash 並注入 Meta ---
+        function init() {
+            const hash = location.hash.substring(1);
+            if (!hash) {
+                homeView.style.display = 'flex';
+                return;
+            }
+
+            const params = new URLSearchParams(hash);
+            const pName = params.get('name');
+            const pUrl = params.get('url');
+            const pIcon = decodeURIComponent(params.get('icon'));
+
+            if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+                window.location.replace(pUrl);
+                return;
+            }
+
+            // 注入 PWA 必要的 Meta
+            document.title = pName;
+            
+            // Apple Touch Icon
+            let link = document.createElement('link');
+            link.rel = 'apple-touch-icon';
+            link.href = pIcon;
+            document.head.appendChild(link);
+
+            // Apple PWA Title
+            let metaTitle = document.createElement('meta');
+            metaTitle.name = 'apple-mobile-web-app-title';
+            metaTitle.content = pName;
+            document.head.appendChild(metaTitle);
+
+            // 動態 Manifest
             const manifest = {
-                "name": name, "short_name": name, "start_url": window.location.href,
+                "name": pName, "short_name": pName, "start_url": window.location.href,
                 "display": "standalone", "background_color": "#000000",
-                "icons": [{ "src": iconUrl, "sizes": "512x512", "type": "image/png" }]
+                "icons": [{ "src": pIcon, "sizes": "180x180", "type": "image/png" }]
             };
             const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            let mLink = document.querySelector('link[rel="manifest"]') || document.createElement('link');
-            mLink.rel = 'manifest'; mLink.href = URL.createObjectURL(blob); document.head.appendChild(mLink);
+            let mLink = document.createElement('link');
+            mLink.rel = 'manifest'; mLink.href = URL.createObjectURL(blob);
+            document.head.appendChild(mLink);
+
+            // 顯示安裝 UI
+            document.getElementById('displayName').innerText = pName;
+            document.getElementById('displayIcon').src = pIcon;
+            installView.style.display = 'flex';
         }
 
-        if (!targetSite) {
-            document.getElementById('inputView').style.display = 'block';
-            document.getElementById('goBtn').onclick = () => {
-                let url = document.getElementById('urlInput').value.trim();
-                if (!url) return;
-                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-                window.location.search = `?site=${encodeURIComponent(url)}`;
-            };
-        } else {
-            // PWA 跳轉模式
-            if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-                window.location.replace(targetSite);
-            } else {
-                document.getElementById('loadingView').style.display = 'flex';
-                
-                (async function smartFetch() {
-                    let finalName = "";
-                    let finalIcon = "";
-
-                    try {
-                        // 嘗試抓取 HTML
-                        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetSite)}`);
-                        const data = await res.json();
-                        const doc = new DOMParser().parseFromString(data.contents, 'text/html');
-
-                        // 1. 嘗試 Manifest
-                        const mLink = doc.querySelector('link[rel="manifest"]');
-                        if (mLink) {
-                            try {
-                                const mRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(resolveUrl(targetSite, mLink.getAttribute('href')))}`);
-                                const mData = await mRes.json();
-                                const m = JSON.parse(mData.contents);
-                                finalName = m.short_name || m.name;
-                                if (m.icons) finalIcon = resolveUrl(targetSite, m.icons[m.icons.length-1].src);
-                            } catch(e){}
-                        }
-
-                        // 2. 嘗試 Apple Touch Icon (優先)
-                        if (!finalName) finalName = cleanTitle(doc.title);
-                        if (!finalIcon) {
-                            const apple = doc.querySelector('link[rel="apple-touch-icon"]') || doc.querySelector('link[rel="apple-touch-icon-precomposed"]');
-                            if (apple) finalIcon = resolveUrl(targetSite, apple.getAttribute('href'));
-                        }
-                    } catch (err) {
-                        console.warn("Proxy blocked or failed. Using Fallback Strategy.");
-                    }
-
-                    // --- 備援策略 (即使 Fetch 失敗也會執行) ---
-                    if (!finalName) {
-                        const urlObj = new URL(targetSite);
-                        const hostParts = urlObj.hostname.split('.');
-                        finalName = hostParts.length > 2 ? hostParts[1] : hostParts[0];
-                        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
-                    }
-                    if (!finalIcon) {
-                        // 使用 Google Favicon API 作為最強後備 (256px)
-                        finalIcon = `https://www.google.com/s2/favicons?sz=256&domain=${new URL(targetSite).hostname}`;
-                    }
-
-                    // 注入並顯示
-                    injectPwaMeta(finalName, finalIcon);
-                    document.getElementById('finalName').innerText = finalName;
-                    document.getElementById('finalIcon').src = finalIcon;
-                    document.getElementById('loadingView').style.display = 'none';
-                    document.getElementById('installView').style.display = 'block';
-                })();
-            }
-        }
+        window.onload = init;
     </script>
 </body>
 </html>
