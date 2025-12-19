@@ -8,140 +8,133 @@
     <title>alwaysPWA</title>
     <style>
         :root {
-            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; --card: #f2f2f7;
+            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF;
         }
         @media (prefers-color-scheme: dark) {
-            :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --card: #1c1c1e; }
-        }
-        body {
-            background-color: var(--bg); color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
-        }
-        .view { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; }
-        h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
-        
-        /* 表單樣式 */
-        label { font-weight: bold; font-size: 0.9rem; margin-bottom: -10px; }
-        input[type="text"], input[type="url"] {
-            width: 100%; padding: 14px; font-size: 1rem; background: transparent;
-            color: var(--text); border: 3px solid var(--border); box-sizing: border-box;
-            outline: none; font-weight: 600;
-        }
-        /* 自定義上傳按鈕 */
-        .file-input-wrapper {
-            border: 3px dashed var(--border); padding: 20px; text-align: center; cursor: pointer;
-            position: relative; transition: opacity 0.2s;
-        }
-        .file-input-wrapper:active { opacity: 0.6; }
-        #iconPreview { width: 60px; height: 60px; border-radius: 12px; display: none; margin: 10px auto; object-fit: cover; border: 1px solid var(--border); }
-        
-        button {
-            width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 900;
-            background-color: var(--accent); color: #fff; border: 3px solid var(--border);
-            cursor: pointer; margin-top: 10px;
+            :root { --bg: #000000; --text: #ffffff; --border: #ffffff; }
         }
 
-        /* 安裝頁 UI */
-        .install-card { text-align: center; }
-        .final-icon { width: 120px; height: 120px; border-radius: 26px; border: 3px solid var(--border); margin-bottom: 20px; }
-        .arrow { font-size: 2.5rem; animation: bounce 2s infinite; margin-top: 20px; }
+        body, html {
+            height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 視圖切換 */
+        .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; }
+
+        /* 主頁佈局 (Input) */
+        #homeView { justify-content: center; align-items: center; padding: 20px; }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+        h1 { font-size: 3rem; font-weight: 900; margin: 0 0 20px 0; letter-spacing: -2px; text-align: center; }
+        label { font-weight: bold; font-size: 0.8rem; text-transform: uppercase; }
+        input {
+            padding: 15px; font-size: 1rem; background: transparent; color: var(--text);
+            border: 4px solid var(--border); outline: none; font-weight: 700;
+        }
+        .upload-area {
+            border: 4px dashed var(--border); padding: 20px; text-align: center; cursor: pointer;
+            font-weight: bold; position: relative;
+        }
+        #iconPreview { width: 50px; height: 50px; border-radius: 10px; display: none; margin: 10px auto; border: 2px solid var(--border); }
+        button {
+            padding: 16px; font-size: 1.2rem; font-weight: 900; background: var(--accent);
+            color: white; border: 4px solid var(--border); cursor: pointer; margin-top: 10px;
+        }
+
+        /* 安裝頁佈局 (#) - 絕對置中 */
+        #installView { justify-content: center; align-items: center; text-align: center; }
+        .final-icon { width: 130px; height: 130px; border-radius: 28px; border: 4px solid var(--border); margin-bottom: 25px; }
+        h2 { margin: 0; font-size: 2rem; font-weight: 800; }
+        .instruction { opacity: 0.7; margin-top: 15px; font-weight: 500; }
+        .arrow { font-size: 2.5rem; margin-top: 30px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
+
+        /* PWA 內部的全螢幕容器 */
+        #appView { height: 100vh; width: 100vw; }
+        iframe { border: none; width: 100%; height: 100%; }
+
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 100; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="homeView" class="view">
         <h1>alwaysPWA</h1>
-        
-        <label>TARGET URL</label>
-        <input type="url" id="targetUrl" placeholder="https://example.com" autocomplete="off">
-        
-        <label>PWA NAME</label>
-        <input type="text" id="targetName" placeholder="My Awesome App" autocomplete="off">
-        
-        <label>APP ICON</label>
-        <div class="file-input-wrapper" onclick="document.getElementById('iconFile').click()">
-            <span id="uploadText">Click to upload icon</span>
-            <img id="iconPreview">
-            <input type="file" id="iconFile" accept="image/*" style="display:none">
+        <div class="input-group">
+            <label>URL</label>
+            <input type="url" id="targetUrl" placeholder="https://..." autocomplete="off">
+            <label>Name</label>
+            <input type="text" id="targetName" placeholder="App Name" autocomplete="off">
+            <label>Icon</label>
+            <div class="upload-area" onclick="document.getElementById('iconFile').click()">
+                <span id="uploadText">Upload App Icon</span>
+                <img id="iconPreview">
+                <input type="file" id="iconFile" accept="image/*" style="display:none">
+            </div>
+            <button id="generateBtn">Get PWA!</button>
         </div>
-        
-        <button id="generateBtn">Get PWA!</button>
     </div>
 
-    <div id="installView" class="view install-card">
+    <div id="installView" class="view">
         <img id="displayIcon" class="final-icon">
-        <h2 id="displayName">App Name</h2>
-        <p>1. Tap the <strong>Share</strong> button ↓<br>2. Select <strong>Add to Home Screen</strong></p>
+        <h2 id="displayName">App</h2>
+        <div class="instruction">Tap <strong>Share</strong> then <strong>Add to Home Screen</strong></div>
         <div class="arrow">↓</div>
-        <button onclick="window.location.hash=''" style="background: transparent; color: var(--text); border-width: 1px; font-size: 0.9rem;">Back</button>
+    </div>
+
+    <div id="appView" class="view">
+        <div id="loader" class="loading-screen">Checking iFrame support...</div>
+        <iframe id="appFrame"></iframe>
     </div>
 
     <script>
-        const homeView = document.getElementById('homeView');
-        const installView = document.getElementById('installView');
-        const iconFile = document.getElementById('iconFile');
-        const iconPreview = document.getElementById('iconPreview');
-        const uploadText = document.getElementById('uploadText');
-        
         let base64Icon = "";
 
-        // --- 1. 處理圖片上傳與縮小 (重要：防止 URL 過長) ---
+        // --- A. 主頁邏輯 ---
+        const iconFile = document.getElementById('iconFile');
         iconFile.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    // 使用 Canvas 縮小圖片到 180x180 (iOS 標準)
                     const canvas = document.createElement('canvas');
-                    canvas.width = 180;
-                    canvas.height = 180;
+                    canvas.width = 180; canvas.height = 180;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, 180, 180);
-                    base64Icon = canvas.toDataURL('image/png');
-                    
-                    // 更新 UI 預覽
-                    iconPreview.src = base64Icon;
-                    iconPreview.style.display = 'block';
-                    uploadText.style.display = 'none';
+                    base64Icon = canvas.toDataURL('image/png', 0.8); // 壓縮以減少 URL 長度
+                    document.getElementById('iconPreview').src = base64Icon;
+                    document.getElementById('iconPreview').style.display = 'block';
+                    document.getElementById('uploadText').style.display = 'none';
                 };
                 img.src = event.target.result;
             };
             reader.readAsDataURL(file);
         };
 
-        // --- 2. 生成 PWA URL 並跳轉 ---
         document.getElementById('generateBtn').onclick = () => {
             const url = document.getElementById('targetUrl').value.trim();
             const name = document.getElementById('targetName').value.trim();
-            
-            if (!url || !name || !base64Icon) {
-                alert("Please fill in all fields and upload an icon.");
-                return;
-            }
+            if (!url || !name || !base64Icon) return alert("All fields required!");
 
             const formattedUrl = /^https?:\/\//i.test(url) ? url : 'https://' + url;
-            
-            // 使用 Hash 傳遞參數
             const params = new URLSearchParams();
             params.set('url', formattedUrl);
             params.set('name', name);
-            // 注意：Base64 可能很大，有些瀏覽器限制網址長度（約 8k-12k 字元）
-            // 縮小到 180x180 後的 Base64 通常在 5k 左右，是安全的。
-            location.hash = params.toString() + "&icon=" + encodeURIComponent(base64Icon);
-            location.reload(); // 重新載入以觸發 Hash 解析
+            
+            // 導向至新分頁
+            const newTabUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
+            window.open(newTabUrl, '_blank');
         };
 
-        // --- 3. 解析 Hash 並注入 Meta ---
-        function init() {
+        // --- B. 安裝頁與 PWA 智慧模式 ---
+        async function checkAndLoad() {
             const hash = location.hash.substring(1);
             if (!hash) {
-                homeView.style.display = 'flex';
+                document.getElementById('homeView').style.display = 'flex';
                 return;
             }
 
@@ -150,44 +143,46 @@
             const pUrl = params.get('url');
             const pIcon = decodeURIComponent(params.get('icon'));
 
-            if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-                window.location.replace(pUrl);
-                return;
-            }
-
-            // 注入 PWA 必要的 Meta
+            // 更新 Meta 讓系統抓取安裝資訊
             document.title = pName;
-            
-            // Apple Touch Icon
-            let link = document.createElement('link');
-            link.rel = 'apple-touch-icon';
-            link.href = pIcon;
+            const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = pIcon;
             document.head.appendChild(link);
-
-            // Apple PWA Title
-            let metaTitle = document.createElement('meta');
-            metaTitle.name = 'apple-mobile-web-app-title';
-            metaTitle.content = pName;
+            const metaTitle = document.createElement('meta'); metaTitle.name = 'apple-mobile-web-app-title'; metaTitle.content = pName;
             document.head.appendChild(metaTitle);
 
-            // 動態 Manifest
-            const manifest = {
-                "name": pName, "short_name": pName, "start_url": window.location.href,
-                "display": "standalone", "background_color": "#000000",
-                "icons": [{ "src": pIcon, "sizes": "180x180", "type": "image/png" }]
-            };
-            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            let mLink = document.createElement('link');
-            mLink.rel = 'manifest'; mLink.href = URL.createObjectURL(blob);
-            document.head.appendChild(mLink);
+            // 檢查是否為全螢幕模式
+            const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
-            // 顯示安裝 UI
-            document.getElementById('displayName').innerText = pName;
-            document.getElementById('displayIcon').src = pIcon;
-            installView.style.display = 'flex';
+            if (isPWA) {
+                document.getElementById('appView').style.display = 'flex';
+                try {
+                    // 使用 Proxy 檢查目標網頁是否允許 iFrame
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(pUrl)}`);
+                    const data = await res.json();
+                    
+                    // 檢查常見的禁止 iFrame 的標記 (這是一個啟發式檢查)
+                    const isBlocked = data.contents.includes('X-Frame-Options') || 
+                                      data.contents.includes('SAMEORIGIN') || 
+                                      pUrl.includes('google.com') || pUrl.includes('facebook.com');
+
+                    if (isBlocked) {
+                        window.location.replace(pUrl); // 不支援則導向
+                    } else {
+                        document.getElementById('appFrame').src = pUrl; // 支援則嵌入
+                        document.getElementById('loader').style.display = 'none';
+                    }
+                } catch (e) {
+                    window.location.replace(pUrl); // 出錯也導向
+                }
+            } else {
+                // 非全螢幕，顯示置中的安裝教學
+                document.getElementById('displayName').innerText = pName;
+                document.getElementById('displayIcon').src = pIcon;
+                document.getElementById('installView').style.display = 'flex';
+            }
         }
 
-        window.onload = init;
+        window.onload = checkAndLoad;
     </script>
 </body>
 </html>
