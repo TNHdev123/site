@@ -25,17 +25,17 @@
         .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; }
 
         /* --- Home View --- */
-        #homeView { justify-content: flex-start; align-items: center; padding: 40px 20px; overflow-y: auto; }
-        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
-        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; letter-spacing: -1.5px; text-align: center; }
-        label { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; }
+        #homeView { justify-content: flex-start; align-items: center; padding: 30px 20px; overflow-y: auto; }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
+        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
+        label { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; margin-top: 5px; }
         input {
             padding: 12px; font-size: 1rem; background: transparent; color: var(--text);
             border: 3px solid var(--border); outline: none; font-weight: 600;
         }
 
         .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
@@ -47,9 +47,10 @@
         }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(18px); }
+        .switch-label { font-size: 0.85rem; font-weight: bold; margin-right: 10px; }
 
-        .upload-area { border: 3px dashed var(--border); padding: 15px; text-align: center; cursor: pointer; font-weight: bold; }
-        #iconPreview { width: 50px; height: 50px; border-radius: 10px; display: none; margin: 10px auto; border: 2px solid var(--border); object-fit: cover; }
+        .upload-area { border: 3px dashed var(--border); padding: 12px; text-align: center; cursor: pointer; font-weight: bold; }
+        #iconPreview { width: 50px; height: 50px; border-radius: 10px; display: none; margin: 8px auto; border: 2px solid var(--border); object-fit: cover; }
         #generateBtn { padding: 16px; font-size: 1.1rem; font-weight: 900; background: var(--accent); color: white; border: 3px solid var(--border); cursor: pointer; margin-top: 10px; }
 
         /* --- Install View --- */
@@ -57,19 +58,19 @@
         .install-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%; max-width: 320px; text-align: left; }
         .final-icon { width: 70px; height: 70px; border-radius: 16px; border: 3px solid var(--border); background: #fff; flex-shrink: 0; }
         .final-name { margin: 0; font-size: 1.6rem; font-weight: 800; line-height: 1.2; flex-grow: 1; }
-        .final-desc { font-size: 1rem; color: var(--sub); margin-bottom: 30px; max-width: 280px; line-height: 1.4; }
+        .final-desc { font-size: 1rem; color: var(--sub); margin-bottom: 25px; max-width: 280px; line-height: 1.4; }
         .instruction { font-size: 1.1rem; font-weight: 600; }
         .arrow { font-size: 2.5rem; margin-top: 10px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
-        /* QR Code Modal */
-        #qrBtn { margin-top: 30px; background: transparent; color: var(--text); border: 2px solid var(--border); padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 25px; }
+        /* --- QR Code Large Modal --- */
+        #qrBtn { display: none; margin-top: 30px; background: var(--text); color: var(--bg); border: none; padding: 12px 24px; font-weight: 900; cursor: pointer; border-radius: 30px; font-size: 1rem; }
         #qrModal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
+            background: var(--bg); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
         }
-        #qrCanvas { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        #closeQr { margin-top: 25px; color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; border: 1px solid white; padding: 5px 20px; border-radius: 20px; }
+        #qrCanvas { width: 85vw; height: 85vw; max-width: 500px; max-height: 500px; border: 10px solid #fff; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,0.1); }
+        #closeQr { margin-top: 30px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 10px 40px; }
 
         /* PWA View */
         #appView { height: 100vh; width: 100vw; display: none; }
@@ -91,17 +92,22 @@
             <input type="url" id="targetJs" placeholder="https://.../script.js" autocomplete="off">
             
             <div class="switch-group">
-                <label>iFrame Mode (Embed)</label>
+                <span class="switch-label">iFrame Mode (Embed)</span>
                 <label class="switch"><input type="checkbox" id="iframeToggle" checked><span class="slider"></span></label>
+            </div>
+
+            <div class="switch-group" style="border: 2px solid var(--border); padding: 8px; margin-top: 5px;">
+                <span class="switch-label" style="color: var(--accent);">Extreme Compression<br><small>(Required for QR Share)</small></span>
+                <label class="switch"><input type="checkbox" id="extremeToggle"><span class="slider"></span></label>
             </div>
 
             <label>App Icon</label>
             <div class="upload-area" onclick="document.getElementById('iconFile').click()">
-                <span id="uploadText">Upload Image</span>
+                <span id="uploadText">Select Icon</span>
                 <img id="iconPreview">
                 <input type="file" id="iconFile" accept="image/*" style="display:none">
             </div>
-            <button id="generateBtn">Get PWA!</button>
+            <button id="generateBtn">Generate PWA</button>
         </div>
     </div>
 
@@ -117,8 +123,9 @@
     </div>
 
     <div id="qrModal">
+        <h2 style="margin-bottom: 20px;">Scan to Install</h2>
         <canvas id="qrCanvas"></canvas>
-        <div id="closeQr">Close</div>
+        <div id="closeQr">Back</div>
     </div>
 
     <div id="appView" class="view">
@@ -128,20 +135,25 @@
     <script>
         let base64Icon = "";
 
-        // Icon Processing (Aggressive compression for QR compatibility)
+        // Icon Processing with Conditional Compression
         document.getElementById('iconFile').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            const isExtreme = document.getElementById('extremeToggle').checked;
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 120; canvas.height = 120; 
+                    // Extreme: 64x64, Normal: 144x144
+                    const size = isExtreme ? 64 : 144;
+                    canvas.width = size; canvas.height = size; 
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 120, 120);
-                    // Use JPEG 0.5 for small payload
-                    base64Icon = canvas.toDataURL('image/jpeg', 0.5); 
+                    ctx.drawImage(img, 0, 0, size, size);
+                    
+                    // Extreme: JPEG 0.1 (Tiny), Normal: JPEG 0.7
+                    base64Icon = canvas.toDataURL('image/jpeg', isExtreme ? 0.1 : 0.7); 
+                    
                     document.getElementById('iconPreview').src = base64Icon;
                     document.getElementById('iconPreview').style.display = 'block';
                     document.getElementById('uploadText').style.display = 'none';
@@ -151,28 +163,28 @@
             reader.readAsDataURL(file);
         };
 
-        // Generate and Open New Tab
         document.getElementById('generateBtn').onclick = () => {
             const url = document.getElementById('targetUrl').value.trim();
             const name = document.getElementById('targetName').value.trim();
             const desc = document.getElementById('targetDesc').value.trim();
             const js = document.getElementById('targetJs').value.trim();
             const useIframe = document.getElementById('iframeToggle').checked;
+            const isExtreme = document.getElementById('extremeToggle').checked;
             
-            if (!url || !name || !base64Icon) return alert("Please fill URL, Name and Icon!");
+            if (!url || !name || !base64Icon) return alert("Fill all required fields!");
 
             const params = new URLSearchParams();
             params.set('url', /^https?:\/\//i.test(url) ? url : 'https://' + url);
             params.set('name', name);
             if(desc) params.set('desc', desc);
             if(js) params.set('js', js);
+            if(isExtreme) params.set('qr', '1');
             params.set('mode', useIframe ? 'iframe' : 'direct');
             
             const finalHashUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
             window.open(finalHashUrl, '_blank');
         };
 
-        // Initialize Logic
         function init() {
             const hash = location.hash.substring(1);
             if (!hash) {
@@ -186,9 +198,9 @@
             const pDesc = params.get('desc') || "";
             const pJs = params.get('js');
             const pMode = params.get('mode');
+            const pQr = params.get('qr');
             const pIcon = decodeURIComponent(params.get('icon'));
 
-            // Inject PWA Meta Tags
             document.title = pName;
             const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = pIcon;
             document.head.appendChild(link);
@@ -198,13 +210,10 @@
             const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPWA) {
-                // Load Custom JS
                 if (pJs) {
-                    const script = document.createElement('script');
-                    script.src = pJs;
+                    const script = document.createElement('script'); script.src = pJs;
                     document.head.appendChild(script);
                 }
-
                 if (pMode === 'iframe') {
                     document.getElementById('appView').style.display = 'block';
                     document.getElementById('appFrame').src = pUrl;
@@ -212,28 +221,30 @@
                     window.location.replace(pUrl);
                 }
             } else {
-                // Show Installation UI
                 document.getElementById('displayName').innerText = pName;
                 document.getElementById('displayIcon').src = pIcon;
                 document.getElementById('displayDesc').innerText = pDesc;
                 document.getElementById('installView').style.display = 'flex';
 
-                // QR Code Generator
-                document.getElementById('qrBtn').onclick = () => {
-                    new QRious({
-                        element: document.getElementById('qrCanvas'),
-                        value: window.location.href,
-                        size: 280,
-                        level: 'L'
-                    });
-                    document.getElementById('qrModal').style.display = 'flex';
-                };
+                // Show QR Button ONLY if extreme compression was used
+                if (pQr === '1') {
+                    const btn = document.getElementById('qrBtn');
+                    btn.style.display = 'inline-block';
+                    btn.onclick = () => {
+                        new QRious({
+                            element: document.getElementById('qrCanvas'),
+                            value: window.location.href,
+                            size: 600, // Generate a high-res source for the canvas
+                            level: 'L'
+                        });
+                        document.getElementById('qrModal').style.display = 'flex';
+                    };
+                }
                 document.getElementById('closeQr').onclick = () => {
                     document.getElementById('qrModal').style.display = 'none';
                 };
             }
         }
-
         window.onload = init;
     </script>
 </body>
