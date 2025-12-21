@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>alwaysPWA Pro</title>
+    <title>alwaysPWA Ultra</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         :root {
             --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; 
-            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #666666;
+            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #888888;
         }
         @media (prefers-color-scheme: dark) {
             :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --sub: #aaaaaa; }
@@ -35,48 +35,47 @@
             border: 3px solid var(--border); outline: none; font-weight: 600;
         }
 
-        .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+        .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
             background-color: #ccc; transition: .4s; border: 2px solid var(--border);
         }
         .slider:before {
-            position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px;
+            position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px;
             background-color: white; transition: .4s; border: 2px solid var(--border);
         }
         input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(18px); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        /* --- Safety Meter --- */
-        .meter-container { margin-top: 10px; display: none; }
-        .meter-bar { height: 8px; width: 100%; background: #eee; border: 2px solid var(--border); position: relative; }
-        #meterFill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
-        #meterText { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
+        .meter-container { margin-top: 5px; display: none; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
+        .meter-bar { height: 10px; width: 100%; background: #eee; border: 1px solid var(--border); overflow: hidden; }
+        #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
+        #meterText { font-size: 0.75rem; font-weight: 900; margin-top: 6px; display: block; }
 
-        .upload-area { border: 3px dashed var(--border); padding: 12px; text-align: center; cursor: pointer; font-weight: bold; }
-        #iconPreview { width: 50px; height: 50px; border-radius: 10px; display: none; margin: 8px auto; border: 2px solid var(--border); object-fit: cover; }
-        #generateBtn { padding: 16px; font-size: 1.1rem; font-weight: 900; background: var(--accent); color: white; border: 3px solid var(--border); cursor: pointer; margin-top: 10px; }
+        .upload-area { border: 3px dashed var(--border); padding: 15px; text-align: center; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        #iconPreview { width: 60px; height: 60px; border-radius: 12px; display: none; margin: 10px auto; border: 2px solid var(--border); object-fit: cover; }
+        #generateBtn { padding: 16px; font-size: 1.1rem; font-weight: 900; background: var(--accent); color: white; border: 3px solid var(--border); cursor: pointer; margin-top: 15px; }
 
         /* --- Install View --- */
         #installView { justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .install-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%; max-width: 320px; text-align: left; }
-        .final-icon { width: 75px; height: 75px; border-radius: 18px; border: 3px solid var(--border); background: #fff; flex-shrink: 0; }
-        .final-name { margin: 0; font-size: 1.7rem; font-weight: 800; line-height: 1.2; flex-grow: 1; }
-        .final-desc { font-size: 1rem; color: var(--sub); margin-bottom: 30px; max-width: 280px; line-height: 1.4; }
+        .install-header { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; width: 100%; max-width: 320px; text-align: left; }
+        .final-icon { width: 80px; height: 80px; border-radius: 18px; border: 3px solid var(--border); background: #fff; flex-shrink: 0; }
+        .final-name { margin: 0; font-size: 1.8rem; font-weight: 800; line-height: 1.2; flex-grow: 1; }
+        .final-desc { font-size: 1.05rem; color: var(--sub); margin-bottom: 35px; max-width: 280px; line-height: 1.4; }
         .instruction { font-size: 1.1rem; font-weight: 600; }
-        .arrow { font-size: 2.5rem; margin-top: 10px; animation: bounce 2s infinite; }
+        .arrow { font-size: 3rem; margin-top: 15px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
         /* --- QR Modal --- */
-        #qrBtn { display: none; margin-top: 25px; background: var(--text); color: var(--bg); border: none; padding: 12px 28px; font-weight: 900; cursor: pointer; border-radius: 30px; font-size: 1rem; }
+        #qrBtn { display: none; margin-top: 25px; background: var(--text); color: var(--bg); border: none; padding: 14px 32px; font-weight: 900; cursor: pointer; border-radius: 35px; font-size: 1rem; }
         #qrModal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
         }
-        #qrCanvas { width: 88vw; height: 88vw; max-width: 550px; max-height: 550px; background: #fff; border: 10px solid #fff; box-shadow: 0 0 50px rgba(0,0,0,0.15); }
-        #closeQr { margin-top: 30px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 10px 50px; }
+        #qrCanvas { width: 90vw; height: 90vw; max-width: 500px; max-height: 500px; background: #fff; border: 10px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.1); }
+        #closeQr { margin-top: 35px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 12px 60px; }
 
         /* PWA View */
         #appView { height: 100vh; width: 100vw; display: none; }
@@ -86,14 +85,14 @@
 <body>
 
     <div id="homeView" class="view">
-        <h1>alwaysPWA Pro</h1>
+        <h1>alwaysPWA Ultra</h1>
         <div class="input-group">
             <label>Target URL</label>
             <input type="url" id="targetUrl" placeholder="https://..." autocomplete="off">
             <label>App Name</label>
-            <input type="text" id="targetName" placeholder="e.g. My Tool" autocomplete="off">
+            <input type="text" id="targetName" placeholder="My Awesome App" autocomplete="off">
             <label>Description (Optional)</label>
-            <input type="text" id="targetDesc" placeholder="Brief description" autocomplete="off">
+            <input type="text" id="targetDesc" placeholder="Describe your app..." autocomplete="off">
             <label>Custom JS URL (Optional)</label>
             <input type="url" id="targetJs" placeholder="https://.../script.js" autocomplete="off">
             
@@ -102,21 +101,21 @@
                 <label class="switch"><input type="checkbox" id="iframeToggle" checked><span class="slider"></span></label>
             </div>
 
-            <div class="switch-group" style="border: 2px solid var(--border); padding: 8px; margin-top: 5px; border-radius: 8px;">
-                <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression<br><small>Auto-shrink icon for scannability</small></span>
+            <div class="switch-group" style="background: rgba(0,122,255,0.05); border: 2px solid var(--accent); padding: 12px; border-radius: 10px;">
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression<br><small style="opacity:0.7">Optimizes icon for scannable QR</small></span>
                 <label class="switch"><input type="checkbox" id="extremeToggle" checked><span class="slider"></span></label>
             </div>
 
             <label>App Icon</label>
             <div class="upload-area" onclick="document.getElementById('iconFile').click()">
-                <span id="uploadText">Click to Upload Icon</span>
+                <span id="uploadText">Choose Image</span>
                 <img id="iconPreview">
                 <input type="file" id="iconFile" accept="image/*" style="display:none">
             </div>
 
             <div class="meter-container" id="meterContainer">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Analyzing...</span>
+                <span id="meterText">Awaiting Image...</span>
             </div>
 
             <button id="generateBtn">Generate PWA</button>
@@ -131,13 +130,13 @@
         <div id="displayDesc" class="final-desc"></div>
         <div class="instruction">Tap <strong>Share</strong><br>Select <strong>Add to Home Screen</strong></div>
         <div class="arrow">↓</div>
-        <button id="qrBtn">Share QR Code</button>
+        <button id="qrBtn">Share via QR Code</button>
     </div>
 
     <div id="qrModal">
         <h2 style="margin-bottom: 20px; font-weight: 900;">Scan to Install</h2>
         <canvas id="qrCanvas"></canvas>
-        <div id="closeQr">Close</div>
+        <div id="closeQr">Back</div>
     </div>
 
     <div id="appView" class="view">
@@ -146,37 +145,47 @@
 
     <script>
         let base64Icon = "";
-        let scanSafety = 0; // 0-100 score
+        let currentFile = null;
 
-        // The Smart Adaptive Compression Engine
-        async function processIcon(file) {
+        // Smart Adaptive Engine
+        async function processIcon() {
+            if (!currentFile) return;
             const isAdaptive = document.getElementById('extremeToggle').checked;
-            const img = await loadImage(file);
+            const img = await loadImage(currentFile);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
             let quality = 0.8;
-            let size = 144;
+            let size = 180; // High Quality Start
             let result = "";
-            const MAX_CHAR_BUDGET = isAdaptive ? 2200 : 8000; 
+            const SAFE_BUDGET = 3200; // Increased budget for better quality
 
-            // Adaptive Loop
-            for (let i = 0; i < 6; i++) {
-                canvas.width = size;
-                canvas.height = size;
-                ctx.clearRect(0, 0, size, size);
-                ctx.drawImage(img, 0, 0, size, size);
-                
-                result = canvas.toDataURL('image/jpeg', quality);
-                if (result.length <= MAX_CHAR_BUDGET || !isAdaptive) break;
-                
-                // Reduce parameters for next iteration
-                size -= 24;
-                quality -= 0.15;
+            if (!isAdaptive) {
+                // Fixed High Quality
+                canvas.width = 180; canvas.height = 180;
+                ctx.drawImage(img, 0, 0, 180, 180);
+                base64Icon = canvas.toDataURL('image/jpeg', 0.9);
+                updateSafetyMeter(base64Icon.length, false);
+            } else {
+                // Smart Adaptive Loop
+                for (let i = 0; i < 8; i++) {
+                    canvas.width = size; canvas.height = size;
+                    ctx.clearRect(0, 0, size, size);
+                    ctx.drawImage(img, 0, 0, size, size);
+                    result = canvas.toDataURL('image/jpeg', quality);
+                    
+                    if (result.length <= SAFE_BUDGET) break;
+                    
+                    // Priority: Reduce quality first, then size
+                    if (quality > 0.4) {
+                        quality -= 0.15;
+                    } else {
+                        size -= 20;
+                    }
+                }
+                base64Icon = result;
+                updateSafetyMeter(base64Icon.length, true);
             }
-
-            base64Icon = result;
-            updateSafetyMeter(result.length);
             
             document.getElementById('iconPreview').src = base64Icon;
             document.getElementById('iconPreview').style.display = 'block';
@@ -195,36 +204,45 @@
             });
         }
 
-        function updateSafetyMeter(length) {
+        function updateSafetyMeter(length, isAdaptive) {
             const container = document.getElementById('meterContainer');
             const fill = document.getElementById('meterFill');
             const text = document.getElementById('meterText');
             container.style.display = 'block';
 
-            // Lower is better for QR
-            let score = Math.max(0, 100 - (length / 40)); 
-            scanSafety = score;
+            if (!isAdaptive) {
+                fill.style.width = '100%';
+                fill.style.background = '#ccc';
+                text.innerText = "HQ MODE: QR Share Disabled";
+                text.style.color = 'var(--sub)';
+                return;
+            }
 
+            // Calculate scannability score based on 3200 chars
+            let score = Math.max(0, 100 - (length / 45)); 
             fill.style.width = score + '%';
 
-            if (score > 70) {
+            if (score > 65) {
                 fill.style.background = 'var(--safe)';
-                text.innerText = "Excellent: Perfect for QR sharing";
+                text.innerText = "EXCELLENT: Fast & Clean Scan";
                 text.style.color = 'var(--safe)';
-            } else if (score > 40) {
+            } else if (score > 35) {
                 fill.style.background = 'var(--warn)';
-                text.innerText = "Good: Scannable on most devices";
+                text.innerText = "GOOD: Balanced Quality";
                 text.style.color = 'var(--warn)';
             } else {
                 fill.style.background = 'var(--danger)';
-                text.innerText = "Complex: Hard to scan via QR";
+                text.innerText = "CRITICAL: Might be hard to scan";
                 text.style.color = 'var(--danger)';
             }
         }
 
         document.getElementById('iconFile').onchange = (e) => {
-            if (e.target.files[0]) processIcon(e.target.files[0]);
+            currentFile = e.target.files[0];
+            processIcon();
         };
+
+        document.getElementById('extremeToggle').onchange = processIcon;
 
         document.getElementById('generateBtn').onclick = () => {
             const url = document.getElementById('targetUrl').value.trim();
@@ -234,14 +252,15 @@
             const useIframe = document.getElementById('iframeToggle').checked;
             const isAdaptive = document.getElementById('extremeToggle').checked;
             
-            if (!url || !name || !base64Icon) return alert("Missing URL, Name or Icon!");
+            if (!url || !name || !base64Icon) return alert("Please fill URL, Name and Icon!");
 
             const params = new URLSearchParams();
             params.set('url', /^https?:\/\//i.test(url) ? url : 'https://' + url);
             params.set('name', name);
             if(desc) params.set('desc', desc);
             if(js) params.set('js', js);
-            if(isAdaptive && scanSafety > 30) params.set('qr', '1');
+            // QR flag is only given if adaptive is ON and size is reasonable
+            if(isAdaptive && base64Icon.length < 5000) params.set('qr', '1');
             params.set('mode', useIframe ? 'iframe' : 'direct');
             
             const finalHashUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
@@ -296,7 +315,7 @@
                         new QRious({
                             element: document.getElementById('qrCanvas'),
                             value: window.location.href,
-                            size: 800, 
+                            size: 900, 
                             level: 'L'
                         });
                         document.getElementById('qrModal').style.display = 'flex';
