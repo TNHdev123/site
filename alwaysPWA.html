@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>alwaysPWA Ultra</title>
+    <title>alwaysPWA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         :root {
@@ -49,6 +49,7 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
+        /* Safety Meter UI */
         .meter-container { margin-top: 5px; display: none; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
         .meter-bar { height: 10px; width: 100%; background: #eee; border: 1px solid var(--border); overflow: hidden; }
         #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
@@ -66,7 +67,6 @@
         .final-desc { font-size: 1.05rem; color: var(--sub); margin-bottom: 35px; max-width: 280px; line-height: 1.4; }
         .instruction { font-size: 1.1rem; font-weight: 600; }
         .arrow { font-size: 3rem; margin-top: 15px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
         /* --- QR Modal --- */
         #qrBtn { display: none; margin-top: 25px; background: var(--text); color: var(--bg); border: none; padding: 14px 32px; font-weight: 900; cursor: pointer; border-radius: 35px; font-size: 1rem; }
@@ -77,7 +77,7 @@
         #qrCanvas { width: 90vw; height: 90vw; max-width: 500px; max-height: 500px; background: #fff; border: 10px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.1); }
         #closeQr { margin-top: 35px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 12px 60px; }
 
-        /* PWA View */
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
         #appView { height: 100vh; width: 100vw; display: none; }
         iframe { border: none; width: 100%; height: 100%; padding-bottom: env(safe-area-inset-bottom); }
     </style>
@@ -85,14 +85,14 @@
 <body>
 
     <div id="homeView" class="view">
-        <h1>alwaysPWA Ultra</h1>
+        <h1>alwaysPWA</h1>
         <div class="input-group">
             <label>Target URL</label>
             <input type="url" id="targetUrl" placeholder="https://..." autocomplete="off">
             <label>App Name</label>
-            <input type="text" id="targetName" placeholder="My Awesome App" autocomplete="off">
+            <input type="text" id="targetName" placeholder="My App" autocomplete="off">
             <label>Description (Optional)</label>
-            <input type="text" id="targetDesc" placeholder="Describe your app..." autocomplete="off">
+            <input type="text" id="targetDesc" placeholder="Brief description..." autocomplete="off">
             <label>Custom JS URL (Optional)</label>
             <input type="url" id="targetJs" placeholder="https://.../script.js" autocomplete="off">
             
@@ -102,7 +102,7 @@
             </div>
 
             <div class="switch-group" style="background: rgba(0,122,255,0.05); border: 2px solid var(--accent); padding: 12px; border-radius: 10px;">
-                <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression<br><small style="opacity:0.7">Optimizes icon for scannable QR</small></span>
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression<br><small style="opacity:0.7">Optimize icon length automatically</small></span>
                 <label class="switch"><input type="checkbox" id="extremeToggle" checked><span class="slider"></span></label>
             </div>
 
@@ -115,7 +115,7 @@
 
             <div class="meter-container" id="meterContainer">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Awaiting Image...</span>
+                <span id="meterText">Analyzing...</span>
             </div>
 
             <button id="generateBtn">Generate PWA</button>
@@ -146,8 +146,8 @@
     <script>
         let base64Icon = "";
         let currentFile = null;
+        let scannable = false;
 
-        // Smart Adaptive Engine
         async function processIcon() {
             if (!currentFile) return;
             const isAdaptive = document.getElementById('extremeToggle').checked;
@@ -155,37 +155,30 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            let quality = 0.8;
-            let size = 180; // High Quality Start
+            let quality = 0.85;
+            let size = 180;
             let result = "";
-            const SAFE_BUDGET = 3200; // Increased budget for better quality
+            const SAFE_BUDGET = 3300; 
 
             if (!isAdaptive) {
-                // Fixed High Quality
+                // High Quality Mode - No forced shrink
                 canvas.width = 180; canvas.height = 180;
                 ctx.drawImage(img, 0, 0, 180, 180);
-                base64Icon = canvas.toDataURL('image/jpeg', 0.9);
-                updateSafetyMeter(base64Icon.length, false);
+                result = canvas.toDataURL('image/jpeg', 0.9);
             } else {
-                // Smart Adaptive Loop
+                // Adaptive Loop
                 for (let i = 0; i < 8; i++) {
                     canvas.width = size; canvas.height = size;
                     ctx.clearRect(0, 0, size, size);
                     ctx.drawImage(img, 0, 0, size, size);
                     result = canvas.toDataURL('image/jpeg', quality);
-                    
                     if (result.length <= SAFE_BUDGET) break;
-                    
-                    // Priority: Reduce quality first, then size
-                    if (quality > 0.4) {
-                        quality -= 0.15;
-                    } else {
-                        size -= 20;
-                    }
+                    if (quality > 0.4) quality -= 0.15; else size -= 20;
                 }
-                base64Icon = result;
-                updateSafetyMeter(base64Icon.length, true);
             }
+
+            base64Icon = result;
+            updateSafetyMeter(result.length);
             
             document.getElementById('iconPreview').src = base64Icon;
             document.getElementById('iconPreview').style.display = 'block';
@@ -204,35 +197,32 @@
             });
         }
 
-        function updateSafetyMeter(length, isAdaptive) {
+        function updateSafetyMeter(length) {
             const container = document.getElementById('meterContainer');
             const fill = document.getElementById('meterFill');
             const text = document.getElementById('meterText');
             container.style.display = 'block';
 
-            if (!isAdaptive) {
-                fill.style.width = '100%';
-                fill.style.background = '#ccc';
-                text.innerText = "HQ MODE: QR Share Disabled";
-                text.style.color = 'var(--sub)';
-                return;
-            }
+            // Scannability Score: 3300 chars is the pivot
+            let score = Math.max(0, 100 - (length / 50)); 
+            fill.style.width = Math.min(100, score) + '%';
 
-            // Calculate scannability score based on 3200 chars
-            let score = Math.max(0, 100 - (length / 45)); 
-            fill.style.width = score + '%';
-
-            if (score > 65) {
-                fill.style.background = 'var(--safe)';
-                text.innerText = "EXCELLENT: Fast & Clean Scan";
-                text.style.color = 'var(--safe)';
-            } else if (score > 35) {
-                fill.style.background = 'var(--warn)';
-                text.innerText = "GOOD: Balanced Quality";
-                text.style.color = 'var(--warn)';
+            if (length <= 3500) {
+                scannable = true;
+                if (length < 2200) {
+                    fill.style.background = 'var(--safe)';
+                    text.innerText = "EXCELLENT: Perfect for Sharing";
+                    text.style.color = 'var(--safe)';
+                } else {
+                    fill.style.background = 'var(--warn)';
+                    text.innerText = "GOOD: Scannable HQ Icon";
+                    text.style.color = 'var(--warn)';
+                }
             } else {
+                // If not adaptive, we allow sharing only if it's not too crazy
+                scannable = length < 5500; 
                 fill.style.background = 'var(--danger)';
-                text.innerText = "CRITICAL: Might be hard to scan";
+                text.innerText = "CRITICAL: Too complex for QR";
                 text.style.color = 'var(--danger)';
             }
         }
@@ -250,7 +240,6 @@
             const desc = document.getElementById('targetDesc').value.trim();
             const js = document.getElementById('targetJs').value.trim();
             const useIframe = document.getElementById('iframeToggle').checked;
-            const isAdaptive = document.getElementById('extremeToggle').checked;
             
             if (!url || !name || !base64Icon) return alert("Please fill URL, Name and Icon!");
 
@@ -259,8 +248,7 @@
             params.set('name', name);
             if(desc) params.set('desc', desc);
             if(js) params.set('js', js);
-            // QR flag is only given if adaptive is ON and size is reasonable
-            if(isAdaptive && base64Icon.length < 5000) params.set('qr', '1');
+            if(scannable) params.set('qr', '1');
             params.set('mode', useIframe ? 'iframe' : 'direct');
             
             const finalHashUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
