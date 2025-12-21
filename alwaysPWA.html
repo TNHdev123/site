@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>alwaysPWA</title>
+    <title>alwaysPWA Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         :root {
-            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; --sub: #666666;
+            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; 
+            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #666666;
         }
         @media (prefers-color-scheme: dark) {
             :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --sub: #aaaaaa; }
@@ -47,7 +48,12 @@
         }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(18px); }
-        .switch-label { font-size: 0.85rem; font-weight: bold; margin-right: 10px; }
+
+        /* --- Safety Meter --- */
+        .meter-container { margin-top: 10px; display: none; }
+        .meter-bar { height: 8px; width: 100%; background: #eee; border: 2px solid var(--border); position: relative; }
+        #meterFill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+        #meterText { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
 
         .upload-area { border: 3px dashed var(--border); padding: 12px; text-align: center; cursor: pointer; font-weight: bold; }
         #iconPreview { width: 50px; height: 50px; border-radius: 10px; display: none; margin: 8px auto; border: 2px solid var(--border); object-fit: cover; }
@@ -56,21 +62,21 @@
         /* --- Install View --- */
         #installView { justify-content: center; align-items: center; text-align: center; padding: 20px; }
         .install-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%; max-width: 320px; text-align: left; }
-        .final-icon { width: 70px; height: 70px; border-radius: 16px; border: 3px solid var(--border); background: #fff; flex-shrink: 0; }
-        .final-name { margin: 0; font-size: 1.6rem; font-weight: 800; line-height: 1.2; flex-grow: 1; }
-        .final-desc { font-size: 1rem; color: var(--sub); margin-bottom: 25px; max-width: 280px; line-height: 1.4; }
+        .final-icon { width: 75px; height: 75px; border-radius: 18px; border: 3px solid var(--border); background: #fff; flex-shrink: 0; }
+        .final-name { margin: 0; font-size: 1.7rem; font-weight: 800; line-height: 1.2; flex-grow: 1; }
+        .final-desc { font-size: 1rem; color: var(--sub); margin-bottom: 30px; max-width: 280px; line-height: 1.4; }
         .instruction { font-size: 1.1rem; font-weight: 600; }
         .arrow { font-size: 2.5rem; margin-top: 10px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
-        /* --- QR Code Large Modal --- */
-        #qrBtn { display: none; margin-top: 30px; background: var(--text); color: var(--bg); border: none; padding: 12px 24px; font-weight: 900; cursor: pointer; border-radius: 30px; font-size: 1rem; }
+        /* --- QR Modal --- */
+        #qrBtn { display: none; margin-top: 25px; background: var(--text); color: var(--bg); border: none; padding: 12px 28px; font-weight: 900; cursor: pointer; border-radius: 30px; font-size: 1rem; }
         #qrModal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
         }
-        #qrCanvas { width: 85vw; height: 85vw; max-width: 500px; max-height: 500px; border: 10px solid #fff; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,0.1); }
-        #closeQr { margin-top: 30px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 10px 40px; }
+        #qrCanvas { width: 88vw; height: 88vw; max-width: 550px; max-height: 550px; background: #fff; border: 10px solid #fff; box-shadow: 0 0 50px rgba(0,0,0,0.15); }
+        #closeQr { margin-top: 30px; font-weight: 900; cursor: pointer; font-size: 1.2rem; border: 3px solid var(--border); padding: 10px 50px; }
 
         /* PWA View */
         #appView { height: 100vh; width: 100vw; display: none; }
@@ -80,33 +86,39 @@
 <body>
 
     <div id="homeView" class="view">
-        <h1>alwaysPWA</h1>
+        <h1>alwaysPWA Pro</h1>
         <div class="input-group">
             <label>Target URL</label>
             <input type="url" id="targetUrl" placeholder="https://..." autocomplete="off">
             <label>App Name</label>
-            <input type="text" id="targetName" placeholder="e.g. My App" autocomplete="off">
+            <input type="text" id="targetName" placeholder="e.g. My Tool" autocomplete="off">
             <label>Description (Optional)</label>
             <input type="text" id="targetDesc" placeholder="Brief description" autocomplete="off">
             <label>Custom JS URL (Optional)</label>
             <input type="url" id="targetJs" placeholder="https://.../script.js" autocomplete="off">
             
             <div class="switch-group">
-                <span class="switch-label">iFrame Mode (Embed)</span>
+                <span style="font-size: 0.85rem; font-weight: bold;">iFrame Mode (Embed)</span>
                 <label class="switch"><input type="checkbox" id="iframeToggle" checked><span class="slider"></span></label>
             </div>
 
-            <div class="switch-group" style="border: 2px solid var(--border); padding: 8px; margin-top: 5px;">
-                <span class="switch-label" style="color: var(--accent);">Extreme Compression<br><small>(Required for QR Share)</small></span>
-                <label class="switch"><input type="checkbox" id="extremeToggle"><span class="slider"></span></label>
+            <div class="switch-group" style="border: 2px solid var(--border); padding: 8px; margin-top: 5px; border-radius: 8px;">
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression<br><small>Auto-shrink icon for scannability</small></span>
+                <label class="switch"><input type="checkbox" id="extremeToggle" checked><span class="slider"></span></label>
             </div>
 
             <label>App Icon</label>
             <div class="upload-area" onclick="document.getElementById('iconFile').click()">
-                <span id="uploadText">Select Icon</span>
+                <span id="uploadText">Click to Upload Icon</span>
                 <img id="iconPreview">
                 <input type="file" id="iconFile" accept="image/*" style="display:none">
             </div>
+
+            <div class="meter-container" id="meterContainer">
+                <div class="meter-bar"><div id="meterFill"></div></div>
+                <span id="meterText">Analyzing...</span>
+            </div>
+
             <button id="generateBtn">Generate PWA</button>
         </div>
     </div>
@@ -119,13 +131,13 @@
         <div id="displayDesc" class="final-desc"></div>
         <div class="instruction">Tap <strong>Share</strong><br>Select <strong>Add to Home Screen</strong></div>
         <div class="arrow">↓</div>
-        <button id="qrBtn">Share via QR Code</button>
+        <button id="qrBtn">Share QR Code</button>
     </div>
 
     <div id="qrModal">
-        <h2 style="margin-bottom: 20px;">Scan to Install</h2>
+        <h2 style="margin-bottom: 20px; font-weight: 900;">Scan to Install</h2>
         <canvas id="qrCanvas"></canvas>
-        <div id="closeQr">Back</div>
+        <div id="closeQr">Close</div>
     </div>
 
     <div id="appView" class="view">
@@ -134,33 +146,84 @@
 
     <script>
         let base64Icon = "";
+        let scanSafety = 0; // 0-100 score
 
-        // Icon Processing with Conditional Compression
-        document.getElementById('iconFile').onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const isExtreme = document.getElementById('extremeToggle').checked;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    // Extreme: 64x64, Normal: 144x144
-                    const size = isExtreme ? 64 : 144;
-                    canvas.width = size; canvas.height = size; 
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, size, size);
-                    
-                    // Extreme: JPEG 0.1 (Tiny), Normal: JPEG 0.7
-                    base64Icon = canvas.toDataURL('image/jpeg', isExtreme ? 0.1 : 0.7); 
-                    
-                    document.getElementById('iconPreview').src = base64Icon;
-                    document.getElementById('iconPreview').style.display = 'block';
-                    document.getElementById('uploadText').style.display = 'none';
+        // The Smart Adaptive Compression Engine
+        async function processIcon(file) {
+            const isAdaptive = document.getElementById('extremeToggle').checked;
+            const img = await loadImage(file);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            let quality = 0.8;
+            let size = 144;
+            let result = "";
+            const MAX_CHAR_BUDGET = isAdaptive ? 2200 : 8000; 
+
+            // Adaptive Loop
+            for (let i = 0; i < 6; i++) {
+                canvas.width = size;
+                canvas.height = size;
+                ctx.clearRect(0, 0, size, size);
+                ctx.drawImage(img, 0, 0, size, size);
+                
+                result = canvas.toDataURL('image/jpeg', quality);
+                if (result.length <= MAX_CHAR_BUDGET || !isAdaptive) break;
+                
+                // Reduce parameters for next iteration
+                size -= 24;
+                quality -= 0.15;
+            }
+
+            base64Icon = result;
+            updateSafetyMeter(result.length);
+            
+            document.getElementById('iconPreview').src = base64Icon;
+            document.getElementById('iconPreview').style.display = 'block';
+            document.getElementById('uploadText').style.display = 'none';
+        }
+
+        function loadImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = e.target.result;
                 };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateSafetyMeter(length) {
+            const container = document.getElementById('meterContainer');
+            const fill = document.getElementById('meterFill');
+            const text = document.getElementById('meterText');
+            container.style.display = 'block';
+
+            // Lower is better for QR
+            let score = Math.max(0, 100 - (length / 40)); 
+            scanSafety = score;
+
+            fill.style.width = score + '%';
+
+            if (score > 70) {
+                fill.style.background = 'var(--safe)';
+                text.innerText = "Excellent: Perfect for QR sharing";
+                text.style.color = 'var(--safe)';
+            } else if (score > 40) {
+                fill.style.background = 'var(--warn)';
+                text.innerText = "Good: Scannable on most devices";
+                text.style.color = 'var(--warn)';
+            } else {
+                fill.style.background = 'var(--danger)';
+                text.innerText = "Complex: Hard to scan via QR";
+                text.style.color = 'var(--danger)';
+            }
+        }
+
+        document.getElementById('iconFile').onchange = (e) => {
+            if (e.target.files[0]) processIcon(e.target.files[0]);
         };
 
         document.getElementById('generateBtn').onclick = () => {
@@ -169,16 +232,16 @@
             const desc = document.getElementById('targetDesc').value.trim();
             const js = document.getElementById('targetJs').value.trim();
             const useIframe = document.getElementById('iframeToggle').checked;
-            const isExtreme = document.getElementById('extremeToggle').checked;
+            const isAdaptive = document.getElementById('extremeToggle').checked;
             
-            if (!url || !name || !base64Icon) return alert("Fill all required fields!");
+            if (!url || !name || !base64Icon) return alert("Missing URL, Name or Icon!");
 
             const params = new URLSearchParams();
             params.set('url', /^https?:\/\//i.test(url) ? url : 'https://' + url);
             params.set('name', name);
             if(desc) params.set('desc', desc);
             if(js) params.set('js', js);
-            if(isExtreme) params.set('qr', '1');
+            if(isAdaptive && scanSafety > 30) params.set('qr', '1');
             params.set('mode', useIframe ? 'iframe' : 'direct');
             
             const finalHashUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
@@ -226,7 +289,6 @@
                 document.getElementById('displayDesc').innerText = pDesc;
                 document.getElementById('installView').style.display = 'flex';
 
-                // Show QR Button ONLY if extreme compression was used
                 if (pQr === '1') {
                     const btn = document.getElementById('qrBtn');
                     btn.style.display = 'inline-block';
@@ -234,7 +296,7 @@
                         new QRious({
                             element: document.getElementById('qrCanvas'),
                             value: window.location.href,
-                            size: 600, // Generate a high-res source for the canvas
+                            size: 800, 
                             level: 'L'
                         });
                         document.getElementById('qrModal').style.display = 'flex';
