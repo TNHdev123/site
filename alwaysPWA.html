@@ -10,31 +10,21 @@
     <style>
         :root {
             --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; 
-            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #888888;
-            --line: #e5e5e5;
+            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #888888; --line: #e5e5e5;
         }
         @media (prefers-color-scheme: dark) {
             :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --sub: #aaaaaa; --line: #333333; }
         }
 
-        body, html {
-            height: 100%; margin: 0; padding: 0;
-            background-color: var(--bg); color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
-        }
-
+        body, html { height: 100%; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
         .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; }
 
         /* --- Home View --- */
         #homeView { justify-content: flex-start; align-items: center; padding: 30px 20px; overflow-y: auto; }
         .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
         h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
-        label { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; margin-top: 5px; }
-        input, textarea {
-            padding: 12px; font-size: 1rem; background: transparent; color: var(--text);
-            border: 3px solid var(--border); outline: none; font-weight: 600; font-family: inherit;
-        }
+        label { font-weight: bold; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; margin-top: 4px; }
+        input, textarea { padding: 12px; font-size: 1rem; background: transparent; color: var(--text); border: 3px solid var(--border); outline: none; font-weight: 600; font-family: inherit; }
 
         .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
@@ -44,13 +34,11 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Safety Meter */
         .meter-container { margin-top: 5px; display: none; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
         .meter-bar { height: 10px; width: 100%; background: #eee; border: 1px solid var(--border); overflow: hidden; }
         #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
         #meterText { font-size: 0.75rem; font-weight: 900; margin-top: 6px; display: block; }
 
-        /* JSON Buttons */
         .dev-tools { display: flex; gap: 10px; margin-top: 15px; }
         .btn-sub { flex: 1; padding: 10px; font-size: 0.8rem; font-weight: bold; background: transparent; color: var(--text); border: 2px solid var(--border); cursor: pointer; }
 
@@ -60,14 +48,10 @@
 
         /* --- Install View (App Store Style) --- */
         #installView { justify-content: flex-start; align-items: center; padding: 40px 25px; overflow-y: auto; text-align: left; }
-        .app-store-header { display: flex; width: 100%; max-width: 350px; gap: 20px; align-items: center; margin-bottom: 25px; }
-        .store-icon { width: 100px; height: 100px; border-radius: 22px; border: 1px solid var(--line); flex-shrink: 0; object-fit: cover; }
-        .store-title-area { flex-grow: 1; }
+        .store-header { display: flex; width: 100%; max-width: 350px; gap: 20px; align-items: center; margin-bottom: 25px; }
+        .store-icon { width: 100px; height: 100px; border-radius: 22px; border: 1px solid var(--line); flex-shrink: 0; object-fit: cover; background: #fff; }
         .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; }
-        
         .store-divider { width: 100%; height: 1px; background-color: var(--line); margin: 20px 0; }
-        
-        .store-section { width: 100%; max-width: 350px; }
         .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
         .store-description { font-size: 1rem; line-height: 1.5; color: var(--text); opacity: 0.9; white-space: pre-wrap; }
 
@@ -97,8 +81,8 @@
             <input type="text" id="targetName" placeholder="My App" autocomplete="off">
             <label>Description</label>
             <textarea id="targetDesc" rows="3" placeholder="Enter app description..."></textarea>
-            <label>Custom JS URL (Optional)</label>
-            <input type="url" id="targetJs" placeholder="https://.../script.js" autocomplete="off">
+            <label>Custom JS (Optional)</label>
+            <input type="url" id="targetJs" placeholder="https://..." autocomplete="off">
             
             <div class="switch-group">
                 <span style="font-size: 0.85rem; font-weight: bold;">iFrame Mode</span>
@@ -119,7 +103,7 @@
 
             <div class="meter-container" id="meterContainer">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Analyzing total length...</span>
+                <span id="meterText">Analyzing...</span>
             </div>
 
             <button id="generateBtn">Generate PWA</button>
@@ -133,20 +117,13 @@
     </div>
 
     <div id="installView" class="view">
-        <div class="app-store-header">
+        <div class="store-header">
             <img id="displayIcon" class="store-icon">
-            <div class="store-title-area">
-                <h1 id="displayName" class="store-name"></h1>
-            </div>
+            <div class="store-title-area"><h1 id="displayName" class="store-name"></h1></div>
         </div>
-
         <div class="store-divider"></div>
-
-        <div class="store-section">
-            <div class="store-section-title">Description</div>
-            <div id="displayDesc" class="store-description"></div>
-        </div>
-
+        <div class="store-section-title">Description</div>
+        <div id="displayDesc" class="store-description"></div>
         <div class="install-footer">
             <div class="instruction">Tap <strong>Share</strong> and <strong>Add to Home Screen</strong></div>
             <div class="arrow">↓</div>
@@ -168,19 +145,17 @@
         let currentFile = null;
         let isScannable = false;
 
-        // 全域長度監控：計算整條 URL 的長度
-        function calculateTotalUrlLength(iconData) {
-            const name = document.getElementById('targetName').value;
-            const url = document.getElementById('targetUrl').value;
-            const desc = document.getElementById('targetDesc').value;
-            const js = document.getElementById('targetJs').value;
-            
-            // 模擬最終生成後的 URL 長度
-            const testParams = new URLSearchParams({
-                name, url, desc, js, mode: 'iframe', qr: '1'
+        // 全域 URL 長度計算 (使用縮寫參數)
+        function getFinalUrlLength(iconData) {
+            const params = new URLSearchParams({
+                u: document.getElementById('targetUrl').value,
+                n: document.getElementById('targetName').value,
+                d: document.getElementById('targetDesc').value,
+                j: document.getElementById('targetJs').value,
+                if: document.getElementById('iframeToggle').checked ? 't' : 'f',
+                q: '1'
             });
-            const fullUrl = window.location.origin + window.location.pathname + "#" + testParams.toString() + "&icon=" + encodeURIComponent(iconData || "");
-            return fullUrl.length;
+            return (window.location.origin + window.location.pathname + "#" + params.toString() + "&i=" + encodeURIComponent(iconData || "")).length;
         }
 
         async function processIcon() {
@@ -190,177 +165,102 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            let quality = 0.85;
-            let size = 180;
-            let result = "";
-            const SAFE_TOTAL_BUDGET = 3800; // 總 URL 的安全長度
+            let quality = 0.85; let size = 180; let result = "";
+            const LIMIT = 3800; // QR 安全總長度閾值
 
             if (!isAdaptive) {
                 canvas.width = 180; canvas.height = 180;
                 ctx.drawImage(img, 0, 0, 180, 180);
                 result = canvas.toDataURL('image/jpeg', 0.9);
             } else {
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 10; i++) {
                     canvas.width = size; canvas.height = size;
                     ctx.clearRect(0, 0, size, size);
                     ctx.drawImage(img, 0, 0, size, size);
                     result = canvas.toDataURL('image/jpeg', quality);
-                    
-                    if (calculateTotalUrlLength(result) <= SAFE_TOTAL_BUDGET) break;
-                    if (quality > 0.4) quality -= 0.15; else size -= 20;
+                    if (getFinalUrlLength(result) <= LIMIT) break;
+                    if (quality > 0.3) quality -= 0.15; else size -= 20;
                 }
             }
-
             base64Icon = result;
-            updateSafetyMeter(calculateTotalUrlLength(result));
-            
+            updateMeter(getFinalUrlLength(result));
             document.getElementById('iconPreview').src = base64Icon;
             document.getElementById('iconPreview').style.display = 'block';
             document.getElementById('uploadText').style.display = 'none';
         }
 
-        function updateSafetyMeter(totalLength) {
+        function updateMeter(len) {
             const container = document.getElementById('meterContainer');
             const fill = document.getElementById('meterFill');
             const text = document.getElementById('meterText');
             container.style.display = 'block';
-
-            let score = Math.max(0, 100 - (totalLength / 60)); 
+            let score = Math.max(0, 100 - (len / 55));
             fill.style.width = Math.min(100, score) + '%';
-
-            if (totalLength < 4000) {
-                isScannable = true;
-                fill.style.background = totalLength < 2800 ? 'var(--safe)' : 'var(--warn)';
-                text.innerText = totalLength < 2800 ? "EXCELLENT: Highly Scannable" : "GOOD: Scannable HQ";
-                text.style.color = totalLength < 2800 ? 'var(--safe)' : 'var(--warn)';
-            } else {
-                isScannable = totalLength < 6500;
-                fill.style.background = 'var(--danger)';
-                text.innerText = "CRITICAL: Too long for QR";
-                text.style.color = 'var(--danger)';
-            }
+            isScannable = len < 4200;
+            fill.style.background = len < 2900 ? 'var(--safe)' : (len < 4200 ? 'var(--warn)' : 'var(--danger)');
+            text.innerText = len < 2900 ? "EXCELLENT: Fast Scan" : (len < 4200 ? "GOOD: Scannable" : "CRITICAL: Too Long");
+            text.style.color = fill.style.background;
         }
 
-        // JSON Import/Export
         function exportConfig() {
-            const config = {
-                url: document.getElementById('targetUrl').value,
-                name: document.getElementById('targetName').value,
-                desc: document.getElementById('targetDesc').value,
-                js: document.getElementById('targetJs').value,
-                iframe: document.getElementById('iframeToggle').checked,
-                adaptive: document.getElementById('extremeToggle').checked,
-                icon: base64Icon
-            };
-            const blob = new Blob([JSON.stringify(config, null, 2)], {type: "application/json"});
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `pwa-config-${config.name || 'unnamed'}.json`;
-            a.click();
+            const config = { u: document.getElementById('targetUrl').value, n: document.getElementById('targetName').value, d: document.getElementById('targetDesc').value, j: document.getElementById('targetJs').value, if: document.getElementById('iframeToggle').checked, i: base64Icon };
+            const blob = new Blob([JSON.stringify(config)], {type: "application/json"});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `pwa-${config.n || 'config'}.json`; a.click();
         }
 
         function importConfig(input) {
-            const file = input.files[0];
-            if (!file) return;
+            const file = input.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const config = JSON.parse(e.target.result);
-                document.getElementById('targetUrl').value = config.url || "";
-                document.getElementById('targetName').value = config.name || "";
-                document.getElementById('targetDesc').value = config.desc || "";
-                document.getElementById('targetJs').value = config.js || "";
-                document.getElementById('iframeToggle').checked = !!config.iframe;
-                document.getElementById('extremeToggle').checked = !!config.adaptive;
-                if (config.icon) {
-                    base64Icon = config.icon;
-                    document.getElementById('iconPreview').src = base64Icon;
-                    document.getElementById('iconPreview').style.display = 'block';
-                    document.getElementById('uploadText').style.display = 'none';
-                    updateSafetyMeter(calculateTotalUrlLength(base64Icon));
-                }
+                const c = JSON.parse(e.target.result);
+                document.getElementById('targetUrl').value = c.u || c.url || "";
+                document.getElementById('targetName').value = c.n || c.name || "";
+                document.getElementById('targetDesc').value = c.d || c.desc || "";
+                document.getElementById('targetJs').value = c.j || c.js || "";
+                document.getElementById('iframeToggle').checked = c.if !== undefined ? c.if : (c.mode === 'iframe');
+                if (c.i || c.icon) { base64Icon = c.i || c.icon; document.getElementById('iconPreview').src = base64Icon; document.getElementById('iconPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; updateMeter(getFinalUrlLength(base64Icon)); }
             };
             reader.readAsText(file);
         }
 
-        function loadImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+        function loadImage(file) { return new Promise((res) => { const r = new FileReader(); r.onload = (e) => { const i = new Image(); i.onload = () => res(i); i.src = e.target.result; }; r.readAsDataURL(file); }); }
 
-        document.getElementById('iconFile').onchange = (e) => {
-            currentFile = e.target.files[0];
-            processIcon();
-        };
-
+        document.getElementById('iconFile').onchange = (e) => { currentFile = e.target.files[0]; processIcon(); };
         document.getElementById('generateBtn').onclick = () => {
-            const url = document.getElementById('targetUrl').value.trim();
-            const name = document.getElementById('targetName').value.trim();
-            const desc = document.getElementById('targetDesc').value.trim();
-            const js = document.getElementById('targetJs').value.trim();
-            const useIframe = document.getElementById('iframeToggle').checked;
-            
-            if (!url || !name || !base64Icon) return alert("Fill Name, URL and Icon!");
-
-            const params = new URLSearchParams();
-            params.set('url', /^https?:\/\//i.test(url) ? url : 'https://' + url);
-            params.set('name', name);
-            if(desc) params.set('desc', desc);
-            if(js) params.set('js', js);
-            if(isScannable) params.set('qr', '1');
-            params.set('mode', useIframe ? 'iframe' : 'direct');
-            
-            const finalHashUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}&icon=${encodeURIComponent(base64Icon)}`;
-            window.open(finalHashUrl, '_blank');
+            const u = document.getElementById('targetUrl').value.trim(); const n = document.getElementById('targetName').value.trim();
+            if (!u || !n || !base64Icon) return alert("Missing Info!");
+            const p = new URLSearchParams();
+            p.set('u', /^https?:\/\//i.test(u) ? u : 'https://' + u); p.set('n', n);
+            const d = document.getElementById('targetDesc').value.trim(); if(d) p.set('d', d);
+            const j = document.getElementById('targetJs').value.trim(); if(j) p.set('j', j);
+            p.set('if', document.getElementById('iframeToggle').checked ? 't' : 'f');
+            if(isScannable) p.set('q', '1');
+            window.open(`${window.location.origin}${window.location.pathname}#${p.toString()}&i=${encodeURIComponent(base64Icon)}`, '_blank');
         };
 
         function init() {
-            const hash = location.hash.substring(1);
-            if (!hash) {
-                document.getElementById('homeView').style.display = 'flex';
-                return;
-            }
-
-            const params = new URLSearchParams(hash);
-            const pName = params.get('name');
-            const pUrl = params.get('url');
-            const pDesc = params.get('desc') || "No description provided.";
-            const pJs = params.get('js');
-            const pMode = params.get('mode');
-            const pQr = params.get('qr');
-            const pIcon = decodeURIComponent(params.get('icon'));
-
-            document.title = pName;
-            const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = pIcon;
-            document.head.appendChild(link);
-            const metaTitle = document.createElement('meta'); metaTitle.name = 'apple-mobile-web-app-title'; metaTitle.content = pName;
-            document.head.appendChild(metaTitle);
+            const hash = location.hash.substring(1); if (!hash) { document.getElementById('homeView').style.display = 'flex'; return; }
+            const p = new URLSearchParams(hash);
+            const n = p.get('n') || p.get('name');
+            const u = p.get('u') || p.get('url');
+            const d = p.get('d') || p.get('desc') || "No description provided.";
+            const j = p.get('j') || p.get('js');
+            const i = decodeURIComponent(p.get('i') || p.get('icon'));
+            const isIf = (p.get('if') === 't') || (p.get('mode') === 'iframe');
+            
+            document.title = n;
+            const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = i; document.head.appendChild(link);
+            const meta = document.createElement('meta'); meta.name = 'apple-mobile-web-app-title'; meta.content = n; document.head.appendChild(meta);
 
             if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-                if (pJs) { const s = document.createElement('script'); s.src = pJs; document.head.appendChild(s); }
-                if (pMode === 'iframe') {
-                    document.getElementById('appView').style.display = 'block';
-                    document.getElementById('appFrame').src = pUrl;
-                } else { window.location.replace(pUrl); }
+                if (j) { const s = document.createElement('script'); s.src = j; document.head.appendChild(s); }
+                if (isIf) { document.getElementById('appView').style.display = 'block'; document.getElementById('appFrame').src = u; } else { window.location.replace(u); }
             } else {
-                document.getElementById('displayName').innerText = pName;
-                document.getElementById('displayIcon').src = pIcon;
-                document.getElementById('displayDesc').innerText = pDesc;
-                document.getElementById('installView').style.display = 'flex';
-
-                if (pQr === '1') {
-                    const btn = document.getElementById('qrBtn');
-                    btn.style.display = 'inline-block';
-                    btn.onclick = () => {
-                        new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 800, level: 'L' });
-                        document.getElementById('qrModal').style.display = 'flex';
-                    };
+                document.getElementById('displayName').innerText = n; document.getElementById('displayIcon').src = i;
+                document.getElementById('displayDesc').innerText = d; document.getElementById('installView').style.display = 'flex';
+                if (p.get('q') === '1' || p.get('qr') === '1') {
+                    const b = document.getElementById('qrBtn'); b.style.display = 'inline-block';
+                    b.onclick = () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 800, level: 'L' }); document.getElementById('qrModal').style.display = 'flex'; };
                 }
                 document.getElementById('closeQr').onclick = () => document.getElementById('qrModal').style.display = 'none';
             }
