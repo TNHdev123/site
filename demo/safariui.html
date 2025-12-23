@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Safari Liquid Interface Final</title>
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.9);
+            --inner: rgba(0, 0, 0, 0.05);
+            --accent: #007AFF;
+            --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            margin: 0; background: #000; height: 300vh;
+            font-family: -apple-system, system-ui; overflow-x: hidden;
+        }
+
+        .safari-wrapper {
+            position: fixed; bottom: 50px; left: 0; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+
+        /* 統一高度的容器，防止上下錯位 */
+        .liquid-pill {
+            position: relative;
+            width: 340px; height: 100px; /* 固定大容器高度 */
+            transition: all 0.5s var(--fluid-ease);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 母體背景膠囊 */
+        .main-bg {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: var(--glass);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border-radius: 35px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+            transition: all 0.5s var(--fluid-ease);
+            z-index: 1;
+        }
+
+        /* 左側區塊 (Logo & 網址) */
+        .left-zone {
+            position: absolute;
+            width: 310px; height: 44px;
+            top: 10px; /* 一般狀態下的高度 */
+            background: var(--inner);
+            border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s var(--fluid-ease);
+            z-index: 2;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .left-zone span { color: #000; font-weight: 500; font-size: 15px; transition: 0.3s; }
+
+        /* 右側區塊 (按鈕列) */
+        .right-zone {
+            position: absolute;
+            width: 310px; height: 40px;
+            bottom: 6px; /* 一般狀態下的高度 */
+            display: flex; justify-content: space-around; align-items: center;
+            transition: all 0.5s var(--fluid-ease);
+            z-index: 2;
+        }
+
+        .icon { 
+            color: var(--accent); font-size: 22px; cursor: pointer; 
+            transition: all 0.5s var(--fluid-ease);
+        }
+
+        /* ================= 狀態轉換 ================= */
+
+        /* 1. 簡化狀態 (Simplified) - 分裂 */
+        .state-simplified .main-bg {
+            opacity: 0; transform: scale(0.8);
+        }
+
+        /* 左區塊移動：從上方中心移到左側中心 */
+        .state-simplified .left-zone {
+            width: 54px; height: 54px;
+            background: var(--glass);
+            border-radius: 50%;
+            top: 23px; /* 調整至與右區塊水平居中 */
+            transform: translateX(-120px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            backdrop-filter: blur(30px);
+        }
+        .state-simplified .left-zone span { opacity: 0; width: 0; }
+
+        /* 右區塊移動：從下方中心移到右側中心 */
+        .state-simplified .right-zone {
+            width: 220px; height: 54px;
+            background: var(--glass);
+            border-radius: 27px;
+            bottom: 23px; /* 與左區塊保持同一水平線 */
+            transform: translateX(35px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            backdrop-filter: blur(30px);
+            padding: 0 10px;
+        }
+
+        /* 2. 縮小狀態 (Compact) - 凝聚 */
+        .state-compact .main-bg {
+            width: 140px; height: 44px; border-radius: 22px;
+        }
+        .state-compact .left-zone {
+            width: 140px; height: 44px; top: 28px; background: transparent;
+        }
+        .state-compact .left-zone img { display: none; }
+        .state-compact .left-zone span { font-size: 14px; font-weight: 600; }
+        .state-compact .right-zone { 
+            opacity: 0; transform: scale(0.5); pointer-events: none;
+        }
+
+        #hint {
+            position: fixed; top: 30px; color: #888; width: 100%; text-align: center;
+            font-size: 13px; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hint">
+        <b>[ 液態玻璃完美版測試 ]</b><br>
+        向右滑動底欄 ➔ <b>分裂簡化</b> (水平對齊無錯位)<br>
+        向上滑動網頁 ➔ <b>凝聚縮小</b> (五鍵消失回歸中心)<br>
+        五個功能按鈕：後退、前進、分享、書籤、分頁
+    </div>
+
+    <div class="safari-wrapper" id="root">
+        <div class="liquid-pill" id="pill">
+            <div class="main-bg"></div>
+
+            <div class="left-zone">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" width="18">
+                <span>apple.com</span>
+            </div>
+
+            <div class="right-zone">
+                <div class="icon">＜</div>
+                <div class="icon">＞</div>
+                <div class="icon">⇪</div>
+                <div class="icon">📖</div>
+                <div class="icon">❐</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const root = document.getElementById('root');
+        let startX = 0;
+        let currentState = 'normal';
+        let prevState = 'normal';
+
+        // 滾動偵測
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                if (currentState !== 'compact') {
+                    prevState = currentState;
+                    currentState = 'compact';
+                    root.className = 'safari-wrapper state-compact';
+                }
+            } else {
+                if (currentState === 'compact') {
+                    currentState = prevState;
+                    root.className = 'safari-wrapper' + (currentState === 'simplified' ? ' state-simplified' : '');
+                }
+            }
+        });
+
+        // 滑動偵測 (核心)
+        document.getElementById('pill').addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        document.getElementById('pill').addEventListener('touchend', e => {
+            const diff = e.changedTouches[0].clientX - startX;
+            if (diff > 40 && currentState === 'normal') {
+                currentState = 'simplified';
+                root.className = 'safari-wrapper state-simplified';
+            } else if (diff < -40 && currentState === 'simplified') {
+                currentState = 'normal';
+                root.className = 'safari-wrapper';
+            }
+        });
+        
+        // 電腦版模擬
+        document.getElementById('pill').addEventListener('mousedown', e => startX = e.clientX);
+        document.getElementById('pill').addEventListener('mouseup', e => {
+            const diff = e.clientX - startX;
+            if (diff > 40 && currentState === 'normal') {
+                currentState = 'simplified';
+                root.className = 'safari-wrapper state-simplified';
+            } else if (diff < -40 && currentState === 'simplified') {
+                currentState = 'normal';
+                root.className = 'safari-wrapper';
+            }
+        });
+    </script>
+</body>
+</html>
