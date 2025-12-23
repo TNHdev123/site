@@ -20,7 +20,18 @@
         body, html { height: 100%; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
         .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; }
 
-        /* --- Home View --- */
+        /* --- Landing View --- */
+        #landingView { justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .hero-title { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px; margin: 0; }
+        .hero-subtitle { font-size: 1.2rem; font-weight: 500; opacity: 0.6; margin: 10px 0 40px 0; }
+        .btn-primary { 
+            background: var(--accent); color: white; padding: 18px 40px; border-radius: 50px; 
+            text-decoration: none; font-size: 1.2rem; font-weight: 800; transition: transform 0.2s;
+            border: 3px solid var(--border);
+        }
+        .btn-primary:active { transform: scale(0.95); }
+
+        /* --- Home View (Generator) --- */
         #homeView { justify-content: flex-start; align-items: center; padding: 30px 20px; overflow-y: auto; }
         .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
         h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
@@ -51,9 +62,9 @@
         #installView { justify-content: flex-start; align-items: center; padding: 40px 25px; overflow-y: auto; text-align: left; }
         .store-header { display: flex; width: 100%; max-width: 400px; gap: 20px; align-items: center; margin-bottom: 25px; }
         .store-icon { width: 100px; height: 100px; border-radius: 22px; border: 1px solid var(--line); flex-shrink: 0; object-fit: cover; background: #fff; }
-        .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; flex-grow: 1; }
+        .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; flex-grow: 1; text-align: left; }
         .store-divider { width: 100%; height: 1px; background-color: var(--line); margin: 20px 0; }
-        .store-section { width: 100%; max-width: 400px; text-align: left; }
+        .store-section { width: 100%; max-width: 400px; }
         .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; text-align: left; }
         .store-description { font-size: 1rem; line-height: 1.5; color: var(--text); opacity: 0.9; white-space: pre-wrap; text-align: left; }
 
@@ -73,6 +84,12 @@
     </style>
 </head>
 <body>
+
+    <div id="landingView" class="view">
+        <h1 class="hero-title">alwaysPWA</h1>
+        <p class="hero-subtitle">Serverless. Instant. Permanent.</p>
+        <a href="#home" target="_blank" class="btn-primary">Create PWA!</a>
+    </div>
 
     <div id="homeView" class="view">
         <h1>alwaysPWA</h1>
@@ -105,7 +122,7 @@
 
             <div class="meter-container" id="meterContainer">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Ready to analyze...</span>
+                <span id="meterText">Analyze total length...</span>
             </div>
 
             <button id="generateBtn">Generate PWA</button>
@@ -149,9 +166,11 @@
         let currentFile = null;
         let isScannable = false;
 
-        // 無損文字壓縮 & 縮寫參數邏輯
+        const compress = (str) => str ? LZString.compressToEncodedURIComponent(str) : "";
+        const decompress = (str) => str ? LZString.decompressFromEncodedURIComponent(str) : "";
+
+        // 全域 URL 長度計算 (含壓縮文字)
         function getFinalUrl(iconData) {
-            const compress = (str) => str ? LZString.compressToEncodedURIComponent(str) : "";
             const p = new URLSearchParams();
             p.set('u', compress(document.getElementById('targetUrl').value));
             p.set('n', compress(document.getElementById('targetName').value));
@@ -173,12 +192,10 @@
             const LIMIT = 3900; 
 
             if (!isAdaptive) {
-                // 原圖模式 (不轉 JPEG 降質，維持基本畫質)
                 canvas.width = 180; canvas.height = 180;
                 ctx.drawImage(img, 0, 0, 180, 180);
-                result = canvas.toDataURL('image/png'); // 使用 PNG 維持原始品質
+                result = canvas.toDataURL('image/png'); 
             } else {
-                // 適應性 JPEG 壓縮模式
                 for (let i = 0; i < 10; i++) {
                     canvas.width = size; canvas.height = size;
                     ctx.clearRect(0, 0, size, size);
@@ -200,7 +217,6 @@
             const fill = document.getElementById('meterFill');
             const text = document.getElementById('meterText');
             document.getElementById('meterContainer').style.display = 'block';
-            
             let score = Math.max(0, 100 - (len / 60));
             fill.style.width = Math.min(100, score) + '%';
             isScannable = len < 4300;
@@ -232,19 +248,30 @@
 
         function loadImage(file) { return new Promise((res) => { const r = new FileReader(); r.onload = (e) => { const i = new Image(); i.onload = () => res(i); i.src = e.target.result; }; r.readAsDataURL(file); }); }
 
-        // Event Listeners
         document.getElementById('iconFile').onchange = (e) => { currentFile = e.target.files[0]; processIcon(); };
         document.getElementById('generateBtn').onclick = () => {
-            if (!document.getElementById('targetUrl').value || !document.getElementById('targetName').value || !base64Icon) return alert("Missing required fields!");
+            if (!document.getElementById('targetUrl').value || !document.getElementById('targetName').value || !base64Icon) return alert("Fill Name, URL and Icon!");
             window.open(getFinalUrl(base64Icon), '_blank');
         };
 
         function init() {
-            const hash = location.hash.substring(1); if (!hash) { document.getElementById('homeView').style.display = 'flex'; return; }
-            const p = new URLSearchParams(hash);
-            const decompress = (str) => str ? LZString.decompressFromEncodedURIComponent(str) : "";
+            const hash = location.hash.substring(1);
             
-            // 讀取參數 (支援新縮寫與舊完整名稱)
+            // Routing Logic
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+
+            if (!hash) {
+                document.getElementById('landingView').style.display = 'flex';
+                return;
+            }
+
+            if (hash === 'home') {
+                document.getElementById('homeView').style.display = 'flex';
+                return;
+            }
+
+            // Handle PWA Params
+            const p = new URLSearchParams(hash);
             const n = decompress(p.get('n')) || p.get('name');
             const u = decompress(p.get('u')) || p.get('url');
             const d = decompress(p.get('d')) || p.get('desc') || "No description provided.";
@@ -252,6 +279,8 @@
             const i = decodeURIComponent(p.get('i') || p.get('icon'));
             const isIf = (p.get('if') === 't') || (p.get('mode') === 'iframe');
             
+            if (!n || !u) return (location.hash = ""); // Redirect to landing if invalid
+
             document.title = n;
             const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = i; document.head.appendChild(link);
             const meta = document.createElement('meta'); meta.name = 'apple-mobile-web-app-title'; meta.content = n; document.head.appendChild(meta);
@@ -269,6 +298,7 @@
                 document.getElementById('closeQr').onclick = () => document.getElementById('qrModal').style.display = 'none';
             }
         }
+        window.addEventListener('hashchange', init);
         window.onload = init;
     </script>
 </body>
