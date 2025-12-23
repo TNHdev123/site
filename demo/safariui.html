@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Full Scroll Detection</title>
+    <title>Safari Liquid - Pro Recovery</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.92);
@@ -12,30 +12,14 @@
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 關鍵修改：讓 Body 恢復捲動能力 */
         body { 
-            margin: 0; background: #fff; 
+            margin: 0; background: #fff; overflow-x: hidden; overflow-y: auto;
             font-family: -apple-system, system-ui;
-            overflow-x: hidden;
-            overflow-y: auto; /* 允許主頁面捲動 */
         }
 
-        /* iFrame 容器：高度由 JS 動態撐開，模擬真實長度 */
-        #web-wrapper {
-            width: 100%;
-            height: 5000px; /* 預設一個長度，稍後由內容決定 */
-            position: relative;
-            z-index: 1;
-        }
+        #web-wrapper { width: 100%; height: 5000px; position: relative; z-index: 1; }
+        iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            pointer-events: none; /* 讓觸控穿透到父層，由父層負責捲動 */
-        }
-
-        /* 全域遮罩 */
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
@@ -43,11 +27,9 @@
         }
         .is-menu-open #global-overlay { display: block; background: rgba(0,0,0,0.4); pointer-events: auto; }
 
-        /* 導覽列 UI */
         .safari-wrapper {
             position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); 
-            left: 0; width: 100%;
-            display: flex; justify-content: center; align-items: center; 
+            left: 0; width: 100%; display: flex; justify-content: center; align-items: center; 
             z-index: 10001; 
         }
 
@@ -91,29 +73,19 @@
 
         /* --- 狀態切換 --- */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
-        .state-simplified .left-zone {
-            width: 56px; height: 56px; background: var(--glass);
-            border-radius: 28px; top: 22px; transform: translateX(-120px);
-        }
+        .state-simplified .left-zone { width: 56px; height: 56px; background: var(--glass); border-radius: 28px; top: 22px; transform: translateX(-120px); }
         .state-simplified .domain-text { opacity: 0; width: 0; }
-        .state-simplified .right-zone {
-            width: 220px; height: 56px; background: var(--glass);
-            border-radius: 28px; bottom: 22px; transform: translateX(35px);
-        }
+        .state-simplified .right-zone { width: 220px; height: 56px; background: var(--glass); border-radius: 28px; bottom: 22px; transform: translateX(35px); }
 
-        .is-menu-open .left-zone {
-            width: 200px; height: 220px; border-radius: 28px; background: white;
-            transform: translateX(-60px) translateY(-145px);
-        }
+        .is-menu-open .left-zone { width: 200px; height: 220px; border-radius: 28px; background: white; transform: translateX(-60px) translateY(-145px); }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        .is-menu-open .domain-text { opacity: 1; width: auto; font-size: 14px; }
 
-        .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; }
-        .state-compact .left-zone { width: 140px; height: 44px; top: 28px; background: transparent; transform: translateX(0); }
+        /* 縮小狀態 */
+        .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; cursor: pointer; }
+        .state-compact .left-zone { width: 140px; height: 44px; top: 28px; background: transparent; transform: translateX(0); cursor: pointer; }
         .state-compact .favicon { display: none; }
         .state-compact .domain-text { font-size: 14px; font-weight: 600; opacity: 1; width: auto; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
-
     </style>
 </head>
 <body id="app-root">
@@ -153,25 +125,45 @@
         let currentState = 'normal';
         let prevState = 'normal';
         let startX = 0;
+        let lastScrollY = window.scrollY;
 
         favIcon.src = `https://www.google.com/s2/favicons?domain=wikipedia.org&sz=64`;
 
-        // --- 核心：使用真實 Scroll 監聽 ---
-        window.addEventListener('scroll', () => {
-            // 在 iPhone 上偵測捲動距離
-            const scrollPos = window.scrollY;
+        // 更新狀態函式
+        function updateUIState(newState) {
+            currentState = newState;
+            navRoot.className = 'safari-wrapper' + 
+                (currentState === 'compact' ? ' state-compact' : '') +
+                (currentState === 'simplified' ? ' state-simplified' : '');
+        }
 
-            if (scrollPos > 60 && currentState !== 'compact') {
-                prevState = currentState;
-                currentState = 'compact';
-                navRoot.className = 'safari-wrapper state-compact';
-            } else if (scrollPos <= 60 && currentState === 'compact') {
-                currentState = prevState;
-                navRoot.className = 'safari-wrapper' + (currentState === 'simplified' ? ' state-simplified' : '');
+        // 1. 滾動偵測：縮小與「反向滑動恢復」
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const diff = currentScrollY - lastScrollY;
+
+            // 向上捲動 (網頁往下滑) -> 縮小
+            if (currentScrollY > 60 && diff > 5 && currentState !== 'compact') {
+                if (currentState !== 'compact') prevState = currentState;
+                updateUIState('compact');
+            } 
+            // 向下捲動 (反向滑動，網頁往回看) -> 恢復
+            else if (diff < -15 && currentState === 'compact') {
+                updateUIState(prevState);
+            }
+
+            lastScrollY = currentScrollY;
+        });
+
+        // 2. 點擊區塊恢復 (僅在縮小狀態生效)
+        pill.addEventListener('click', (e) => {
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+                e.stopPropagation();
             }
         });
 
-        // 彈出選單
+        // 3. 彈出選單 (僅簡化模式點擊 Logo)
         document.getElementById('logo-btn').addEventListener('click', (e) => {
             if (currentState === 'simplified') {
                 root.classList.add('is-menu-open');
@@ -179,29 +171,27 @@
             }
         });
 
-        const closeMenu = () => root.classList.remove('is-menu-open');
-        document.getElementById('global-overlay').addEventListener('touchstart', closeMenu);
-
-        // 導覽列左右滑動
+        // 4. 左右滑動切換
         pill.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
         });
 
         pill.addEventListener('touchend', e => {
-            if (root.classList.contains('is-menu-open')) return;
+            if (root.classList.contains('is-menu-open') || currentState === 'compact') return;
             const diffX = e.changedTouches[0].clientX - startX;
             if (Math.abs(diffX) > 50) {
                 if (diffX > 50 && currentState === 'normal') {
-                    currentState = 'simplified';
-                    navRoot.className = 'safari-wrapper state-simplified';
+                    updateUIState('simplified');
                 } else if (diffX < -50 && currentState === 'simplified') {
-                    currentState = 'normal';
-                    navRoot.className = 'safari-wrapper';
+                    updateUIState('normal');
                 }
             }
         });
 
-        // 阻擋誤觸 (一般和簡化狀態下禁止捲動，模擬真實 Safari 底部條手感)
+        const closeMenu = () => root.classList.remove('is-menu-open');
+        document.getElementById('global-overlay').addEventListener('touchstart', closeMenu);
+        
+        // 阻擋誤觸
         pill.addEventListener('touchmove', e => {
             if (currentState !== 'compact') e.preventDefault();
         }, { passive: false });
