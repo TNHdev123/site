@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Safari Liquid - Global Touch Dismiss</title>
+    <title>Safari Liquid Interface - Wikipedia Pro</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.9);
@@ -12,57 +12,53 @@
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body { margin: 0; background: #000; height: 300vh; font-family: -apple-system, system-ui; overflow-x: hidden; }
+        /* 網頁背景容器 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: -apple-system, system-ui; }
+        
+        #web-bg {
+            width: 100%; height: 100%; border: none;
+            transition: transform 0.6s var(--fluid-ease);
+        }
 
-        /* 全域遮罩：這是關鍵 */
+        /* 全域遮罩：攔截全螢幕觸控 */
         #global-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0);
-            z-index: 10000; /* 確保在所有東西之上 */
-            display: none; /* 平時隱藏 */
-            transition: background 0.4s;
-            /* 讓這層樓攔截所有觸控 */
-            touch-action: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0); z-index: 10000; display: none;
+            transition: background 0.4s; touch-action: none;
         }
+        .is-menu-open #global-overlay { display: block; background: rgba(0,0,0,0.4); }
 
-        /* 選單開啟時的狀態 */
-        .is-menu-open #global-overlay {
-            display: block;
-            background: rgba(0,0,0,0.4);
-        }
-
+        /* 導覽列總容器 */
         .safari-wrapper {
-            position: fixed; bottom: 50px; left: 0; width: 100%;
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 10001; /* 導覽列要在遮罩之上，才能點選單內的東西 */
+            position: fixed; bottom: 40px; left: 0; width: 100%;
+            display: flex; justify-content: center; align-items: center; z-index: 10001;
         }
 
         .liquid-pill {
             position: relative; width: 340px; height: 100px;
             transition: all 0.5s var(--fluid-ease);
             display: flex; align-items: center; justify-content: center;
+            touch-action: none; 
         }
 
         .main-bg {
             position: absolute; width: 100%; height: 100%;
             background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.3);
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
+        /* 內容區塊 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
             display: flex; flex-direction: column; align-items: center;
-            transition: all 0.5s var(--fluid-ease); z-index: 10;
-            overflow: hidden;
+            transition: all 0.5s var(--fluid-ease); z-index: 10; overflow: hidden;
         }
 
         .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
-        .left-header span { color: #000; font-weight: 500; font-size: 15px; }
+        .favicon { width: 18px; height: 18px; border-radius: 4px; }
+        .domain-text { color: #000; font-weight: 500; font-size: 15px; text-transform: capitalize; }
 
         .menu-content {
             width: 100%; opacity: 0; visibility: hidden;
@@ -85,48 +81,50 @@
             border-radius: 28px; top: 22px; transform: translateX(-120px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
-        .state-simplified .left-header span { opacity: 0; width: 0; }
+        .state-simplified .domain-text { opacity: 0; width: 0; }
         .state-simplified .right-zone {
             width: 220px; height: 56px; background: var(--glass);
             border-radius: 28px; bottom: 22px; transform: translateX(35px);
         }
 
         .is-menu-open .left-zone {
-            width: 200px; height: 220px; 
-            border-radius: 28px; background: white;
-            transform: translateX(-60px) translateY(-150px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            width: 200px; height: 220px; border-radius: 28px; background: white;
+            transform: translateX(-60px) translateY(-150px); box-shadow: 0 25px 50px rgba(0,0,0,0.4);
         }
-        .is-menu-open .left-header { border-bottom: 1px solid #f0f0f0; height: 52px; }
-        .is-menu-open .left-header span { opacity: 1; width: auto; font-size: 14px; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
+        .is-menu-open .domain-text { opacity: 1; width: auto; font-size: 14px; }
 
         .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; }
         .state-compact .left-zone { width: 140px; height: 44px; top: 28px; background: transparent; transform: translateX(0); }
-        .state-compact .left-header span { font-size: 14px; font-weight: 600; opacity: 1; width: auto; }
+        .state-compact .favicon { display: none; }
+        .state-compact .domain-text { font-size: 14px; font-weight: 600; opacity: 1; width: auto; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
     </style>
 </head>
-<body id="body-tag">
+<body id="app-root">
+
+    <iframe id="web-bg" src="https://en.m.wikipedia.org/wiki/Main_Page"></iframe>
 
     <div id="global-overlay"></div>
 
-    <div class="safari-wrapper" id="root">
+    <div class="safari-wrapper" id="nav-root">
         <div class="liquid-pill" id="pill">
             <div class="main-bg"></div>
+            
             <div class="left-zone" id="logo-btn">
                 <div class="left-header">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" width="18">
-                    <span>apple.com</span>
+                    <img id="fav-icon" class="favicon" src="">
+                    <span id="domain-display" class="domain-text"></span>
                 </div>
                 <div class="menu-content">
-                    <div class="menu-item">❐ 複製連結</div>
-                    <div class="menu-item">↻ 重新載入</div>
-                    <div class="menu-item">📖 儲存書籤</div>
-                    <div class="menu-item">⇪ 分享網頁</div>
+                    <div class="menu-item">❐ Copy Link</div>
+                    <div class="menu-item">↻ Reload</div>
+                    <div class="menu-item">📖 Save Bookmark</div>
+                    <div class="menu-item">⇪ Share</div>
                 </div>
             </div>
+
             <div class="right-zone">
                 <div class="icon">＜</div><div class="icon">＞</div><div class="icon">⇪</div><div class="icon">📖</div><div class="icon">❐</div>
             </div>
@@ -134,45 +132,42 @@
     </div>
 
     <script>
-        const root = document.getElementById('body-tag');
+        const root = document.getElementById('app-root');
+        const navRoot = document.getElementById('nav-root');
         const pill = document.getElementById('pill');
-        const logoBtn = document.getElementById('logo-btn');
         const overlay = document.getElementById('global-overlay');
+        const domainDisplay = document.getElementById('domain-display');
+        const favIcon = document.getElementById('fav-icon');
         
-        let startX = 0;
+        const targetUrl = "en.wikipedia.org";
         let currentState = 'normal';
+        let startX = 0;
 
-        // 點擊 Logo 開啟
-        logoBtn.addEventListener('click', (e) => {
+        // 1. 處理 URL 顯示
+        const cleanDomain = targetUrl.split('.')[1]; // 取得 "wikipedia"
+        domainDisplay.innerText = cleanDomain;
+        favIcon.src = `https://www.google.com/s2/favicons?domain=${targetUrl}&sz=64`;
+
+        // 2. 彈出選單控制
+        document.getElementById('logo-btn').addEventListener('click', (e) => {
             if (currentState === 'simplified') {
                 root.classList.add('is-menu-open');
                 e.stopPropagation();
             }
         });
 
-        // 重點：全螢幕攔截。無論是 touch 還是 click，只要在 overlay 上就關閉
         const closeMenu = (e) => {
             root.classList.remove('is-menu-open');
-            e.preventDefault(); // 防止穿透點擊到網頁
+            if(e) e.preventDefault();
         };
-        
         overlay.addEventListener('touchstart', closeMenu, { passive: false });
         overlay.addEventListener('click', closeMenu);
 
-        // 滾動與手勢
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 40) {
-                if (currentState !== 'compact') {
-                    currentState = 'compact';
-                    root.classList.remove('is-menu-open');
-                    document.getElementById('root').className = 'safari-wrapper state-compact';
-                }
-            } else if (window.scrollY <= 40 && currentState === 'compact') {
-                currentState = 'normal';
-                document.getElementById('root').className = 'safari-wrapper';
-            }
-        });
+        // 3. 模擬滾動監聽 (由於 iframe 限制，我們偵測容器點擊來模擬狀態切換)
+        // 註：在真實 App 中會監聽 WebView 的 scroll，此處用簡單邏輯模擬
+        window.addEventListener('message', (e) => { /* 接收來自 iframe 的滾動訊息 */ });
 
+        // 4. 手勢切換 一般/簡化
         pill.addEventListener('touchstart', e => {
             if (root.classList.contains('is-menu-open')) return;
             startX = e.touches[0].clientX;
@@ -180,20 +175,32 @@
 
         pill.addEventListener('touchmove', e => {
             if (currentState !== 'compact' && !root.classList.contains('is-menu-open')) {
-                e.preventDefault(); // 阻擋誤觸滑動
+                e.preventDefault(); 
             }
         }, { passive: false });
 
         pill.addEventListener('touchend', e => {
+            if (root.classList.contains('is-menu-open')) return;
             const diff = e.changedTouches[0].clientX - startX;
             if (Math.abs(diff) > 40) {
                 if (diff > 40 && currentState === 'normal') {
                     currentState = 'simplified';
-                    document.getElementById('root').className = 'safari-wrapper state-simplified';
+                    navRoot.className = 'safari-wrapper state-simplified';
                 } else if (diff < -40 && currentState === 'simplified') {
                     currentState = 'normal';
-                    document.getElementById('root').className = 'safari-wrapper';
+                    navRoot.className = 'safari-wrapper';
                 }
+            }
+        });
+
+        // 模擬進入縮小狀態 (雙擊背景模擬)
+        document.body.addEventListener('dblclick', () => {
+            if (currentState !== 'compact') {
+                currentState = 'compact';
+                navRoot.className = 'safari-wrapper state-compact';
+            } else {
+                currentState = 'normal';
+                navRoot.className = 'safari-wrapper';
             }
         });
     </script>
