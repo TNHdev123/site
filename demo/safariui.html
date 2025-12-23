@@ -2,31 +2,38 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Safari Liquid - Gesture Sensing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Safari Liquid iPhone Pro</title>
     <style>
         :root {
-            --glass: rgba(255, 255, 255, 0.9);
+            --glass: rgba(255, 255, 255, 0.92);
             --inner: rgba(0, 0, 0, 0.05);
             --accent: #007AFF;
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: -apple-system, system-ui; }
-        
-        /* 網頁層：iframe 預設不接收點擊，由透明層攔截手勢 */
-        #web-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        iframe { width: 100%; height: 100%; border: none; pointer-events: auto; }
-
-        /* 手勢偵測層：覆蓋在 iframe 之上，但允許點擊穿透，只偵測滑動 */
-        #gesture-sensor {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 5; pointer-events: none; /* 平時穿透，點擊網頁不受限 */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #000; overflow: hidden; position: fixed;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* 全域遮罩：選單開啟時攔截一切 */
+        /* 網頁層 */
+        #web-viewport {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; -webkit-overflow-scrolling: touch;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* 手勢監控層 - 覆蓋全螢幕 */
+        #gesture-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; pointer-events: none; /* 平時允許點擊穿透 */
+        }
+
+        /* 全域遮罩 - 選單開啟時 */
         #global-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
             transition: background 0.4s; touch-action: none;
         }
@@ -34,21 +41,23 @@
 
         /* 導覽列 UI */
         .safari-wrapper {
-            position: fixed; bottom: 40px; left: 0; width: 100%;
-            display: flex; justify-content: center; align-items: center; z-index: 10001;
+            position: fixed; bottom: calc(40px + env(safe-area-inset-bottom)); 
+            left: 0; width: 100%;
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 10001; transition: transform 0.5s var(--fluid-ease);
         }
 
         .liquid-pill {
             position: relative; width: 340px; height: 100px;
             transition: all 0.5s var(--fluid-ease);
             display: flex; align-items: center; justify-content: center;
-            touch-action: none; 
+            touch-action: none;
         }
 
         .main-bg {
             position: absolute; width: 100%; height: 100%;
             background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.3);
+            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.2);
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
@@ -65,33 +74,34 @@
 
         .menu-content {
             width: 100%; opacity: 0; visibility: hidden;
-            display: flex; flex-direction: column; gap: 18px; padding: 10px 0; transition: 0.3s;
+            display: flex; flex-direction: column; gap: 18px; padding: 15px 0; transition: 0.3s;
         }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 0 20px; color: #000; font-size: 16px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 0 20px; color: #000; font-size: 17px; }
 
         .right-zone {
-            position: absolute; width: 310px; height: 40px; bottom: 6px;
+            position: absolute; width: 310px; height: 40px; bottom: 8px;
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--fluid-ease); z-index: 2;
         }
-        .icon { color: var(--accent); font-size: 22px; }
+        .icon { color: var(--accent); font-size: 22px; font-weight: bold; }
 
         /* --- 狀態切換 --- */
-        .state-simplified .main-bg { opacity: 0; transform: scale(0.8); }
+        .state-simplified .main-bg { opacity: 0; transform: scale(0.95); }
         .state-simplified .left-zone {
             width: 56px; height: 56px; background: var(--glass);
             border-radius: 28px; top: 22px; transform: translateX(-120px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
         .state-simplified .domain-text { opacity: 0; width: 0; }
         .state-simplified .right-zone {
             width: 220px; height: 56px; background: var(--glass);
             border-radius: 28px; bottom: 22px; transform: translateX(35px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .is-menu-open .left-zone {
-            width: 200px; height: 220px; border-radius: 28px; background: white;
-            transform: translateX(-60px) translateY(-150px);
+            width: 200px; height: 240px; border-radius: 28px; background: white;
+            transform: translateX(-60px) translateY(-160px);
         }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
         .is-menu-open .domain-text { opacity: 1; width: auto; font-size: 14px; }
@@ -106,11 +116,11 @@
 </head>
 <body id="app-root">
 
-    <div id="web-container">
+    <div id="web-viewport">
         <iframe src="https://en.m.wikipedia.org/wiki/Main_Page"></iframe>
     </div>
 
-    <div id="gesture-sensor"></div>
+    <div id="gesture-layer"></div>
     <div id="global-overlay"></div>
 
     <div class="safari-wrapper" id="nav-root">
@@ -124,7 +134,7 @@
                 <div class="menu-content">
                     <div class="menu-item">❐ Copy Link</div>
                     <div class="menu-item">↻ Reload</div>
-                    <div class="menu-item">📖 Save Bookmark</div>
+                    <div class="menu-item">📖 Bookmark</div>
                 </div>
             </div>
             <div class="right-zone">
@@ -143,13 +153,13 @@
         const targetUrl = "en.wikipedia.org";
         let currentState = 'normal';
         let prevState = 'normal';
-        let startX = 0, startY = 0;
+        let startX = 0, startY = 0, lastY = 0;
 
-        // 初始化 URL 資訊
-        domainDisplay.innerText = targetUrl.split('.')[1];
+        // 初始化
+        domainDisplay.innerText = "Wikipedia";
         favIcon.src = `https://www.google.com/s2/favicons?domain=${targetUrl}&sz=64`;
 
-        // 彈出選單控制
+        // 彈出選單
         document.getElementById('logo-btn').addEventListener('click', (e) => {
             if (currentState === 'simplified') {
                 root.classList.add('is-menu-open');
@@ -159,40 +169,41 @@
 
         const closeMenu = () => root.classList.remove('is-menu-open');
         document.getElementById('global-overlay').addEventListener('touchstart', closeMenu);
-        document.getElementById('global-overlay').addEventListener('click', closeMenu);
 
-        // --- 核心：全螢幕觸控偵測 (偵測滑動方向以縮放 UI) ---
-        window.addEventListener('touchstart', e => {
+        // --- iPhone 專用手勢感知 (Global Sensing) ---
+        // 我們監聽全域的 touchmove 來判斷滑動方向
+        document.addEventListener('touchstart', e => {
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
         }, { passive: true });
 
-        window.addEventListener('touchmove', e => {
-            let currentY = e.touches[0].clientY;
-            let diffY = startY - currentY;
+        document.addEventListener('touchmove', e => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = startY - currentY;
 
-            // 向上滑動超過 30px -> 進入縮小狀態
-            if (diffY > 30 && currentState !== 'compact') {
+            // 向上滑動：UI 縮小
+            if (deltaY > 20 && currentState !== 'compact' && !root.classList.contains('is-menu-open')) {
                 prevState = currentState;
                 currentState = 'compact';
                 navRoot.className = 'safari-wrapper state-compact';
             } 
-            // 向下滑動超過 30px -> 恢復原始狀態
-            else if (diffY < -30 && currentState === 'compact') {
+            // 向下滑動：UI 展開
+            else if (deltaY < -20 && currentState === 'compact') {
                 currentState = prevState;
                 navRoot.className = 'safari-wrapper' + (currentState === 'simplified' ? ' state-simplified' : '');
             }
         }, { passive: true });
 
-        // --- 導覽列手勢 (左右滑動) ---
+        // --- 導覽列內的手勢 (左右滑動切換) ---
         pill.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
-            e.stopPropagation(); // 防止冒泡給 window 誤判成縮放
+            e.stopPropagation(); 
         });
 
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open')) return;
             const diffX = e.changedTouches[0].clientX - startX;
+            
             if (Math.abs(diffX) > 50) {
                 if (diffX > 50 && currentState === 'normal') {
                     currentState = 'simplified';
@@ -203,6 +214,9 @@
                 }
             }
         });
+
+        // 為了讓 iPhone 使用者更好測試，增加一個小提示
+        console.log("iPhone Test Active: Swipe UP anywhere to shrink UI, Swipe DOWN to expand.");
     </script>
 </body>
 </html>
