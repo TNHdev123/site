@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>alwaysPWA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <style>
         :root {
             --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; 
@@ -34,7 +35,7 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        .meter-container { margin-top: 5px; display: none; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
+        .meter-container { margin-top: 5px; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
         .meter-bar { height: 10px; width: 100%; background: #eee; border: 1px solid var(--border); overflow: hidden; }
         #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
         #meterText { font-size: 0.75rem; font-weight: 900; margin-top: 6px; display: block; }
@@ -48,12 +49,13 @@
 
         /* --- Install View (App Store Style) --- */
         #installView { justify-content: flex-start; align-items: center; padding: 40px 25px; overflow-y: auto; text-align: left; }
-        .store-header { display: flex; width: 100%; max-width: 350px; gap: 20px; align-items: center; margin-bottom: 25px; }
+        .store-header { display: flex; width: 100%; max-width: 400px; gap: 20px; align-items: center; margin-bottom: 25px; }
         .store-icon { width: 100px; height: 100px; border-radius: 22px; border: 1px solid var(--line); flex-shrink: 0; object-fit: cover; background: #fff; }
-        .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; }
+        .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; flex-grow: 1; }
         .store-divider { width: 100%; height: 1px; background-color: var(--line); margin: 20px 0; }
-        .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
-        .store-description { font-size: 1rem; line-height: 1.5; color: var(--text); opacity: 0.9; white-space: pre-wrap; }
+        .store-section { width: 100%; max-width: 400px; text-align: left; }
+        .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; text-align: left; }
+        .store-description { font-size: 1rem; line-height: 1.5; color: var(--text); opacity: 0.9; white-space: pre-wrap; text-align: left; }
 
         .install-footer { margin-top: auto; padding: 30px 0; text-align: center; width: 100%; }
         .instruction { font-size: 1rem; font-weight: 600; margin-bottom: 10px; }
@@ -103,7 +105,7 @@
 
             <div class="meter-container" id="meterContainer">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Analyzing...</span>
+                <span id="meterText">Ready to analyze...</span>
             </div>
 
             <button id="generateBtn">Generate PWA</button>
@@ -119,11 +121,13 @@
     <div id="installView" class="view">
         <div class="store-header">
             <img id="displayIcon" class="store-icon">
-            <div class="store-title-area"><h1 id="displayName" class="store-name"></h1></div>
+            <h1 id="displayName" class="store-name"></h1>
         </div>
         <div class="store-divider"></div>
-        <div class="store-section-title">Description</div>
-        <div id="displayDesc" class="store-description"></div>
+        <div class="store-section">
+            <div class="store-section-title">Description</div>
+            <div id="displayDesc" class="store-description"></div>
+        </div>
         <div class="install-footer">
             <div class="instruction">Tap <strong>Share</strong> and <strong>Add to Home Screen</strong></div>
             <div class="arrow">↓</div>
@@ -145,17 +149,17 @@
         let currentFile = null;
         let isScannable = false;
 
-        // 全域 URL 長度計算 (使用縮寫參數)
-        function getFinalUrlLength(iconData) {
-            const params = new URLSearchParams({
-                u: document.getElementById('targetUrl').value,
-                n: document.getElementById('targetName').value,
-                d: document.getElementById('targetDesc').value,
-                j: document.getElementById('targetJs').value,
-                if: document.getElementById('iframeToggle').checked ? 't' : 'f',
-                q: '1'
-            });
-            return (window.location.origin + window.location.pathname + "#" + params.toString() + "&i=" + encodeURIComponent(iconData || "")).length;
+        // 無損文字壓縮 & 縮寫參數邏輯
+        function getFinalUrl(iconData) {
+            const compress = (str) => str ? LZString.compressToEncodedURIComponent(str) : "";
+            const p = new URLSearchParams();
+            p.set('u', compress(document.getElementById('targetUrl').value));
+            p.set('n', compress(document.getElementById('targetName').value));
+            p.set('d', compress(document.getElementById('targetDesc').value));
+            p.set('j', compress(document.getElementById('targetJs').value));
+            p.set('if', document.getElementById('iframeToggle').checked ? 't' : 'f');
+            if (isScannable) p.set('q', '1');
+            return window.location.origin + window.location.pathname + "#" + p.toString() + "&i=" + encodeURIComponent(iconData || "");
         }
 
         async function processIcon() {
@@ -166,39 +170,42 @@
             const ctx = canvas.getContext('2d');
 
             let quality = 0.85; let size = 180; let result = "";
-            const LIMIT = 3800; // QR 安全總長度閾值
+            const LIMIT = 3900; 
 
             if (!isAdaptive) {
+                // 原圖模式 (不轉 JPEG 降質，維持基本畫質)
                 canvas.width = 180; canvas.height = 180;
                 ctx.drawImage(img, 0, 0, 180, 180);
-                result = canvas.toDataURL('image/jpeg', 0.9);
+                result = canvas.toDataURL('image/png'); // 使用 PNG 維持原始品質
             } else {
+                // 適應性 JPEG 壓縮模式
                 for (let i = 0; i < 10; i++) {
                     canvas.width = size; canvas.height = size;
                     ctx.clearRect(0, 0, size, size);
                     ctx.drawImage(img, 0, 0, size, size);
                     result = canvas.toDataURL('image/jpeg', quality);
-                    if (getFinalUrlLength(result) <= LIMIT) break;
+                    if (getFinalUrl(result).length <= LIMIT) break;
                     if (quality > 0.3) quality -= 0.15; else size -= 20;
                 }
             }
             base64Icon = result;
-            updateMeter(getFinalUrlLength(result));
+            updateMeter();
             document.getElementById('iconPreview').src = base64Icon;
             document.getElementById('iconPreview').style.display = 'block';
             document.getElementById('uploadText').style.display = 'none';
         }
 
-        function updateMeter(len) {
-            const container = document.getElementById('meterContainer');
+        function updateMeter() {
+            const len = getFinalUrl(base64Icon).length;
             const fill = document.getElementById('meterFill');
             const text = document.getElementById('meterText');
-            container.style.display = 'block';
-            let score = Math.max(0, 100 - (len / 55));
+            document.getElementById('meterContainer').style.display = 'block';
+            
+            let score = Math.max(0, 100 - (len / 60));
             fill.style.width = Math.min(100, score) + '%';
-            isScannable = len < 4200;
-            fill.style.background = len < 2900 ? 'var(--safe)' : (len < 4200 ? 'var(--warn)' : 'var(--danger)');
-            text.innerText = len < 2900 ? "EXCELLENT: Fast Scan" : (len < 4200 ? "GOOD: Scannable" : "CRITICAL: Too Long");
+            isScannable = len < 4300;
+            fill.style.background = len < 3000 ? 'var(--safe)' : (len < 4300 ? 'var(--warn)' : 'var(--danger)');
+            text.innerText = `Total: ${len} chars. ${len < 3000 ? "EXCELLENT" : (len < 4300 ? "GOOD" : "TOO LONG")}`;
             text.style.color = fill.style.background;
         }
 
@@ -218,33 +225,30 @@
                 document.getElementById('targetDesc').value = c.d || c.desc || "";
                 document.getElementById('targetJs').value = c.j || c.js || "";
                 document.getElementById('iframeToggle').checked = c.if !== undefined ? c.if : (c.mode === 'iframe');
-                if (c.i || c.icon) { base64Icon = c.i || c.icon; document.getElementById('iconPreview').src = base64Icon; document.getElementById('iconPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; updateMeter(getFinalUrlLength(base64Icon)); }
+                if (c.i || c.icon) { base64Icon = c.i || c.icon; document.getElementById('iconPreview').src = base64Icon; document.getElementById('iconPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; updateMeter(); }
             };
             reader.readAsText(file);
         }
 
         function loadImage(file) { return new Promise((res) => { const r = new FileReader(); r.onload = (e) => { const i = new Image(); i.onload = () => res(i); i.src = e.target.result; }; r.readAsDataURL(file); }); }
 
+        // Event Listeners
         document.getElementById('iconFile').onchange = (e) => { currentFile = e.target.files[0]; processIcon(); };
         document.getElementById('generateBtn').onclick = () => {
-            const u = document.getElementById('targetUrl').value.trim(); const n = document.getElementById('targetName').value.trim();
-            if (!u || !n || !base64Icon) return alert("Missing Info!");
-            const p = new URLSearchParams();
-            p.set('u', /^https?:\/\//i.test(u) ? u : 'https://' + u); p.set('n', n);
-            const d = document.getElementById('targetDesc').value.trim(); if(d) p.set('d', d);
-            const j = document.getElementById('targetJs').value.trim(); if(j) p.set('j', j);
-            p.set('if', document.getElementById('iframeToggle').checked ? 't' : 'f');
-            if(isScannable) p.set('q', '1');
-            window.open(`${window.location.origin}${window.location.pathname}#${p.toString()}&i=${encodeURIComponent(base64Icon)}`, '_blank');
+            if (!document.getElementById('targetUrl').value || !document.getElementById('targetName').value || !base64Icon) return alert("Missing required fields!");
+            window.open(getFinalUrl(base64Icon), '_blank');
         };
 
         function init() {
             const hash = location.hash.substring(1); if (!hash) { document.getElementById('homeView').style.display = 'flex'; return; }
             const p = new URLSearchParams(hash);
-            const n = p.get('n') || p.get('name');
-            const u = p.get('u') || p.get('url');
-            const d = p.get('d') || p.get('desc') || "No description provided.";
-            const j = p.get('j') || p.get('js');
+            const decompress = (str) => str ? LZString.decompressFromEncodedURIComponent(str) : "";
+            
+            // 讀取參數 (支援新縮寫與舊完整名稱)
+            const n = decompress(p.get('n')) || p.get('name');
+            const u = decompress(p.get('u')) || p.get('url');
+            const d = decompress(p.get('d')) || p.get('desc') || "No description provided.";
+            const j = decompress(p.get('j')) || p.get('js');
             const i = decodeURIComponent(p.get('i') || p.get('icon'));
             const isIf = (p.get('if') === 't') || (p.get('mode') === 'iframe');
             
@@ -260,7 +264,7 @@
                 document.getElementById('displayDesc').innerText = d; document.getElementById('installView').style.display = 'flex';
                 if (p.get('q') === '1' || p.get('qr') === '1') {
                     const b = document.getElementById('qrBtn'); b.style.display = 'inline-block';
-                    b.onclick = () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 800, level: 'L' }); document.getElementById('qrModal').style.display = 'flex'; };
+                    b.onclick = () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 850, level: 'L' }); document.getElementById('qrModal').style.display = 'flex'; };
                 }
                 document.getElementById('closeQr').onclick = () => document.getElementById('qrModal').style.display = 'none';
             }
