@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Focus Editor Mode</title>
+    <title>Safari Liquid - Native Keyboard Logic</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.95);
@@ -42,27 +42,25 @@
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
-            transition: background 0.4s; touch-action: none;
+            transition: background 0.4s;
         }
         .is-menu-open #global-overlay, .is-editing #global-overlay { 
             display: block; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); 
         }
 
         .safari-wrapper {
-            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); 
+            position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); 
             left: 0; width: 100%; display: flex; justify-content: center; align-items: center; 
-            z-index: 10001; transition: transform 0.5s var(--fluid-ease);
-            pointer-events: none; /* 防止 wrapper 攔截背景點擊 */
+            z-index: 10001; transition: all 0.5s var(--fluid-ease);
         }
 
-        /* 編輯狀態：更接近鍵盤的高度 */
-        .is-editing .safari-wrapper { transform: translateY(-220px); }
+        /* 移除位移，讓它隨鍵盤自然上升 */
+        .is-editing .safari-wrapper { bottom: calc(10px + env(safe-area-inset-bottom)); }
 
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto; /* 恢復 pill 的點擊 */
-            touch-action: pan-x; /* 核心：在 CSS 層級禁止上下滑動，僅保留左右 */
+            touch-action: pan-x;
         }
 
         .main-bg {
@@ -82,9 +80,8 @@
         .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
         .favicon { width: 18px; height: 18px; border-radius: 4px; }
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
-        .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
-        /* 編輯模式下的純輸入框 */
+        /* 統一的輸入欄樣式 */
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
@@ -100,7 +97,7 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--fluid-ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
+        .icon { color: var(--accent); font-size: 22px; }
 
         /* --- 狀態切換 --- */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
@@ -110,7 +107,6 @@
 
         .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
         .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .domain-tag { display: block; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
 
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
@@ -119,11 +115,11 @@
         .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
-        /* 編輯模式：僅顯示輸入欄 */
-        .is-editing .main-bg { width: 340px; height: 54px; border-radius: 27px; opacity: 1; transform: scale(1); }
+        /* 編輯模式：統一顯示方式 */
+        .is-editing .main-bg { width: 95vw; height: 60px; border-radius: 20px; opacity: 1; transform: scale(1); }
         .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; }
         .is-editing #url-input { display: block; }
-        .is-editing .left-header, .is-editing .right-zone { display: none !important; }
+        .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { display: none !important; }
     </style>
 </head>
 <body id="app-root">
@@ -144,14 +140,14 @@
                 <div class="left-header" id="domain-trigger">
                     <img id="fav-icon" class="favicon" src="">
                     <span class="domain-display" id="display-text">wikipedia.org</span>
-                    <div class="domain-tag" id="menu-domain-tag">wikipedia.org</div>
                 </div>
-                <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search or enter website name">
+                
+                <input type="text" id="url-input" spellcheck="false" autocomplete="off" inputmode="url" placeholder="Search or enter website">
                 
                 <div class="menu-content">
+                    <div class="menu-item" id="menu-edit-trigger">⌨️ &nbsp; Edit Website</div>
                     <div class="menu-item">❐ &nbsp; Copy Link</div>
                     <div class="menu-item">↻ &nbsp; Reload Page</div>
-                    <div class="menu-item">📖 &nbsp; Save Bookmark</div>
                 </div>
             </div>
 
@@ -169,7 +165,6 @@
         const urlInput = document.getElementById('url-input');
         const viewport = document.getElementById('scroll-viewport');
         const displayText = document.getElementById('display-text');
-        const menuDomainTag = document.getElementById('menu-domain-tag');
         const favIcon = document.getElementById('fav-icon');
 
         let currentState = 'normal';
@@ -181,7 +176,6 @@
                 const urlObj = new URL(url);
                 const host = urlObj.hostname.replace('www.', '');
                 displayText.innerText = host;
-                menuDomainTag.innerText = host;
                 favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
             } catch(e) { displayText.innerText = "New Page"; }
         }
@@ -197,24 +191,64 @@
 
         // 禁止在 Pill 區塊上下滑動
         pill.addEventListener('touchmove', (e) => {
-            // 獲取觸控移動的方向
             const touch = e.touches[0];
-            if (!this.lastY) this.lastY = touch.pageY;
-            const deltaY = Math.abs(touch.pageY - this.lastY);
-            const deltaX = Math.abs(touch.pageX - this.lastX);
-
-            // 如果上下移動大於左右移動，則徹底攔截
-            if (deltaY > deltaX) {
-                e.preventDefault();
-            }
+            const deltaY = Math.abs(touch.pageY - (this.lastY || 0));
+            const deltaX = Math.abs(touch.pageX - (this.lastX || 0));
+            if (deltaY > deltaX) e.preventDefault();
             this.lastY = touch.pageY;
             this.lastX = touch.pageX;
         }, { passive: false });
 
-        pill.addEventListener('touchstart', (e) => {
-            this.lastY = e.touches[0].pageY;
-            this.lastX = e.touches[0].pageX;
-            startX = e.touches[0].clientX;
+        // 核心：編輯模式進入點（統一邏輯）
+        function enterEditMode() {
+            root.classList.remove('is-menu-open');
+            root.classList.add('is-editing');
+            urlInput.value = iframe.src;
+            // 真實觸發鍵盤：在點擊事件流中立即 focus
+            urlInput.focus();
+            // 針對某些 iOS 版本的延遲處理
+            setTimeout(() => urlInput.setSelectionRange(0, urlInput.value.length), 50);
+        }
+
+        // 點擊事件
+        document.getElementById('domain-trigger').addEventListener('click', (e) => {
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+            } else if (currentState === 'normal') {
+                enterEditMode();
+            }
+            e.stopPropagation();
+        });
+
+        // 彈出選單內的編輯觸發
+        document.getElementById('menu-edit-trigger').addEventListener('click', (e) => {
+            enterEditMode();
+            e.stopPropagation();
+        });
+
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                let newUrl = urlInput.value;
+                if (!newUrl.startsWith('http')) newUrl = 'https://' + newUrl;
+                iframe.src = newUrl;
+                updateBranding(newUrl);
+                exitEditMode();
+                viewport.scrollTop = 0;
+            }
+        });
+
+        function exitEditMode() { root.classList.remove('is-editing'); urlInput.blur(); updateUIState(currentState); }
+        
+        document.getElementById('logo-btn').addEventListener('click', (e) => {
+            if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
+                root.classList.toggle('is-menu-open');
+                e.stopPropagation();
+            }
+        });
+
+        document.getElementById('global-overlay').addEventListener('touchstart', () => { 
+            exitEditMode(); 
+            root.classList.remove('is-menu-open'); 
         });
 
         // 捲動偵測
@@ -230,50 +264,9 @@
             lastScrollY = currentScrollY;
         }, { passive: true });
 
-        // 點擊處理
-        document.getElementById('domain-trigger').addEventListener('click', (e) => {
-            if (currentState === 'compact') {
-                updateUIState(prevState);
-                e.stopPropagation();
-            } else if (currentState === 'normal' || root.classList.contains('is-menu-open')) {
-                enterEditMode();
-                e.stopPropagation();
-            }
-        });
-
-        function enterEditMode() {
-            root.classList.remove('is-menu-open');
-            root.classList.add('is-editing');
-            urlInput.value = iframe.src;
-            setTimeout(() => urlInput.focus(), 100);
-        }
-
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                let newUrl = urlInput.value;
-                if (!newUrl.startsWith('http')) newUrl = 'https://' + newUrl;
-                iframe.src = newUrl;
-                updateBranding(newUrl);
-                exitEditMode();
-                viewport.scrollTop = 0;
-            }
-        });
-
-        function exitEditMode() { root.classList.remove('is-editing'); urlInput.blur(); updateUIState(currentState); }
-        document.getElementById('logo-btn').addEventListener('click', (e) => {
-            if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
-                root.classList.toggle('is-menu-open');
-                e.stopPropagation();
-            }
-        });
-
-        document.getElementById('global-overlay').addEventListener('touchstart', () => { 
-            exitEditMode(); 
-            root.classList.remove('is-menu-open'); 
-        });
-
-        // 左右滑動切換
+        // 手勢切換
         let startX = 0;
+        pill.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
             const diffX = e.changedTouches[0].clientX - startX;
