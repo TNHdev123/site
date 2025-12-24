@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - UI Logic Rebuilt</title>
+    <title>Safari Liquid - Final Refined Logic</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.96);
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
+            --shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
             --ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -31,9 +32,8 @@
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
-            transition: background 0.4s var(--ease);
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(15px); }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.2); backdrop-filter: blur(15px); }
 
         .safari-wrapper {
             position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); 
@@ -44,46 +44,51 @@
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
+            pointer-events: auto;
         }
 
-        /* 背景層：控制所有變形的底座 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
             background: var(--glass); backdrop-filter: blur(40px);
-            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+            border-radius: 35px; box-shadow: var(--shadow);
             transition: all 0.5s var(--ease); z-index: 1;
         }
 
-        /* 互動核心區塊：控制位置與大小 */
+        /* 核心互動容器 */
         .left-zone {
-            position: absolute; width: 310px; height: 44px; top: 10px;
+            position: absolute; width: 310px; height: 44px;
             background: var(--inner); border-radius: 22px;
             display: flex; flex-direction: column; overflow: hidden;
             transition: all 0.5s var(--ease); z-index: 100;
+            top: 10px;
         }
 
-        /* 網域列與輸入框的容器：解決文字偏移 */
-        .header-box { 
-            height: 44px; width: 100%; position: relative;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-            transition: all 0.4s var(--ease);
+        .left-header { 
+            height: 44px; width: 100%; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; flex-shrink: 0; 
+            transition: all 0.5s var(--ease);
         }
 
-        #fav-icon { width: 18px; height: 18px; border-radius: 4px; margin-right: 8px; transition: 0.3s; }
-        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: 0.3s; }
-
-        /* 編輯狀態的關鍵：修正垂直位移 */
+        .favicon { width: 18px; height: 18px; border-radius: 4px; transition: all 0.5s var(--ease); }
+        .domain-display { 
+            color: var(--text); font-weight: 500; font-size: 15px; 
+            transition: all 0.5s var(--ease); white-space: nowrap;
+            line-height: 44px; /* 修正垂直偏移 */
+        }
+        
+        /* 統一編輯輸入框 */
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
-            text-align: center; box-sizing: border-box;
-            opacity: 0; visibility: hidden;
-            line-height: normal; /* 修正偏移 */
-            display: flex; align-items: center; justify-content: center;
+            display: none; text-align: center; box-sizing: border-box;
+            opacity: 0; transition: opacity 0.3s;
+            line-height: 58px; /* 匹配編輯狀態高度，修正文字偏移 */
         }
 
-        .menu-content { width: 100%; opacity: 0; display: flex; flex-direction: column; transition: 0.2s; }
+        /* 選單內容 */
+        .menu-content { width: 100%; opacity: 0; display: none; flex-direction: column; transition: 0.3s; }
+        .is-menu-open .menu-content { display: flex; opacity: 1; }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; }
 
         .right-zone {
@@ -91,55 +96,53 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: 0.4s var(--ease); }
+        .icon { color: var(--accent); font-size: 22px; transition: all 0.4s var(--ease); }
 
-        /* --- 狀態邏輯重整 --- */
+        /* --- 狀態切換邏輯 --- */
 
-        /* 1. 簡化模式 */
+        /* 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { 
             width: 58px; height: 58px; background: var(--glass); 
             border-radius: 29px; top: 21px; transform: translateX(-120px); 
+            box-shadow: var(--shadow);
         }
-        .state-simplified .header-box { height: 58px; }
+        .state-simplified .left-header { height: 58px; }
         .state-simplified .domain-display { opacity: 0; width: 0; }
+        .state-simplified .favicon { transform: scale(1.2); }
         .state-simplified .right-zone { 
             width: 224px; height: 58px; background: var(--glass); 
             border-radius: 29px; bottom: 21px; transform: translateX(35px); 
+            box-shadow: var(--shadow); 
         }
 
-        /* 2. 彈出選單 */
+        /* 彈出選單 */
         .is-menu-open .left-zone { 
-            width: 220px; height: 210px; border-radius: 35px; 
-            transform: translateX(-55px) translateY(-120px); 
+            width: 220px; height: 210px; border-radius: 35px; transform: translateX(-55px) translateY(-120px); 
             background: var(--glass);
         }
-        .is-menu-open .header-box { border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .menu-content { opacity: 1; }
+        .is-menu-open .left-header { 
+            height: 55px; border-bottom: 0.5px solid var(--inner); 
+            justify-content: flex-start; padding-left: 18px; 
+        }
+        .is-menu-open .favicon { opacity: 1; transform: scale(1); }
+        .is-menu-open .domain-display { opacity: 1; width: auto; font-size: 14px; line-height: 55px; }
 
-        /* 3. 縮小模式 */
+        /* 縮小模式 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; }
         .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); }
-        .state-compact #fav-icon { opacity: 0; width: 0; margin: 0; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; opacity: 0.8; }
-        .state-compact .right-zone { opacity: 0; transform: scale(0.8); }
+        .state-compact .favicon { opacity: 0; width: 0; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; opacity: 0.8; line-height: 44px; }
+        .state-compact .right-zone { opacity: 0; transform: scale(0.8) translateY(10px); }
 
-        /* 4. 編輯模式：消除雙層影子的核心 */
-        .is-editing .main-bg { 
-            width: 350px; height: 58px; border-radius: 29px; opacity: 1; 
-            transform: translate(0, 0) scale(1) !important; 
-            z-index: 150; 
-        }
-        .is-editing .left-zone { 
-            width: 350px; height: 58px; top: 0; transform: translate(0, 0) !important; 
-            background: transparent; border-radius: 29px; z-index: 200;
-        }
-        .is-editing .header-box { height: 58px; border: none; }
-        .is-editing #url-input { opacity: 1; visibility: visible; }
-        /* 強制隱藏所有其他部件，避免雙層疊加 */
-        .is-editing #fav-icon, .is-editing .domain-display, .is-editing .menu-content, .is-editing .right-zone { 
-            opacity: 0 !important; visibility: hidden !important; 
-        }
+        /* 編輯模式：絕對唯一的單層結構 */
+        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; transform: translate(0, 0); z-index: 2; }
+        .is-editing .left-zone { width: 350px; height: 58px; top: 0; transform: translate(0, 0); background: transparent; z-index: 200; }
+        .is-editing #url-input { display: block; opacity: 1; }
+        /* 徹底隱藏非編輯部件，防止層疊錯誤 */
+        .is-editing .left-header, 
+        .is-editing .right-zone, 
+        .is-editing .menu-content { display: none !important; opacity: 0 !important; }
 
     </style>
 </head>
@@ -158,10 +161,9 @@
             <div class="main-bg"></div>
             
             <div class="left-zone" id="logo-btn">
-                <div class="header-box" id="click-trigger">
-                    <img id="fav-icon" src="">
+                <div class="left-header" id="click-trigger">
+                    <img id="fav-icon" class="favicon" src="">
                     <span class="domain-display" id="display-text">wikipedia.org</span>
-                    <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search">
                 </div>
                 
                 <div class="menu-content">
@@ -169,6 +171,8 @@
                     <div class="menu-item">↻ &nbsp; 重新載入</div>
                     <div class="menu-item">📖 &nbsp; 儲存書籤</div>
                 </div>
+
+                <input type="text" id="url-input" spellcheck="false" autocomplete="off">
             </div>
 
             <div class="right-zone">
@@ -183,6 +187,7 @@
         const iframe = document.getElementById('browser-frame');
         const urlInput = document.getElementById('url-input');
         const viewport = document.getElementById('scroll-viewport');
+        const favIcon = document.getElementById('fav-icon');
 
         let currentState = 'normal';
         let prevState = 'normal';
@@ -191,7 +196,7 @@
             try {
                 const host = new URL(url).hostname.replace('www.', '');
                 document.getElementById('display-text').innerText = host;
-                document.getElementById('fav-icon').src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+                favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
             } catch(e) {}
         }
         updateBranding(iframe.src);
@@ -213,7 +218,7 @@
                 root.classList.add('is-menu-open');
                 return;
             }
-            // 進入編輯模式：在正常模式點擊，或在彈出選單點擊頂部 header
+            // 點擊網域標籤進入編輯
             if (currentState === 'normal' || (root.classList.contains('is-menu-open') && e.target.closest('#click-trigger'))) {
                 enterEditMode();
                 e.stopPropagation();
@@ -221,10 +226,12 @@
         });
 
         function enterEditMode() {
+            // 先清理狀態，確保只有單層
             root.classList.remove('is-menu-open');
             root.classList.add('is-editing');
             urlInput.value = iframe.src;
-            // 優化聚焦邏輯
+            
+            // 強制延遲聚焦以確保鍵盤彈出
             setTimeout(() => { 
                 urlInput.focus(); 
                 urlInput.setSelectionRange(0, urlInput.value.length);
@@ -251,7 +258,6 @@
             }
         });
 
-        // 捲動邏輯
         let lastY = 0;
         viewport.addEventListener('scroll', () => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing')) return;
@@ -265,7 +271,6 @@
             lastY = curY;
         });
 
-        // 左右滑動切換
         let startX = 0;
         document.getElementById('pill').addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.getElementById('pill').addEventListener('touchend', e => {
@@ -274,6 +279,13 @@
             if (diff > 60) setUI('simplified');
             else if (diff < -60) setUI('normal');
         });
+
+        document.getElementById('pill').addEventListener('touchmove', e => {
+            const dy = Math.abs(e.touches[0].pageY - this.y);
+            const dx = Math.abs(e.touches[0].pageX - this.x);
+            if (dy > dx) e.preventDefault();
+            this.y = e.touches[0].pageY; this.x = e.touches[0].pageX;
+        }, { passive: false });
     </script>
 </body>
 </html>
