@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Perfect Sync Editor</title>
+    <title>Safari Liquid - Unified Input & Focus</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.96);
@@ -31,7 +31,11 @@
 
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, system-ui; }
         
-        #scroll-viewport { width: 100%; height: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; position: absolute; top: 0; left: 0; }
+        #scroll-viewport { 
+            width: 100%; height: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; 
+            position: absolute; top: 0; left: 0; 
+        }
+
         #iframe-holder { width: 100%; height: 5000px; }
         iframe { width: 100%; height: 100%; border: none; }
 
@@ -40,18 +44,22 @@
             background: rgba(0,0,0,0); z-index: 10000; display: none;
             transition: background 0.3s; touch-action: none;
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { 
+            display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); 
+        }
 
         .safari-wrapper {
             position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); 
             left: 0; width: 100%; display: flex; justify-content: center; align-items: center; 
-            z-index: 10001; transition: transform 0.4s var(--fluid-ease); pointer-events: none;
+            z-index: 10001; transition: transform 0.4s var(--fluid-ease);
+            pointer-events: none;
         }
 
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto; touch-action: pan-x;
+            pointer-events: auto;
+            touch-action: pan-x;
         }
 
         .main-bg {
@@ -73,13 +81,13 @@
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
         .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
-        /* --- 統一輸入欄樣式 --- */
+        /* 統一化的輸入欄設計 */
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
             display: none; text-align: center; box-sizing: border-box;
-            z-index: 50;
+            z-index: 100;
         }
 
         .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s; }
@@ -90,39 +98,35 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--fluid-ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; }
+        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
 
-        /* 狀態邏輯 */
-        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
-        .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
-        .state-simplified .domain-display { display: none; }
-        .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow-strong); }
+        /* --- 狀態切換邏輯 --- */
 
+        /* 彈出選單 */
         .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
         .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
         .is-menu-open .domain-tag { display: block; cursor: pointer; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
 
-        .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
-        .state-compact .favicon { display: none; }
+        /* 簡化模式 */
+        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
+        .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
+        .state-simplified .domain-display { display: none; }
+        .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow-strong); }
 
-        /* --- 編輯模式：強制覆蓋所有形狀，兩者歸一 --- */
-        .is-editing .main-bg { 
-            width: 360px !important; height: 56px !important; 
-            border-radius: 28px !important; 
-            transform: translateX(0) translateY(0) !important;
-            opacity: 1 !important; z-index: 40;
-        }
-        .is-editing .left-zone { 
-            width: 100% !important; height: 100% !important; 
-            top: 0 !important; transform: translateX(0) translateY(0) !important;
-            background: transparent !important; z-index: 41;
-        }
-        .is-editing #url-input { display: block !important; }
-        /* 隱藏所有不需要的組件 */
+        /* 縮小狀態 */
+        .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; cursor: pointer; }
+        .state-compact .favicon { display: none; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
+        .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
+
+        /* 統一編輯模式：樣式完全一致 */
+        .is-editing .main-bg { width: 360px; height: 58px; border-radius: 29px; opacity: 1; transform: scale(1) translateY(0); }
+        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; border-radius: 29px; }
+        .is-editing #url-input { display: block; }
         .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { display: none !important; }
+
     </style>
 </head>
 <body id="app-root">
@@ -195,61 +199,34 @@
                 (currentState === 'simplified' ? ' state-simplified' : '');
         }
 
-        // --- 核心：進入編輯模式並同步喚起鍵盤 ---
-        function startEditing() {
-            // 1. 立即 focus，不等待任何動畫（iOS 關鍵）
+        // 喚起鍵盤的關鍵：必須在 Click 事件中直接 Focus
+        function triggerFocus() {
             urlInput.value = iframe.src;
-            urlInput.focus();
-            
-            // 2. 切換 UI 狀態
-            root.classList.remove('is-menu-open');
             root.classList.add('is-editing');
-            
-            // 3. 再次確保全選（加強體驗）
+            root.classList.remove('is-menu-open');
+            urlInput.focus();
+            // 對於 iOS 的二次保險
             setTimeout(() => {
-                urlInput.setSelectionRange(0, urlInput.value.length);
-            }, 0);
+                urlInput.setSelectionRange(0, 9999);
+            }, 10);
         }
 
-        // 一般點擊
+        // 一般模式點擊網域
         document.getElementById('domain-trigger').addEventListener('click', (e) => {
             if (currentState === 'compact') {
                 updateUIState(prevState);
+            } else {
+                triggerFocus();
+            }
+            e.stopPropagation();
+        });
+
+        // 縮小模式點擊 Pill 本身（確保恢復）
+        pill.addEventListener('click', (e) => {
+            if (currentState === 'compact') {
+                updateUIState(prevState);
                 e.stopPropagation();
-                return;
             }
-            startEditing();
-            e.stopPropagation();
-        });
-
-        // 彈出選單內的標籤點擊 (額外監控)
-        menuDomainTag.addEventListener('click', (e) => {
-            startEditing();
-            e.stopPropagation();
-        });
-
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                let newUrl = urlInput.value;
-                if (!newUrl.startsWith('http')) newUrl = 'https://' + newUrl;
-                iframe.src = newUrl;
-                updateBranding(newUrl);
-                stopEditing();
-                viewport.scrollTop = 0;
-            }
-        });
-
-        function stopEditing() {
-            root.classList.remove('is-editing');
-            urlInput.blur();
-            updateUIState(currentState);
-        }
-
-        // 遮罩關閉
-        document.getElementById('global-overlay').addEventListener('touchstart', (e) => {
-            stopEditing();
-            root.classList.remove('is-menu-open');
-            e.preventDefault();
         });
 
         // 禁止 Pill 上下滑動
@@ -266,10 +243,10 @@
         pill.addEventListener('touchstart', (e) => {
             this.lastY = e.touches[0].pageY;
             this.lastX = e.touches[0].pageX;
-            startX = e.touches[0].clientX;
+            this.startX = e.touches[0].clientX;
         });
 
-        // 捲動縮小
+        // 捲動監測
         viewport.addEventListener('scroll', () => {
             const currentScrollY = viewport.scrollTop;
             const diff = currentScrollY - lastScrollY;
@@ -282,7 +259,23 @@
             lastScrollY = currentScrollY;
         }, { passive: true });
 
-        // Logo 點擊
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                let newUrl = urlInput.value;
+                if (!newUrl.startsWith('http')) newUrl = 'https://' + newUrl;
+                iframe.src = newUrl;
+                updateBranding(newUrl);
+                exitEditMode();
+                viewport.scrollTop = 0;
+            }
+        });
+
+        function exitEditMode() { 
+            root.classList.remove('is-editing'); 
+            urlInput.blur(); 
+            updateUIState(currentState); 
+        }
+
         document.getElementById('logo-btn').addEventListener('click', (e) => {
             if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
                 root.classList.toggle('is-menu-open');
@@ -290,11 +283,15 @@
             }
         });
 
-        // 左右滑動模式切換
-        let startX = 0;
+        document.getElementById('global-overlay').addEventListener('touchstart', () => { 
+            exitEditMode(); 
+            root.classList.remove('is-menu-open'); 
+        });
+
+        // 左右滑動切換
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
-            const diffX = e.changedTouches[0].clientX - startX;
+            const diffX = e.changedTouches[0].clientX - this.startX;
             if (Math.abs(diffX) > 50) {
                 if (diffX > 50 && currentState === 'normal') updateUIState('simplified');
                 else if (diffX < -50 && currentState === 'simplified') updateUIState('normal');
