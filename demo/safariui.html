@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - URL Editor Edition</title>
+    <title>Safari Liquid - Pro Dynamic Browser</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.95);
@@ -29,11 +29,12 @@
             body { background: #000 !important; }
         }
 
-        body { margin: 0; background: #f2f2f7; overflow-x: hidden; overflow-y: auto; font-family: -apple-system, system-ui; }
-        #web-wrapper { width: 100%; height: 5000px; position: relative; z-index: 1; }
-        iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, system-ui; }
+        
+        /* 讓 iframe 容器動態適應內容 */
+        #web-container { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        iframe { width: 100%; min-height: 100vh; border: none; display: block; }
 
-        /* 遮罩 */
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
@@ -50,7 +51,6 @@
             z-index: 10001; transition: transform 0.5s var(--fluid-ease);
         }
 
-        /* 編輯模式下，將整個 UI 向上推到螢幕中間偏下（避開鍵盤區域） */
         .is-editing .safari-wrapper { transform: translateY(-300px); }
 
         .liquid-pill { position: relative; width: 340px; height: 100px; display: flex; align-items: center; justify-content: center; }
@@ -62,7 +62,6 @@
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
-        /* 左側區塊 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
@@ -70,12 +69,11 @@
             transition: all 0.5s var(--fluid-ease); z-index: 20;
         }
 
-        .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
-        .favicon { width: 18px; height: 18px; border-radius: 4px; }
+        .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+        .favicon { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; }
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
         .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
-        /* 輸入框設計 */
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 44px;
             background: transparent; border: none; outline: none;
@@ -84,48 +82,42 @@
         }
 
         .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s; }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: var(--text); font-size: 16px; text-decoration: none; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: var(--text); font-size: 16px; }
 
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--fluid-ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.4s; }
+        .icon { color: var(--accent); font-size: 22px; }
 
         /* --- 狀態切換 --- */
-
-        /* 1. 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
         .state-simplified .domain-display { display: none; }
         .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow-strong); }
 
-        /* 2. 彈出選單 */
-        .is-menu-open .left-zone { width: 200px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-65px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
         .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .domain-tag { display: block; }
+        .is-menu-open .domain-tag { display: block; cursor: pointer; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
 
-        /* 3. 縮小狀態 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
+        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; cursor: pointer; }
         .state-compact .favicon { display: none; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; opacity: 0.8; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
-        /* 4. 編輯模式：強制變回一般模式的全寬外觀 */
         .is-editing .main-bg { opacity: 1; transform: scale(1); width: 340px; height: 60px; border-radius: 30px; }
         .is-editing .left-zone { width: 310px; height: 44px; top: 8px; transform: translateX(0); background: var(--inner); border-radius: 22px; }
         .is-editing #url-input { display: block; }
-        .is-editing .favicon, .is-editing .domain-display, .is-editing .domain-tag, .is-editing .menu-content { display: none !important; }
-        .is-editing .right-zone { opacity: 0; pointer-events: none; }
-
+        .is-editing .favicon, .is-editing .domain-display, .is-editing .domain-tag { display: none !important; }
+        .is-editing .right-zone { opacity: 0; }
     </style>
 </head>
 <body id="app-root">
 
-    <div id="web-wrapper">
+    <div id="web-container">
         <iframe id="browser-frame" src="https://en.m.wikipedia.org/wiki/Liquid"></iframe>
     </div>
 
@@ -138,8 +130,8 @@
             <div class="left-zone" id="logo-btn">
                 <div class="left-header" id="domain-trigger">
                     <img id="fav-icon" class="favicon" src="">
-                    <span class="domain-display">en.m.wikipedia.org</span>
-                    <div class="domain-tag">en.m.wikipedia.org</div>
+                    <span class="domain-display" id="display-text">wikipedia.org</span>
+                    <div class="domain-tag" id="menu-domain-tag">wikipedia.org</div>
                     <input type="text" id="url-input" spellcheck="false" autocomplete="off">
                 </div>
                 <div class="menu-content">
@@ -161,15 +153,29 @@
         const pill = document.getElementById('pill');
         const iframe = document.getElementById('browser-frame');
         const urlInput = document.getElementById('url-input');
-        const domainTrigger = document.getElementById('domain-trigger');
+        const displayText = document.getElementById('display-text');
+        const menuDomainTag = document.getElementById('menu-domain-tag');
+        const favIcon = document.getElementById('fav-icon');
+        const container = document.getElementById('web-container');
         
         let currentState = 'normal';
         let prevState = 'normal';
-        let startX = 0;
-        let lastScrollY = window.scrollY;
+        let lastScrollY = 0;
 
-        // 初始化圖示
-        document.getElementById('fav-icon').src = `https://www.google.com/s2/favicons?domain=wikipedia.org&sz=64`;
+        // 解析 URL 並更新顯示與圖示
+        function updateBranding(url) {
+            try {
+                const urlObj = new URL(url);
+                const host = urlObj.hostname.replace('www.', '');
+                displayText.innerText = host;
+                menuDomainTag.innerText = host;
+                favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+            } catch(e) {
+                displayText.innerText = "New Page";
+            }
+        }
+
+        updateBranding(iframe.src);
 
         function updateUIState(newState) {
             if (root.classList.contains('is-editing')) return;
@@ -179,7 +185,22 @@
                 (currentState === 'simplified' ? ' state-simplified' : '');
         }
 
-        // 觸發編輯模式
+        // 核心邏輯：點擊事件處理
+        document.getElementById('domain-trigger').addEventListener('click', (e) => {
+            // 1. 如果是縮小狀態，僅還原，不編輯
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+                e.stopPropagation();
+                return;
+            }
+            
+            // 2. 如果是選單模式點擊標籤，或是一般模式點擊，則進入編輯
+            if (currentState === 'normal' || root.classList.contains('is-menu-open')) {
+                enterEditMode();
+                e.stopPropagation();
+            }
+        });
+
         function enterEditMode() {
             root.classList.remove('is-menu-open');
             root.classList.add('is-editing');
@@ -187,19 +208,12 @@
             setTimeout(() => urlInput.focus(), 100);
         }
 
-        domainTrigger.addEventListener('click', (e) => {
-            if (currentState !== 'simplified' || root.classList.contains('is-menu-open')) {
-                enterEditMode();
-                e.stopPropagation();
-            }
-        });
-
-        // 監聽 Enter 鍵切換網址
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 let newUrl = urlInput.value;
                 if (!newUrl.startsWith('http')) newUrl = 'https://' + newUrl;
                 iframe.src = newUrl;
+                updateBranding(newUrl);
                 exitEditMode();
             }
         });
@@ -210,7 +224,7 @@
             updateUIState(currentState);
         }
 
-        // 點擊 Logo (簡化模式)
+        // 簡化模式 Logo 點擊
         document.getElementById('logo-btn').addEventListener('click', (e) => {
             if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
                 root.classList.toggle('is-menu-open');
@@ -218,11 +232,12 @@
             }
         });
 
-        // 捲動偵測
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
+        // 捲動監控（在容器內捲動）
+        container.addEventListener('scroll', () => {
+            const currentScrollY = container.scrollTop;
             const diff = currentScrollY - lastScrollY;
-            if (currentScrollY > 60 && diff > 5) {
+            
+            if (currentScrollY > 60 && diff > 5 && currentState !== 'compact') {
                 if (currentState !== 'compact') prevState = currentState;
                 updateUIState('compact');
             } else if (diff < -15 && currentState === 'compact') {
@@ -231,13 +246,13 @@
             lastScrollY = currentScrollY;
         });
 
-        // 點擊遮罩關閉一切
         document.getElementById('global-overlay').addEventListener('touchstart', () => {
             exitEditMode();
             root.classList.remove('is-menu-open');
         });
 
-        // 左右滑動
+        // 手勢切換
+        let startX = 0;
         pill.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
@@ -247,12 +262,6 @@
                 else if (diffX < -50 && currentState === 'simplified') updateUIState('normal');
             }
         });
-
-        pill.addEventListener('click', (e) => {
-            if (currentState === 'compact') { updateUIState(prevState); e.stopPropagation(); }
-        });
-
-        pill.addEventListener('touchmove', e => { if (currentState !== 'compact') e.preventDefault(); }, { passive: false });
     </script>
 </body>
 </html>
