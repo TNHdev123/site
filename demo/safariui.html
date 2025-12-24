@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Unified Input & Focus</title>
+    <title>Safari Liquid - Final Refinement</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.96);
@@ -11,7 +11,7 @@
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            --shadow-strong: 0 15px 45px rgba(0, 0, 0, 0.2);
+            --shadow-strong: 0 15px 45px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
             --menu-bg: #ffffff;
         }
@@ -31,11 +31,7 @@
 
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, system-ui; }
         
-        #scroll-viewport { 
-            width: 100%; height: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; 
-            position: absolute; top: 0; left: 0; 
-        }
-
+        #scroll-viewport { width: 100%; height: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; position: absolute; top: 0; left: 0; }
         #iframe-holder { width: 100%; height: 5000px; }
         iframe { width: 100%; height: 100%; border: none; }
 
@@ -44,9 +40,7 @@
             background: rgba(0,0,0,0); z-index: 10000; display: none;
             transition: background 0.3s; touch-action: none;
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { 
-            display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); 
-        }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); }
 
         .safari-wrapper {
             position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); 
@@ -58,8 +52,7 @@
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto;
-            touch-action: pan-x;
+            pointer-events: auto; touch-action: pan-x;
         }
 
         .main-bg {
@@ -81,13 +74,13 @@
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
         .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
-        /* 統一化的輸入欄設計 */
+        /* 統一輸入欄樣式 */
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
             display: none; text-align: center; box-sizing: border-box;
-            z-index: 100;
+            z-index: 50;
         }
 
         .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s; }
@@ -100,19 +93,17 @@
         }
         .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
 
-        /* --- 狀態切換邏輯 --- */
-
-        /* 彈出選單 */
-        .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
-        .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .domain-tag { display: block; cursor: pointer; }
-        .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-
-        /* 簡化模式 */
+        /* --- 狀態邏輯 --- */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
         .state-simplified .domain-display { display: none; }
         .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow-strong); }
+
+        /* 彈出視窗：保持獨立性，避免影響編輯模式 */
+        .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
+        .is-menu-open .domain-tag { display: block; cursor: pointer; }
+        .is-menu-open .menu-content { opacity: 1; visibility: visible; }
 
         /* 縮小狀態 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
@@ -121,12 +112,11 @@
         .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
-        /* 統一編輯模式：樣式完全一致 */
-        .is-editing .main-bg { width: 360px; height: 58px; border-radius: 29px; opacity: 1; transform: scale(1) translateY(0); }
-        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; border-radius: 29px; }
-        .is-editing #url-input { display: block; }
+        /* 編輯模式：統一視覺，從任何點進入都長一樣 */
+        .is-editing .main-bg { width: 360px !important; height: 58px !important; border-radius: 29px !important; opacity: 1 !important; transform: none !important; }
+        .is-editing .left-zone { width: 100% !important; height: 100% !important; top: 0 !important; transform: none !important; background: transparent !important; border-radius: 29px !important; }
+        .is-editing #url-input { display: block !important; }
         .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { display: none !important; }
-
     </style>
 </head>
 <body id="app-root">
@@ -152,7 +142,7 @@
                 
                 <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search or enter website">
                 
-                <div class="menu-content">
+                <div class="menu-content" id="menu-items">
                     <div class="menu-item">❐ &nbsp; Copy Link</div>
                     <div class="menu-item">↻ &nbsp; Reload Page</div>
                     <div class="menu-item">📖 &nbsp; Save Bookmark</div>
@@ -199,36 +189,6 @@
                 (currentState === 'simplified' ? ' state-simplified' : '');
         }
 
-        // 喚起鍵盤的關鍵：必須在 Click 事件中直接 Focus
-        function triggerFocus() {
-            urlInput.value = iframe.src;
-            root.classList.add('is-editing');
-            root.classList.remove('is-menu-open');
-            urlInput.focus();
-            // 對於 iOS 的二次保險
-            setTimeout(() => {
-                urlInput.setSelectionRange(0, 9999);
-            }, 10);
-        }
-
-        // 一般模式點擊網域
-        document.getElementById('domain-trigger').addEventListener('click', (e) => {
-            if (currentState === 'compact') {
-                updateUIState(prevState);
-            } else {
-                triggerFocus();
-            }
-            e.stopPropagation();
-        });
-
-        // 縮小模式點擊 Pill 本身（確保恢復）
-        pill.addEventListener('click', (e) => {
-            if (currentState === 'compact') {
-                updateUIState(prevState);
-                e.stopPropagation();
-            }
-        });
-
         // 禁止 Pill 上下滑動
         pill.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
@@ -243,7 +203,7 @@
         pill.addEventListener('touchstart', (e) => {
             this.lastY = e.touches[0].pageY;
             this.lastX = e.touches[0].pageX;
-            this.startX = e.touches[0].clientX;
+            startX = e.touches[0].clientX;
         });
 
         // 捲動監測
@@ -258,6 +218,34 @@
             }
             lastScrollY = currentScrollY;
         }, { passive: true });
+
+        // 核心：觸發編輯並喚起鍵盤
+        function triggerEdit(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+                return;
+            }
+
+            urlInput.value = iframe.src;
+            root.classList.remove('is-menu-open');
+            root.classList.add('is-editing');
+
+            // 關鍵：立即執行 focus 確保喚起鍵盤
+            urlInput.focus();
+            
+            // 部分瀏覽器需要微小延遲來處理 DOM 切換後的渲染
+            setTimeout(() => {
+                urlInput.focus();
+                urlInput.setSelectionRange(0, urlInput.value.length);
+            }, 10);
+        }
+
+        // 綁定點擊事件
+        document.getElementById('domain-trigger').addEventListener('click', triggerEdit);
+        menuDomainTag.addEventListener('click', triggerEdit);
 
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -283,15 +271,19 @@
             }
         });
 
-        document.getElementById('global-overlay').addEventListener('touchstart', () => { 
-            exitEditMode(); 
-            root.classList.remove('is-menu-open'); 
+        document.getElementById('global-overlay').addEventListener('touchstart', (e) => { 
+            if (root.classList.contains('is-editing') || root.classList.contains('is-menu-open')) {
+                exitEditMode(); 
+                root.classList.remove('is-menu-open');
+                e.preventDefault();
+            }
         });
 
         // 左右滑動切換
+        let startX = 0;
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
-            const diffX = e.changedTouches[0].clientX - this.startX;
+            const diffX = e.changedTouches[0].clientX - startX;
             if (Math.abs(diffX) > 50) {
                 if (diffX > 50 && currentState === 'normal') updateUIState('simplified');
                 else if (diffX < -50 && currentState === 'simplified') updateUIState('normal');
