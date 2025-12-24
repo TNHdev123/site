@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - High Contrast Shadows</title>
+    <title>Safari Liquid - Control Center Mode</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.88);
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            /* 強化版淺色陰影：多層次投影讓邊緣更紮實 */
             --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1);
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
             --menu-bg: #ffffff;
@@ -22,7 +21,6 @@
                 --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
                 --accent: #0A84FF;
-                /* 強化版深色陰影：加強黑色的厚重感 */
                 --shadow-strong: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
                 --menu-bg: #222224;
             }
@@ -57,7 +55,6 @@
             touch-action: none;
         }
 
-        /* 一般狀態陰影 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
             background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
@@ -65,6 +62,7 @@
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
+        /* 核心修改：選單內的 Header 結構 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
@@ -72,15 +70,20 @@
             transition: all 0.5s var(--fluid-ease); z-index: 10; overflow: hidden;
         }
 
-        .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+        .left-header { 
+            height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; 
+            transition: all 0.5s var(--fluid-ease);
+        }
+        
         .favicon { width: 18px; height: 18px; border-radius: 4px; }
-        .domain-text { color: var(--text); font-weight: 500; font-size: 15px; }
+        .domain-text { color: var(--text); font-weight: 500; font-size: 15px; transition: opacity 0.3s; }
 
         .menu-content {
             width: 100%; opacity: 0; visibility: hidden;
-            display: flex; flex-direction: column; gap: 15px; padding: 15px 0; transition: 0.3s;
+            display: flex; flex-direction: column; gap: 12px; padding: 10px 0; transition: 0.3s;
         }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 0 15px; color: var(--text); font-size: 16px; font-weight: 400; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: var(--text); font-size: 16px; border-radius: 12px; margin: 0 10px; }
+        .menu-item:active { background: var(--inner); }
 
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
@@ -89,29 +92,34 @@
         }
         .icon { color: var(--accent); font-size: 22px; }
 
-        /* --- 狀態切換：重點加厚陰影 --- */
+        /* --- 狀態切換 --- */
 
         /* 1. 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); box-shadow: none; }
         .state-simplified .left-zone { 
             width: 58px; height: 58px; background: var(--glass); 
             border-radius: 29px; top: 21px; transform: translateX(-120px);
-            box-shadow: var(--shadow-strong); /* 高對比陰影 */
-            backdrop-filter: blur(40px);
+            box-shadow: var(--shadow-strong); backdrop-filter: blur(40px);
         }
-        .state-simplified .domain-text { opacity: 0; width: 0; }
+        .state-simplified .domain-text { opacity: 0; pointer-events: none; } /* 隱藏但保留結構 */
         .state-simplified .right-zone { 
             width: 224px; height: 58px; background: var(--glass); 
             border-radius: 29px; bottom: 21px; transform: translateX(35px);
-            box-shadow: var(--shadow-strong); /* 高對比陰影 */
-            backdrop-filter: blur(40px);
+            box-shadow: var(--shadow-strong); backdrop-filter: blur(40px);
         }
 
-        /* 2. 彈出選單 */
+        /* 2. 彈出選單：加回網域顯示 */
         .is-menu-open .left-zone { 
-            width: 210px; height: 230px; border-radius: 28px; 
-            background: var(--menu-bg); transform: translateX(-55px) translateY(-155px);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5); /* 選單開啟時最強陰影 */
+            width: 240px; height: 260px; border-radius: 30px; 
+            background: var(--menu-bg); transform: translateX(-40px) translateY(-170px);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        }
+        .is-menu-open .left-header { 
+            height: 54px; border-bottom: 0.5px solid var(--inner); 
+            justify-content: center; /* 選單開啟時置中顯示網域 */
+        }
+        .is-menu-open .domain-text { 
+            opacity: 1; font-size: 15px; font-weight: 600; 
         }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
 
@@ -130,7 +138,7 @@
 <body id="app-root">
 
     <div id="web-wrapper">
-        <iframe src="https://en.m.wikipedia.org/wiki/Liquid_crystal"></iframe>
+        <iframe src="https://en.m.wikipedia.org/wiki/Liquid_UI"></iframe>
     </div>
 
     <div id="global-overlay"></div>
@@ -144,9 +152,10 @@
                     <span id="domain-display" class="domain-text">Wikipedia</span>
                 </div>
                 <div class="menu-content">
-                    <div class="menu-item">❐ Copy Link</div>
-                    <div class="menu-item">↻ Reload</div>
-                    <div class="menu-item">📖 Bookmark</div>
+                    <div class="menu-item"><span>❐</span> Copy Link</div>
+                    <div class="menu-item"><span>↻</span> Reload Page</div>
+                    <div class="menu-item"><span>📖</span> Add Bookmark</div>
+                    <div class="menu-item"><span>⇪</span> Share Page</div>
                 </div>
             </div>
             <div class="right-zone">
