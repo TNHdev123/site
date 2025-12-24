@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Native Keyboard Logic</title>
+    <title>Safari Liquid - Unified Input Edition</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.96);
@@ -13,18 +13,16 @@
             --accent: #007AFF;
             --shadow-strong: 0 15px 45px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
-            --menu-bg: #ffffff;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass-solid: rgba(45, 45, 45, 0.98);
-                --glass-trans: rgba(35, 35, 35, 0.70);
+                --glass-solid: rgba(30, 30, 30, 0.98);
+                --glass-trans: rgba(25, 25, 25, 0.70);
                 --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
                 --accent: #0A84FF;
                 --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.5);
-                --menu-bg: #222224;
             }
             body { background: #000 !important; }
         }
@@ -36,7 +34,7 @@
             position: absolute; top: 0; left: 0; 
         }
 
-        #iframe-holder { width: 100%; height: 5000px; }
+        #iframe-holder { width: 100%; height: 6000px; }
         iframe { width: 100%; height: 100%; border: none; }
 
         #global-overlay {
@@ -45,7 +43,7 @@
             transition: background 0.3s; touch-action: none;
         }
         .is-menu-open #global-overlay, .is-editing #global-overlay { 
-            display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); 
+            display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); 
         }
 
         .safari-wrapper {
@@ -58,8 +56,7 @@
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto;
-            touch-action: pan-x; /* 禁止上下滑動，只允許左右 */
+            pointer-events: auto; touch-action: pan-x;
         }
 
         .main-bg {
@@ -69,27 +66,28 @@
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
-        .left-zone {
+        /* 統一輸入欄樣式 */
+        .input-container {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
-            display: flex; flex-direction: column; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.5s var(--fluid-ease); z-index: 20;
+            overflow: hidden;
         }
 
-        .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+        .left-header { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .favicon { width: 18px; height: 18px; border-radius: 4px; }
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
-        .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
-        /* 輸入框：全螢幕寬度感 */
         #url-input {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
-            display: none; text-align: center; box-sizing: border-box;
+            text-align: center; display: none; box-sizing: border-box;
         }
 
-        .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s; }
+        /* 選單樣式 */
+        .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; gap: 4px; padding: 50px 0 10px 0; transition: 0.3s; }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: var(--text); font-size: 16px; }
 
         .right-zone {
@@ -97,32 +95,33 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--fluid-ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
+        .icon { color: var(--accent); font-size: 22px; }
 
         /* --- 狀態邏輯 --- */
+        
+        /* 1. 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
-        .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
-        .state-simplified .domain-display { display: none; }
+        .state-simplified .input-container { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow-strong); }
+        .state-simplified .domain-display, .state-simplified .favicon { display: none; }
         .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow-strong); }
 
-        /* 彈出視窗：覆蓋式設計 */
-        .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-60px) translateY(-125px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
-        .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .domain-tag { display: block; }
-        .is-menu-open .menu-content { opacity: 1; visibility: visible; }
+        /* 2. 彈出選單 */
+        .is-menu-open .input-container { width: 220px; height: 44px; top: 10px; background: var(--inner); border-radius: 22px; transform: translateX(-60px) translateY(-125px); z-index: 30; }
+        .is-menu-open .main-bg { width: 220px; height: 210px; border-radius: 35px; transform: translateX(-60px) translateY(-60px); }
+        .is-menu-open .menu-content { opacity: 1; visibility: visible; z-index: 25; }
 
-        /* 縮小狀態 */
+        /* 3. 縮小狀態 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
+        .state-compact .input-container { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
         .state-compact .favicon { display: none; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
-        .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; }
+        .state-compact .right-zone { opacity: 0; pointer-events: none; }
 
-        /* 編輯模式：原地展開，不再飄浮 */
-        .is-editing .main-bg { width: 360px; height: 58px; border-radius: 29px; opacity: 1; transform: scale(1); }
-        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; }
+        /* 4. 統一編輯模式樣式 */
+        .is-editing .main-bg { width: 360px; height: 58px; border-radius: 29px; opacity: 1; transform: scale(1); z-index: 100; }
+        .is-editing .input-container { width: 360px; height: 58px; top: 0; transform: translateX(0); background: transparent; z-index: 101; }
         .is-editing #url-input { display: block; }
-        .is-editing .left-header, .is-editing .right-zone { display: none !important; }
+        .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { display: none !important; }
     </style>
 </head>
 <body id="app-root">
@@ -139,20 +138,18 @@
         <div class="liquid-pill" id="pill">
             <div class="main-bg"></div>
             
-            <div class="left-zone" id="logo-btn">
+            <div class="input-container" id="logo-btn">
                 <div class="left-header" id="domain-trigger">
                     <img id="fav-icon" class="favicon" src="">
-                    <span class="domain-display" id="display-text">wikipedia.org</span>
-                    <div class="domain-tag" id="menu-domain-tag">wikipedia.org</div>
+                    <span class="domain-display" id="display-text">en.m.wikipedia.org</span>
                 </div>
-                
                 <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search or enter website">
-                
-                <div class="menu-content">
-                    <div class="menu-item">❐ &nbsp; Copy Link</div>
-                    <div class="menu-item">↻ &nbsp; Reload Page</div>
-                    <div class="menu-item">📖 &nbsp; Save Bookmark</div>
-                </div>
+            </div>
+
+            <div class="menu-content" id="menu-box">
+                <div class="menu-item">❐ &nbsp; Copy Link</div>
+                <div class="menu-item">↻ &nbsp; Reload Page</div>
+                <div class="menu-item">📖 &nbsp; Save Bookmark</div>
             </div>
 
             <div class="right-zone">
@@ -169,7 +166,6 @@
         const urlInput = document.getElementById('url-input');
         const viewport = document.getElementById('scroll-viewport');
         const displayText = document.getElementById('display-text');
-        const menuDomainTag = document.getElementById('menu-domain-tag');
         const favIcon = document.getElementById('fav-icon');
 
         let currentState = 'normal';
@@ -181,7 +177,6 @@
                 const urlObj = new URL(url);
                 const host = urlObj.hostname.replace('www.', '');
                 displayText.innerText = host;
-                menuDomainTag.innerText = host;
                 favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
             } catch(e) { displayText.innerText = "New Page"; }
         }
@@ -195,24 +190,32 @@
                 (currentState === 'simplified' ? ' state-simplified' : '');
         }
 
-        // 禁止 Pills 上下滑動 (僅允許 X 軸操作)
-        pill.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            if (!this.lastY) this.lastY = touch.pageY;
-            const deltaY = Math.abs(touch.pageY - this.lastY);
-            const deltaX = Math.abs(touch.pageX - this.lastX);
-            if (deltaY > deltaX) e.preventDefault();
-            this.lastY = touch.pageY;
-            this.lastX = touch.pageX;
-        }, { passive: false });
+        // 核心修正：統一編輯模式觸發
+        function handleDomainClick(e) {
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+            } else {
+                // 在 iOS 上，必須在點擊回調中直接執行 focus
+                root.classList.add('is-editing');
+                root.classList.remove('is-menu-open');
+                urlInput.value = iframe.src;
+                urlInput.focus(); 
+                urlInput.select();
+            }
+            e.stopPropagation();
+        }
 
-        pill.addEventListener('touchstart', (e) => {
-            this.lastY = e.touches[0].pageY;
-            this.lastX = e.touches[0].pageX;
-            startX = e.touches[0].clientX;
+        document.getElementById('domain-trigger').addEventListener('click', handleDomainClick);
+
+        // 簡化模式 Logo 點擊邏輯
+        document.getElementById('logo-btn').addEventListener('click', (e) => {
+            if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
+                root.classList.toggle('is-menu-open');
+                e.stopPropagation();
+            }
         });
 
-        // 捲動觸發
+        // 捲動偵測
         viewport.addEventListener('scroll', () => {
             const currentScrollY = viewport.scrollTop;
             const diff = currentScrollY - lastScrollY;
@@ -225,28 +228,7 @@
             lastScrollY = currentScrollY;
         }, { passive: true });
 
-        // 進入編輯模式的統一入口
-        function enterEditMode() {
-            root.classList.remove('is-menu-open');
-            root.classList.add('is-editing');
-            urlInput.value = iframe.src;
-            // 重要：延遲 focus 確保 iPhone 軟體鍵盤喚起
-            setTimeout(() => {
-                urlInput.focus();
-                urlInput.select();
-            }, 50);
-        }
-
-        document.getElementById('domain-trigger').addEventListener('click', (e) => {
-            if (currentState === 'compact') {
-                updateUIState(prevState);
-                e.stopPropagation();
-            } else if (currentState === 'normal' || root.classList.contains('is-menu-open')) {
-                enterEditMode();
-                e.stopPropagation();
-            }
-        });
-
+        // 輸入完成
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 let newUrl = urlInput.value;
@@ -264,19 +246,25 @@
             updateUIState(currentState); 
         }
 
-        document.getElementById('logo-btn').addEventListener('click', (e) => {
-            if (currentState === 'simplified' && !root.classList.contains('is-editing')) {
-                root.classList.toggle('is-menu-open');
-                e.stopPropagation();
-            }
-        });
-
-        document.getElementById('global-overlay').addEventListener('touchstart', () => { 
+        document.getElementById('global-overlay').addEventListener('touchstart', (e) => { 
             exitEditMode(); 
             root.classList.remove('is-menu-open'); 
         });
 
-        // 簡化/一般模式滑動切換
+        // 禁止 Pill 上下滑動
+        pill.addEventListener('touchmove', e => {
+            const touch = e.touches[0];
+            if (!this.lastY) this.lastY = touch.pageY;
+            if (Math.abs(touch.pageY - this.lastY) > Math.abs(touch.pageX - this.lastX)) e.preventDefault();
+            this.lastY = touch.pageY; this.lastX = touch.pageX;
+        }, { passive: false });
+
+        pill.addEventListener('touchstart', e => {
+            this.lastY = e.touches[0].pageY;
+            this.lastX = e.touches[0].pageX;
+            startX = e.touches[0].clientX;
+        });
+
         let startX = 0;
         pill.addEventListener('touchend', e => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
