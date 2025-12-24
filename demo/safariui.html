@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Final Refinement</title>
+    <title>Safari Liquid - Perfect Alignment</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.96);
@@ -32,8 +32,9 @@
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
+            transition: background 0.4s;
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.2); backdrop-filter: blur(15px); }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.25); backdrop-filter: blur(20px); }
 
         .safari-wrapper {
             position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); 
@@ -47,48 +48,43 @@
             pointer-events: auto;
         }
 
+        /* 唯一的底座背景 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
-            background: var(--glass); backdrop-filter: blur(40px);
-            border-radius: 35px; box-shadow: var(--shadow);
+            background: var(--glass); border-radius: 35px; box-shadow: var(--shadow);
             transition: all 0.5s var(--ease); z-index: 1;
         }
 
+        /* 互動區域：內部統一使用 Flex 置中解決文字偏移 */
         .left-zone {
-            position: absolute; width: 310px; height: 44px;
+            position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
-            display: flex; flex-direction: column; overflow: hidden;
-            transition: all 0.5s var(--ease); z-index: 100;
-            top: 10px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; transition: all 0.5s var(--ease); z-index: 100;
         }
 
-        /* 網域列容器 */
         .left-header { 
-            height: 44px; width: 100%; display: flex; align-items: center; 
-            justify-content: center; gap: 8px; flex-shrink: 0; 
-            transition: all 0.5s var(--ease);
+            width: 100%; height: 100%; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; transition: all 0.5s var(--ease);
         }
 
-        /* 網站圖示：在所有模式下都受控 */
         .favicon { width: 18px; height: 18px; border-radius: 4px; transition: all 0.5s var(--ease); }
-        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: all 0.5s var(--ease); white-space: nowrap; }
-        
-        /* 彈出選單標籤 */
-        .domain-tag { 
-            background: rgba(0,0,0,0.06); padding: 6px 14px; border-radius: 15px; 
-            font-size: 15px; color: var(--text); font-weight: 500; display: none; 
-            align-items: center; gap: 6px;
-        }
+        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: all 0.5s var(--ease); line-height: 1; }
 
+        /* 統一編輯欄：解決層疊與偏移 */
         #url-input {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
-            display: none; text-align: center; box-sizing: border-box;
-            opacity: 0; transition: opacity 0.3s;
+            text-align: center; box-sizing: border-box;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            display: flex; align-items: center; /* 確保文字在 input 內垂直置中 */
         }
 
-        .menu-content { width: 100%; opacity: 0; flex-direction: column; transition: 0.3s; }
+        .menu-content { 
+            position: absolute; width: 100%; top: 55px; opacity: 0; 
+            display: flex; flex-direction: column; transition: 0.3s; pointer-events: none;
+        }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; }
 
         .right-zone {
@@ -96,51 +92,53 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: all 0.4s var(--ease); }
+        .icon { color: var(--accent); font-size: 22px; transition: all 0.5s var(--ease); }
 
-        /* --- 狀態修正 --- */
+        /* --- 狀態精準定義 --- */
 
-        /* 簡化模式：確保 Logo 置中且右側縮入 */
+        /* 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { 
             width: 58px; height: 58px; background: var(--glass); 
             border-radius: 29px; top: 21px; transform: translateX(-120px); 
             box-shadow: var(--shadow);
         }
-        .state-simplified .left-header { height: 58px; }
         .state-simplified .domain-display { opacity: 0; width: 0; }
-        .state-simplified .favicon { transform: scale(1.2); } /* Logo 放大置中 */
+        .state-simplified .favicon { transform: scale(1.1); }
         .state-simplified .right-zone { 
             width: 224px; height: 58px; background: var(--glass); 
             border-radius: 29px; bottom: 21px; transform: translateX(35px); 
             box-shadow: var(--shadow); 
         }
 
-        /* 彈出選單：Logo 移動到左側 */
+        /* 彈出選單：修正背景重複層疊問題 */
         .is-menu-open .left-zone { 
-            width: 220px; height: 210px; border-radius: 35px; transform: translateX(-55px) translateY(-120px); 
+            width: 210px; height: 210px; border-radius: 35px; 
+            transform: translateX(-55px) translateY(-120px); 
+            background: var(--glass); /* 選單時左區塊變大，但不產生額外層 */
         }
-        .is-menu-open .left-header { 
-            height: 55px; border-bottom: 0.5px solid var(--inner); 
-            justify-content: flex-start; padding-left: 18px; 
-        }
-        .is-menu-open .favicon { display: block; opacity: 1; transform: scale(1); }
-        .is-menu-open .domain-display { opacity: 1; width: auto; font-size: 14px; }
-        .is-menu-open .menu-content { opacity: 1; }
+        .is-menu-open .left-header { height: 55px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
+        .is-menu-open .menu-content { opacity: 1; pointer-events: auto; }
+        .is-menu-open .right-zone { opacity: 0.2; transform: scale(0.9); pointer-events: none; }
 
-        /* 縮小模式：向右偏移修正 & 文字縮小 */
+        /* 縮小模式：導覽列向內縮 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; }
         .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); }
-        .state-compact .left-header { justify-content: center; padding: 0; }
-        .state-compact .favicon { opacity: 0; width: 0; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; opacity: 0.8; }
-        .state-compact .right-zone { opacity: 0; transform: scale(0.8); } /* 向內縮動畫 */
+        .state-compact .favicon { opacity: 0; width: 0; pointer-events: none; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; }
+        .state-compact .right-zone { opacity: 0; transform: scale(0.7) translateY(10px); pointer-events: none; }
 
-        /* 編輯模式：主網域列放大為輸入欄 */
-        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; transform: translate(0, 0); }
-        .is-editing .left-zone { width: 350px; height: 58px; top: 0; transform: translate(0, 0); background: transparent; }
-        .is-editing #url-input { display: block; opacity: 1; }
-        .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { opacity: 0 !important; }
+        /* 編輯模式：解決雙層與置中問題 */
+        .is-editing .main-bg { 
+            width: 350px; height: 58px; border-radius: 29px; opacity: 1; 
+            transform: translateY(0); z-index: 150;
+        }
+        .is-editing .left-zone { 
+            width: 350px; height: 58px; top: 0; transform: translateX(0) translateY(0); 
+            background: transparent; border-radius: 29px; z-index: 200; 
+        }
+        .is-editing #url-input { opacity: 1; pointer-events: auto; }
+        .is-editing .left-header, .is-editing .menu-content, .is-editing .right-zone { opacity: 0 !important; pointer-events: none; }
 
     </style>
 </head>
@@ -164,7 +162,7 @@
                     <span class="domain-display" id="display-text">wikipedia.org</span>
                 </div>
                 
-                <input type="text" id="url-input" spellcheck="false" autocomplete="off">
+                <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search">
                 
                 <div class="menu-content">
                     <div class="menu-item">❐ &nbsp; 複製連結</div>
@@ -185,7 +183,6 @@
         const iframe = document.getElementById('browser-frame');
         const urlInput = document.getElementById('url-input');
         const viewport = document.getElementById('scroll-viewport');
-        const favIcon = document.getElementById('fav-icon');
 
         let currentState = 'normal';
         let prevState = 'normal';
@@ -194,7 +191,7 @@
             try {
                 const host = new URL(url).hostname.replace('www.', '');
                 document.getElementById('display-text').innerText = host;
-                favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+                document.getElementById('fav-icon').src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
             } catch(e) {}
         }
         updateBranding(iframe.src);
@@ -216,6 +213,7 @@
                 root.classList.add('is-menu-open');
                 return;
             }
+            // 進入編輯模式：關閉選單並點擊
             if (currentState === 'normal' || root.classList.contains('is-menu-open')) {
                 enterEditMode();
             }
@@ -225,7 +223,14 @@
             root.classList.remove('is-menu-open');
             root.classList.add('is-editing');
             urlInput.value = iframe.src;
-            setTimeout(() => { urlInput.focus(); urlInput.select(); }, 50);
+            
+            // 解決文字偏移：強制重設光標位置並聚焦
+            setTimeout(() => { 
+                urlInput.focus(); 
+                urlInput.setSelectionRange(0, urlInput.value.length);
+                // 模擬真實 iOS 喚起鍵盤的觸發
+                urlInput.click(); 
+            }, 100);
         }
 
         function closeAll() {
@@ -234,7 +239,10 @@
             urlInput.blur();
         }
 
-        document.getElementById('global-overlay').addEventListener('touchstart', closeAll);
+        document.getElementById('global-overlay').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            closeAll();
+        });
 
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -243,6 +251,7 @@
                 iframe.src = val;
                 updateBranding(val);
                 closeAll();
+                viewport.scrollTop = 0;
             }
         });
 
@@ -253,7 +262,7 @@
             if (curY > 60 && curY > lastY && currentState !== 'compact') {
                 prevState = currentState;
                 setUI('compact');
-            } else if (curY < lastY - 15 && currentState === 'compact') {
+            } else if (curY < lastY - 20 && currentState === 'compact') {
                 setUI(prevState);
             }
             lastY = curY;
@@ -267,13 +276,6 @@
             if (diff > 60) setUI('simplified');
             else if (diff < -60) setUI('normal');
         });
-
-        document.getElementById('pill').addEventListener('touchmove', e => {
-            const dy = Math.abs(e.touches[0].pageY - this.y);
-            const dx = Math.abs(e.touches[0].pageX - this.x);
-            if (dy > dx) e.preventDefault();
-            this.y = e.touches[0].pageY; this.x = e.touches[0].pageX;
-        }, { passive: false });
     </script>
 </body>
 </html>
