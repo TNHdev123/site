@@ -3,37 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Physical Overlay</title>
+    <title>Safari Liquid - Refined Menu Logic</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.88);
-            --inner-pill: rgba(0, 0, 0, 0.08);
+            --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            --shadow-strong: 0 15px 45px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(0, 0, 0, 0.1);
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --menu-bg: #ffffff;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass: rgba(45, 45, 45, 0.9);
-                --inner-pill: rgba(255, 255, 255, 0.15);
+                --glass: rgba(35, 35, 35, 0.85);
+                --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
-                --shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+                --accent: #0A84FF;
+                --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
+                --menu-bg: #222224;
             }
-            body { background: #000 !important; }
         }
 
-        body { margin: 0; background: #f2f2f7; overflow-x: hidden; font-family: -apple-system, system-ui; }
-        #web-wrapper { width: 100%; height: 5000px; position: relative; }
+        body { 
+            margin: 0; background: #f2f2f7; overflow-x: hidden; overflow-y: auto;
+            font-family: -apple-system, system-ui;
+        }
+
+        #web-wrapper { width: 100%; height: 5000px; position: relative; z-index: 1; }
         iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
 
-        /* 全域遮罩：點擊非區塊處縮回 */
+        /* 全域遮罩：變暗背景並禁止互動 */
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10000; display: none; touch-action: none;
+            background: rgba(0,0,0,0); z-index: 10000; display: none;
+            transition: background 0.4s; touch-action: none;
         }
-        .is-menu-open #global-overlay { display: block; }
+        .is-menu-open #global-overlay { display: block; background: rgba(0,0,0,0.3); pointer-events: auto; }
 
         .safari-wrapper {
             position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); 
@@ -46,78 +53,87 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- 左側區塊 (選單本體) --- */
+        /* 基礎區塊 */
+        .main-bg {
+            position: absolute; width: 100%; height: 100%;
+            background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-radius: 35px; box-shadow: var(--shadow-strong);
+            transition: all 0.5s var(--fluid-ease); z-index: 1;
+        }
+
+        /* 左側區塊：Logo/選單 */
         .left-zone {
-            position: absolute; left: 15px; top: 21px;
-            width: 58px; height: 58px;
-            background: var(--glass); border-radius: 29px;
-            box-shadow: var(--shadow); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            transition: all 0.5s var(--fluid-ease);
-            z-index: 100; overflow: hidden;
-            display: flex; flex-direction: column;
+            position: absolute; width: 310px; height: 44px; top: 10px;
+            background: var(--inner); border-radius: 22px;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: all 0.5s var(--fluid-ease); z-index: 20;
         }
 
-        /* 選單標題：網域 */
-        .menu-header {
-            height: 58px; width: 100%; display: flex; align-items: center; 
-            padding: 0 18px; flex-shrink: 0; box-sizing: border-box;
-            opacity: 0; transition: opacity 0.2s;
+        .left-header { 
+            height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
         }
-        .domain-pill {
-            background: var(--inner-pill); padding: 6px 14px; border-radius: 20px;
-            display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; color: var(--text);
-        }
-
-        /* 選單內容 */
-        .menu-content {
-            flex: 1; opacity: 0; visibility: hidden; padding: 5px 0;
-            display: flex; flex-direction: column; gap: 5px;
-        }
-        .menu-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
-            color: var(--text); font-size: 17px; text-decoration: none;
-        }
-        .menu-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
-
-        /* 圖示狀態 (簡化時) */
-        .logo-icon {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 24px; height: 24px; transition: opacity 0.3s;
-        }
-
-        /* --- 右側區塊 (導覽按鈕) --- */
-        .right-zone {
-            position: absolute; right: 15px; bottom: 21px;
-            width: 224px; height: 58px; background: var(--glass); 
-            border-radius: 29px; box-shadow: var(--shadow);
-            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            display: flex; justify-content: space-around; align-items: center;
-            transition: all 0.5s var(--fluid-ease); z-index: 50;
-        }
-        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
-
-        /* --- 交互狀態：開啟選單 --- */
-        .is-menu-open .left-zone {
-            width: 220px; height: 260px; border-radius: 35px;
-            transform: translateY(-160px) translateX(20px); /* 向右上移動並擴大 */
-        }
-        .is-menu-open .menu-header, .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        .is-menu-open .logo-icon { opacity: 0; }
         
-        /* 右側區塊變暗且禁止互動 */
-        .is-menu-open .right-zone {
-            filter: brightness(0.6);
-            pointer-events: none;
-            transform: scale(0.96);
+        .favicon { width: 18px; height: 18px; border-radius: 4px; }
+        .domain-tag { background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
+
+        .menu-content {
+            width: 100%; opacity: 0; visibility: hidden;
+            display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s;
+        }
+        .menu-item { 
+            display: flex; align-items: center; gap: 12px; padding: 12px 18px; 
+            color: var(--text); font-size: 16px; transition: background 0.2s;
+        }
+        .menu-item i { font-size: 20px; width: 24px; text-align: center; }
+
+        /* 右側區塊：導覽鍵 */
+        .right-zone {
+            position: absolute; width: 310px; height: 40px; bottom: 10px;
+            display: flex; justify-content: space-around; align-items: center;
+            transition: all 0.5s var(--fluid-ease); z-index: 10;
+        }
+        .icon { color: var(--accent); font-size: 22px; transition: opacity 0.4s; }
+
+        /* --- 核心設計：狀態切換 --- */
+
+        /* 1. 簡化模式 */
+        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
+        .state-simplified .left-zone { 
+            width: 58px; height: 58px; background: var(--glass); 
+            border-radius: 29px; top: 21px; transform: translateX(-120px);
+            box-shadow: var(--shadow-strong);
+        }
+        .state-simplified .right-zone { 
+            width: 224px; height: 58px; background: var(--glass); 
+            border-radius: 29px; bottom: 21px; transform: translateX(35px);
+            box-shadow: var(--shadow-strong);
         }
 
-        /* --- 其他模式：一般與縮小 --- */
-        .state-normal .left-zone, .state-normal .right-zone { transition: none; } /* 略過複雜動畫 */
-        /* ... (此處保留之前的 normal/compact 邏輯以維持 Demo 完整性) ... */
+        /* 2. 彈出選單（簡化模式下觸發） */
+        .is-menu-open .left-zone { 
+            width: 200px; height: 230px; border-radius: 35px; 
+            background: var(--menu-bg); 
+            transform: translateX(-65px) translateY(-145px); /* 原地放大並覆蓋部分右側 */
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+        .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
+        .is-menu-open .domain-tag { display: block; }
+        .is-menu-open .favicon { width: 22px; height: 22px; }
+        .is-menu-open .menu-content { opacity: 1; visibility: visible; }
+        
+        /* 變暗右側區塊並禁止互動 */
+        .is-menu-open .right-zone { opacity: 0.4; filter: grayscale(0.5); pointer-events: none; }
+
+        /* 3. 縮小狀態 */
+        .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; box-shadow: var(--shadow-strong); }
+        .state-compact .left-zone { width: 140px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
+        .state-compact .favicon { display: none; }
+        .state-compact .domain-text { font-size: 14px; font-weight: 600; }
+        .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
     </style>
 </head>
-<body id="app-root" class="state-simplified">
+<body id="app-root">
 
     <div id="web-wrapper">
         <iframe src="https://en.m.wikipedia.org/wiki/Apple_Inc."></iframe>
@@ -127,73 +143,92 @@
 
     <div class="safari-wrapper" id="nav-root">
         <div class="liquid-pill" id="pill">
+            <div class="main-bg"></div>
             
             <div class="left-zone" id="logo-btn">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
-                </div>
-                <div class="menu-header">
-                    <div class="domain-pill">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.1 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM13 3.5c.73-.83 1.24-1.99 1.1-3.15-1.01.04-2.24.67-2.97 1.52-.66.76-1.24 1.95-1.09 3.06 1.13.09 2.25-.63 2.96-1.43z"/></svg>
-                        apple.com
-                    </div>
+                <div class="left-header">
+                    <img id="fav-icon" class="favicon" src="">
+                    <div class="domain-tag">apple.com</div>
                 </div>
                 <div class="menu-content">
-                    <div class="menu-item">
-                        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        複製連結
-                    </div>
-                    <div class="menu-item">
-                        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                        重新載入
-                    </div>
-                    <div class="menu-item">
-                        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                        儲存書籤
-                    </div>
+                    <div class="menu-item">❐ &nbsp; 複製連結</div>
+                    <div class="menu-item">↻ &nbsp; 重新載入</div>
+                    <div class="menu-item">📖 &nbsp; 儲存書籤</div>
                 </div>
             </div>
 
-            <div class="right-zone" id="nav-btns">
+            <div class="right-zone">
                 <div class="icon">＜</div><div class="icon">＞</div><div class="icon">⇪</div><div class="icon">📖</div><div class="icon">❐</div>
             </div>
-
         </div>
     </div>
 
     <script>
         const root = document.getElementById('app-root');
-        const logoBtn = document.getElementById('logo-btn');
-        const overlay = document.getElementById('global-overlay');
+        const navRoot = document.getElementById('nav-root');
+        const pill = document.getElementById('pill');
+        const favIcon = document.getElementById('fav-icon');
+        
+        let currentState = 'normal';
+        let prevState = 'normal';
+        let startX = 0;
+        let lastScrollY = window.scrollY;
 
-        // 開啟選單
-        logoBtn.addEventListener('click', (e) => {
-            if (root.classList.contains('state-simplified')) {
-                root.classList.toggle('is-menu-open');
+        favIcon.src = `https://www.google.com/s2/favicons?domain=apple.com&sz=64`;
+
+        function updateUIState(newState) {
+            currentState = newState;
+            navRoot.className = 'safari-wrapper' + 
+                (currentState === 'compact' ? ' state-compact' : '') +
+                (currentState === 'simplified' ? ' state-simplified' : '');
+        }
+
+        // 滾動與自動恢復偵測
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const diff = currentScrollY - lastScrollY;
+            if (currentScrollY > 60 && diff > 5 && currentState !== 'compact') {
+                if (currentState !== 'compact') prevState = currentState;
+                updateUIState('compact');
+            } else if (diff < -15 && currentState === 'compact') {
+                updateUIState(prevState);
+            }
+            lastScrollY = currentScrollY;
+        });
+
+        // 點擊 Logo 開啟選單（僅限簡化模式）
+        document.getElementById('logo-btn').addEventListener('click', (e) => {
+            if (currentState === 'simplified') {
+                root.classList.add('is-menu-open');
                 e.stopPropagation();
             }
         });
 
-        // 點擊任何地方（包含變暗後的右側區塊）收回選單
+        // 點擊外部縮回
         const closeMenu = () => root.classList.remove('is-menu-open');
-        overlay.addEventListener('touchstart', closeMenu);
-        document.getElementById('nav-btns').addEventListener('touchstart', (e) => {
-            if (root.classList.contains('is-menu-open')) {
-                closeMenu();
-                e.preventDefault();
+        document.getElementById('global-overlay').addEventListener('touchstart', closeMenu);
+
+        // 左右滑動切換
+        pill.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+        pill.addEventListener('touchend', e => {
+            if (root.classList.contains('is-menu-open') || currentState === 'compact') return;
+            const diffX = e.changedTouches[0].clientX - startX;
+            if (Math.abs(diffX) > 50) {
+                if (diffX > 50 && currentState === 'normal') updateUIState('simplified');
+                else if (diffX < -50 && currentState === 'simplified') updateUIState('normal');
             }
         });
 
-        // 模擬原本的捲動縮放功能 (簡化版)
-        let lastY = window.scrollY;
-        window.addEventListener('scroll', () => {
-            if (root.classList.contains('is-menu-open')) return;
-            const currY = window.scrollY;
-            if (currY > 60 && currY > lastY) {
-                // 進入 compact 略過，此 Demo 專注於簡化模式的彈窗
+        // 縮小時點擊恢復
+        pill.addEventListener('click', (e) => {
+            if (currentState === 'compact') {
+                updateUIState(prevState);
+                e.stopPropagation();
             }
-            lastY = currY;
         });
+
+        // 阻擋誤觸
+        pill.addEventListener('touchmove', e => { if (currentState !== 'compact') e.preventDefault(); }, { passive: false });
     </script>
 </body>
 </html>
