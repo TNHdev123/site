@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Wikipedia English Edition</title>
+    <title>Safari Liquid - Perfect Opacity Balance</title>
     <style>
         :root {
-            --glass: rgba(255, 255, 255, 0.88);
+            --glass-solid: rgba(255, 255, 255, 0.95); /* 簡化模式使用的較濃郁玻璃 */
+            --glass-trans: rgba(255, 255, 255, 0.75); /* 縮小模式使用的輕透玻璃 */
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
@@ -17,7 +18,8 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass: rgba(35, 35, 35, 0.85);
+                --glass-solid: rgba(45, 45, 45, 0.98);
+                --glass-trans: rgba(35, 35, 35, 0.70);
                 --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
                 --accent: #0A84FF;
@@ -53,14 +55,14 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* 預設狀態底色 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
-            background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            background: var(--glass-solid); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
             border-radius: 35px; box-shadow: var(--shadow-strong);
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
-        /* 左側區塊：選單本體 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
@@ -74,23 +76,14 @@
         
         .favicon { width: 18px; height: 18px; border-radius: 4px; }
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
-        
-        /* 選單內部的網域標籤 (示意圖風格) */
-        .domain-tag { 
-            background: var(--inner); padding: 4px 12px; border-radius: 12px; 
-            font-size: 14px; color: var(--text); font-weight: 500; display: none; 
-        }
+        .domain-tag { background: var(--inner); padding: 4px 12px; border-radius: 12px; font-size: 14px; color: var(--text); font-weight: 500; display: none; }
 
         .menu-content {
             width: 100%; opacity: 0; visibility: hidden;
             display: flex; flex-direction: column; gap: 4px; padding: 10px 0; transition: 0.3s;
         }
-        .menu-item { 
-            display: flex; align-items: center; gap: 12px; padding: 12px 18px; 
-            color: var(--text); font-size: 16px; text-decoration: none;
-        }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: var(--text); font-size: 16px; text-decoration: none; }
 
-        /* 右側區塊：導覽鍵 */
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
             display: flex; justify-content: space-around; align-items: center;
@@ -100,21 +93,21 @@
 
         /* --- 狀態切換邏輯 --- */
 
-        /* 1. 簡化模式 */
+        /* 1. 簡化模式：加厚背景，增加實體感 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { 
-            width: 58px; height: 58px; background: var(--glass); 
+            width: 58px; height: 58px; background: var(--glass-solid); /* 實心感 */
             border-radius: 29px; top: 21px; transform: translateX(-120px);
-            box-shadow: var(--shadow-strong);
+            box-shadow: var(--shadow-strong); backdrop-filter: blur(40px);
         }
         .state-simplified .domain-display { display: none; }
         .state-simplified .right-zone { 
-            width: 224px; height: 58px; background: var(--glass); 
+            width: 224px; height: 58px; background: var(--glass-solid); /* 實心感 */
             border-radius: 29px; bottom: 21px; transform: translateX(35px);
-            box-shadow: var(--shadow-strong);
+            box-shadow: var(--shadow-strong); backdrop-filter: blur(40px);
         }
 
-        /* 2. 彈出選單 (從簡化模式原地放大) */
+        /* 2. 彈出選單 */
         .is-menu-open .left-zone { 
             width: 200px; height: 210px; border-radius: 35px; 
             background: var(--menu-bg); 
@@ -123,15 +116,17 @@
         }
         .is-menu-open .left-header { height: 50px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
         .is-menu-open .domain-tag { display: block; }
-        .is-menu-open .domain-display { display: none; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        .is-menu-open .right-zone { opacity: 0.4; filter: grayscale(0.8); pointer-events: none; }
 
-        /* 3. 縮小狀態 (保留網域顯示) */
-        .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; box-shadow: var(--shadow-strong); }
+        /* 3. 縮小狀態：增加透明度，讓路給內容 */
+        .state-compact .main-bg { 
+            width: 160px; height: 44px; border-radius: 22px; 
+            background: var(--glass-trans); /* 輕薄透明感 */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+        }
         .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
         .state-compact .favicon { display: none; }
-        .state-compact .domain-display { font-size: 14px; font-weight: 600; display: block; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; opacity: 0.8; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
     </style>
