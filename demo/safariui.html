@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Ultimate Dark Mode</title>
+    <title>Safari Liquid - High Contrast Shadows</title>
     <style>
         :root {
-            /* 淺色模式變數 */
-            --glass: rgba(255, 255, 255, 0.85);
+            --glass: rgba(255, 255, 255, 0.88);
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            --shadow: rgba(0, 0, 0, 0.15);
+            /* 強化版淺色陰影：多層次投影讓邊緣更紮實 */
+            --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1);
             --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
             --menu-bg: #ffffff;
         }
 
-        /* 深色模式偵測 */
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass: rgba(40, 40, 40, 0.75);
+                --glass: rgba(35, 35, 35, 0.85);
                 --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
                 --accent: #0A84FF;
-                --shadow: rgba(0, 0, 0, 0.4);
-                --menu-bg: #1c1c1e;
+                /* 強化版深色陰影：加強黑色的厚重感 */
+                --shadow-strong: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
+                --menu-bg: #222224;
             }
             body { background: #000 !important; }
         }
 
         body { 
             margin: 0; background: #f2f2f7; overflow-x: hidden; overflow-y: auto;
-            font-family: -apple-system, system-ui; transition: background 0.3s;
+            font-family: -apple-system, system-ui;
         }
 
         #web-wrapper { width: 100%; height: 5000px; position: relative; z-index: 1; }
@@ -57,11 +57,11 @@
             touch-action: none;
         }
 
-        /* 主底色 */
+        /* 一般狀態陰影 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
-            background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border-radius: 35px; box-shadow: 0 10px 30px var(--shadow);
+            background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-radius: 35px; box-shadow: var(--shadow-strong);
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
@@ -73,14 +73,14 @@
         }
 
         .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
-        .favicon { width: 18px; height: 18px; border-radius: 4px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .favicon { width: 18px; height: 18px; border-radius: 4px; }
         .domain-text { color: var(--text); font-weight: 500; font-size: 15px; }
 
         .menu-content {
             width: 100%; opacity: 0; visibility: hidden;
             display: flex; flex-direction: column; gap: 15px; padding: 15px 0; transition: 0.3s;
         }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 0 15px; color: var(--text); font-size: 16px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 0 15px; color: var(--text); font-size: 16px; font-weight: 400; }
 
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
@@ -89,51 +89,48 @@
         }
         .icon { color: var(--accent); font-size: 22px; }
 
-        /* --- 狀態切換 --- */
+        /* --- 狀態切換：重點加厚陰影 --- */
 
-        /* 1. 簡化模式 - 補上強化的陰影 */
+        /* 1. 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); box-shadow: none; }
         .state-simplified .left-zone { 
-            width: 56px; height: 56px; background: var(--glass); 
-            border-radius: 28px; top: 22px; transform: translateX(-120px);
-            box-shadow: 0 8px 25px var(--shadow); /* 補回陰影 */
-            backdrop-filter: blur(30px);
+            width: 58px; height: 58px; background: var(--glass); 
+            border-radius: 29px; top: 21px; transform: translateX(-120px);
+            box-shadow: var(--shadow-strong); /* 高對比陰影 */
+            backdrop-filter: blur(40px);
         }
         .state-simplified .domain-text { opacity: 0; width: 0; }
         .state-simplified .right-zone { 
-            width: 220px; height: 56px; background: var(--glass); 
-            border-radius: 28px; bottom: 22px; transform: translateX(35px);
-            box-shadow: 0 8px 25px var(--shadow); /* 補回陰影 */
-            backdrop-filter: blur(30px);
+            width: 224px; height: 58px; background: var(--glass); 
+            border-radius: 29px; bottom: 21px; transform: translateX(35px);
+            box-shadow: var(--shadow-strong); /* 高對比陰影 */
+            backdrop-filter: blur(40px);
         }
 
         /* 2. 彈出選單 */
         .is-menu-open .left-zone { 
             width: 210px; height: 230px; border-radius: 28px; 
-            background: var(--menu-bg); transform: translateX(-55px) translateY(-150px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            background: var(--menu-bg); transform: translateX(-55px) translateY(-155px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5); /* 選單開啟時最強陰影 */
         }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        .is-menu-open .left-header { border-bottom: 1px solid var(--inner); }
 
         /* 3. 縮小狀態 */
-        .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; box-shadow: 0 4px 15px var(--shadow); }
+        .state-compact .main-bg { width: 140px; height: 44px; border-radius: 22px; box-shadow: var(--shadow-strong); }
         .state-compact .left-zone { width: 140px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
         .state-compact .favicon { display: none; }
         .state-compact .domain-text { font-size: 14px; font-weight: 600; opacity: 1; width: auto; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
         
-        /* 深色模式下 Logo 的微調 */
         @media (prefers-color-scheme: dark) {
             .favicon { filter: invert(1) brightness(2); }
-            .is-menu-open .left-zone { border: 0.5px solid rgba(255,255,255,0.1); }
         }
     </style>
 </head>
 <body id="app-root">
 
     <div id="web-wrapper">
-        <iframe src="https://en.m.wikipedia.org/wiki/Dark_mode"></iframe>
+        <iframe src="https://en.m.wikipedia.org/wiki/Liquid_crystal"></iframe>
     </div>
 
     <div id="global-overlay"></div>
@@ -181,7 +178,6 @@
         window.addEventListener('scroll', () => {
             const currentScrollY = window.scrollY;
             const diff = currentScrollY - lastScrollY;
-
             if (currentScrollY > 60 && diff > 5 && currentState !== 'compact') {
                 if (currentState !== 'compact') prevState = currentState;
                 updateUIState('compact');
