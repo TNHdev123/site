@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Perfect Alignment</title>
+    <title>Safari Liquid - UI Logic Rebuilt</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.96);
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            --shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
             --ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -32,9 +31,9 @@
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
-            transition: background 0.4s;
+            transition: background 0.4s var(--ease);
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.25); backdrop-filter: blur(20px); }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.3); backdrop-filter: blur(15px); }
 
         .safari-wrapper {
             position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); 
@@ -45,46 +44,46 @@
         .liquid-pill { 
             position: relative; width: 340px; height: 100px; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto;
         }
 
-        /* 唯一的底座背景 */
+        /* 背景層：控制所有變形的底座 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
-            background: var(--glass); border-radius: 35px; box-shadow: var(--shadow);
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-radius: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.15);
             transition: all 0.5s var(--ease); z-index: 1;
         }
 
-        /* 互動區域：內部統一使用 Flex 置中解決文字偏移 */
+        /* 互動核心區塊：控制位置與大小 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; transition: all 0.5s var(--ease); z-index: 100;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: all 0.5s var(--ease); z-index: 100;
         }
 
-        .left-header { 
-            width: 100%; height: 100%; display: flex; align-items: center; 
-            justify-content: center; gap: 8px; transition: all 0.5s var(--ease);
+        /* 網域列與輸入框的容器：解決文字偏移 */
+        .header-box { 
+            height: 44px; width: 100%; position: relative;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            transition: all 0.4s var(--ease);
         }
 
-        .favicon { width: 18px; height: 18px; border-radius: 4px; transition: all 0.5s var(--ease); }
-        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: all 0.5s var(--ease); line-height: 1; }
+        #fav-icon { width: 18px; height: 18px; border-radius: 4px; margin-right: 8px; transition: 0.3s; }
+        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: 0.3s; }
 
-        /* 統一編輯欄：解決層疊與偏移 */
+        /* 編輯狀態的關鍵：修正垂直位移 */
         #url-input {
-            position: absolute; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
             text-align: center; box-sizing: border-box;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
-            display: flex; align-items: center; /* 確保文字在 input 內垂直置中 */
+            opacity: 0; visibility: hidden;
+            line-height: normal; /* 修正偏移 */
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .menu-content { 
-            position: absolute; width: 100%; top: 55px; opacity: 0; 
-            display: flex; flex-direction: column; transition: 0.3s; pointer-events: none;
-        }
+        .menu-content { width: 100%; opacity: 0; display: flex; flex-direction: column; transition: 0.2s; }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; }
 
         .right-zone {
@@ -92,53 +91,55 @@
             display: flex; justify-content: space-around; align-items: center;
             transition: all 0.5s var(--ease); z-index: 10;
         }
-        .icon { color: var(--accent); font-size: 22px; transition: all 0.5s var(--ease); }
+        .icon { color: var(--accent); font-size: 22px; transition: 0.4s var(--ease); }
 
-        /* --- 狀態精準定義 --- */
+        /* --- 狀態邏輯重整 --- */
 
-        /* 簡化模式 */
+        /* 1. 簡化模式 */
         .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { 
             width: 58px; height: 58px; background: var(--glass); 
             border-radius: 29px; top: 21px; transform: translateX(-120px); 
-            box-shadow: var(--shadow);
         }
+        .state-simplified .header-box { height: 58px; }
         .state-simplified .domain-display { opacity: 0; width: 0; }
-        .state-simplified .favicon { transform: scale(1.1); }
         .state-simplified .right-zone { 
             width: 224px; height: 58px; background: var(--glass); 
             border-radius: 29px; bottom: 21px; transform: translateX(35px); 
-            box-shadow: var(--shadow); 
         }
 
-        /* 彈出選單：修正背景重複層疊問題 */
+        /* 2. 彈出選單 */
         .is-menu-open .left-zone { 
-            width: 210px; height: 210px; border-radius: 35px; 
+            width: 220px; height: 210px; border-radius: 35px; 
             transform: translateX(-55px) translateY(-120px); 
-            background: var(--glass); /* 選單時左區塊變大，但不產生額外層 */
+            background: var(--glass);
         }
-        .is-menu-open .left-header { height: 55px; justify-content: flex-start; padding-left: 18px; border-bottom: 0.5px solid var(--inner); }
-        .is-menu-open .menu-content { opacity: 1; pointer-events: auto; }
-        .is-menu-open .right-zone { opacity: 0.2; transform: scale(0.9); pointer-events: none; }
+        .is-menu-open .header-box { border-bottom: 0.5px solid var(--inner); }
+        .is-menu-open .menu-content { opacity: 1; }
 
-        /* 縮小模式：導覽列向內縮 */
+        /* 3. 縮小模式 */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; }
         .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); }
-        .state-compact .favicon { opacity: 0; width: 0; pointer-events: none; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; }
-        .state-compact .right-zone { opacity: 0; transform: scale(0.7) translateY(10px); pointer-events: none; }
+        .state-compact #fav-icon { opacity: 0; width: 0; margin: 0; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; opacity: 0.8; }
+        .state-compact .right-zone { opacity: 0; transform: scale(0.8); }
 
-        /* 編輯模式：解決雙層與置中問題 */
+        /* 4. 編輯模式：消除雙層影子的核心 */
         .is-editing .main-bg { 
             width: 350px; height: 58px; border-radius: 29px; opacity: 1; 
-            transform: translateY(0); z-index: 150;
+            transform: translate(0, 0) scale(1) !important; 
+            z-index: 150; 
         }
         .is-editing .left-zone { 
-            width: 350px; height: 58px; top: 0; transform: translateX(0) translateY(0); 
-            background: transparent; border-radius: 29px; z-index: 200; 
+            width: 350px; height: 58px; top: 0; transform: translate(0, 0) !important; 
+            background: transparent; border-radius: 29px; z-index: 200;
         }
-        .is-editing #url-input { opacity: 1; pointer-events: auto; }
-        .is-editing .left-header, .is-editing .menu-content, .is-editing .right-zone { opacity: 0 !important; pointer-events: none; }
+        .is-editing .header-box { height: 58px; border: none; }
+        .is-editing #url-input { opacity: 1; visibility: visible; }
+        /* 強制隱藏所有其他部件，避免雙層疊加 */
+        .is-editing #fav-icon, .is-editing .domain-display, .is-editing .menu-content, .is-editing .right-zone { 
+            opacity: 0 !important; visibility: hidden !important; 
+        }
 
     </style>
 </head>
@@ -157,12 +158,11 @@
             <div class="main-bg"></div>
             
             <div class="left-zone" id="logo-btn">
-                <div class="left-header" id="click-trigger">
-                    <img id="fav-icon" class="favicon" src="">
+                <div class="header-box" id="click-trigger">
+                    <img id="fav-icon" src="">
                     <span class="domain-display" id="display-text">wikipedia.org</span>
+                    <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search">
                 </div>
-                
-                <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search">
                 
                 <div class="menu-content">
                     <div class="menu-item">❐ &nbsp; 複製連結</div>
@@ -213,9 +213,10 @@
                 root.classList.add('is-menu-open');
                 return;
             }
-            // 進入編輯模式：關閉選單並點擊
-            if (currentState === 'normal' || root.classList.contains('is-menu-open')) {
+            // 進入編輯模式：在正常模式點擊，或在彈出選單點擊頂部 header
+            if (currentState === 'normal' || (root.classList.contains('is-menu-open') && e.target.closest('#click-trigger'))) {
                 enterEditMode();
+                e.stopPropagation();
             }
         });
 
@@ -223,13 +224,10 @@
             root.classList.remove('is-menu-open');
             root.classList.add('is-editing');
             urlInput.value = iframe.src;
-            
-            // 解決文字偏移：強制重設光標位置並聚焦
+            // 優化聚焦邏輯
             setTimeout(() => { 
                 urlInput.focus(); 
                 urlInput.setSelectionRange(0, urlInput.value.length);
-                // 模擬真實 iOS 喚起鍵盤的觸發
-                urlInput.click(); 
             }, 100);
         }
 
@@ -240,7 +238,6 @@
         }
 
         document.getElementById('global-overlay').addEventListener('touchstart', (e) => {
-            e.preventDefault();
             closeAll();
         });
 
@@ -251,10 +248,10 @@
                 iframe.src = val;
                 updateBranding(val);
                 closeAll();
-                viewport.scrollTop = 0;
             }
         });
 
+        // 捲動邏輯
         let lastY = 0;
         viewport.addEventListener('scroll', () => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing')) return;
@@ -268,6 +265,7 @@
             lastY = curY;
         });
 
+        // 左右滑動切換
         let startX = 0;
         document.getElementById('pill').addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.getElementById('pill').addEventListener('touchend', e => {
