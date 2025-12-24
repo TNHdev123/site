@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Pure Logic Sync</title>
+    <title>Safari Liquid - Animation Refined</title>
     <style>
         :root {
-            --glass-solid: rgba(255, 255, 255, 0.96);
+            --glass: rgba(255, 255, 255, 0.96);
             --inner: rgba(0, 0, 0, 0.05);
             --text: #000000;
             --accent: #007AFF;
-            --shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
-            --fluid-ease: cubic-bezier(0.4, 0, 0.2, 1);
-            --menu-bg: #ffffff;
+            --shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass-solid: rgba(55, 55, 55, 0.98);
+                --glass: rgba(45, 45, 45, 0.98);
                 --inner: rgba(255, 255, 255, 0.1);
                 --text: #ffffff;
                 --accent: #0A84FF;
-                --menu-bg: #2C2C2E;
             }
             body { background: #000; }
         }
@@ -34,11 +32,12 @@
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
+            backdrop-filter: blur(0px); transition: 0.4s var(--ease);
         }
-        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .is-menu-open #global-overlay, .is-editing #global-overlay { display: block; background: rgba(0,0,0,0.2); backdrop-filter: blur(15px); }
 
         .safari-wrapper {
-            position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); 
+            position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); 
             left: 0; width: 100%; display: flex; justify-content: center; align-items: center; 
             z-index: 10001; pointer-events: none;
         }
@@ -49,77 +48,85 @@
             pointer-events: auto; touch-action: pan-x;
         }
 
+        /* 底部主背景 */
         .main-bg {
             position: absolute; width: 100%; height: 100%;
-            background: var(--glass-solid); backdrop-filter: blur(40px);
+            background: var(--glass); backdrop-filter: blur(40px);
             border-radius: 35px; box-shadow: var(--shadow);
-            transition: all 0.5s var(--fluid-ease); z-index: 1;
+            transition: all 0.5s var(--ease); z-index: 1;
         }
 
+        /* 核心動態區塊 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
             display: flex; flex-direction: column; overflow: hidden;
-            transition: all 0.5s var(--fluid-ease); z-index: 50;
+            transition: all 0.5s var(--ease); z-index: 100;
         }
 
-        .left-header { height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
-        .favicon { width: 18px; height: 18px; border-radius: 4px; }
-        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
+        /* 網域列 - 這是動畫的本體 */
+        .left-header { 
+            height: 44px; width: 100%; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; flex-shrink: 0; 
+            transition: all 0.5s var(--ease);
+        }
+        .favicon { width: 18px; height: 18px; transition: 0.3s; }
+        .domain-display { color: var(--text); font-weight: 500; font-size: 15px; transition: 0.3s; }
         
-        /* 彈出選單頂部標籤 */
         .domain-tag { 
             background: rgba(0,0,0,0.06); padding: 6px 14px; border-radius: 15px; 
             font-size: 15px; color: var(--text); font-weight: 500; display: none; 
-            align-items: center; gap: 6px;
         }
-        .domain-tag img { width: 16px; height: 16px; border-radius: 3px; }
 
-        /* 統一編輯欄：純淨全寬設計 */
         #url-input {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 44px;
             background: transparent; border: none; outline: none;
             padding: 0 20px; font-size: 17px; color: var(--text);
             display: none; text-align: center; box-sizing: border-box;
         }
 
-        .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+        /* 選單內容 - 應被隱藏 */
+        .menu-content { width: 100%; opacity: 0; visibility: hidden; display: flex; flex-direction: column; transition: 0.2s; }
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; }
 
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
             display: flex; justify-content: space-around; align-items: center;
-            transition: all 0.5s var(--fluid-ease); z-index: 10;
+            transition: all 0.4s var(--ease); z-index: 10;
         }
         .icon { color: var(--accent); font-size: 22px; }
 
-        /* --- 狀態切換 --- */
-        
-        /* 縮小狀態 */
-        .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; }
-        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; cursor: pointer; }
-        .state-compact .favicon, .state-compact .right-zone { display: none; }
-        .state-compact .domain-display { font-size: 13px; font-weight: 600; display: block; }
+        /* --- 狀態定義 --- */
 
-        /* 簡化狀態 */
-        .state-simplified .main-bg { opacity: 0; pointer-events: none; }
-        .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass-solid); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow); }
-        .state-simplified .domain-display { display: none; }
-        .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass-solid); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow); }
+        /* 1. 簡化模式 */
+        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
+        .state-simplified .left-zone { width: 58px; height: 58px; background: var(--glass); border-radius: 29px; top: 21px; transform: translateX(-120px); box-shadow: var(--shadow); }
+        .state-simplified .domain-display, .state-simplified .favicon { opacity: 0; }
+        .state-simplified .right-zone { width: 224px; height: 58px; background: var(--glass); border-radius: 29px; bottom: 21px; transform: translateX(35px); box-shadow: var(--shadow); }
 
-        /* 彈出選單 */
-        .is-menu-open .left-zone { width: 210px; height: 200px; border-radius: 35px; background: var(--menu-bg); transform: translateX(-55px) translateY(-115px); box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        /* 2. 彈出選單 (只發生在簡化模式) */
+        .is-menu-open .left-zone { width: 220px; height: 210px; border-radius: 35px; transform: translateX(-55px) translateY(-120px); }
         .is-menu-open .left-header { height: 55px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
-        .is-menu-open .favicon, .is-menu-open .domain-display { display: none; }
-        .is-menu-open .domain-tag { display: flex; }
-        .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        .is-menu-open .right-zone { opacity: 0.3; pointer-events: none; }
+        .is-menu-open .domain-tag { display: block; }
+        .is-menu-open .menu-content { opacity: 1; visibility: visible; transition-delay: 0.2s; }
+        .is-menu-open .right-zone { opacity: 0.4; pointer-events: none; }
 
-        /* 編輯狀態：無論何處觸發，顯示完全一致 */
-        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; transform: scale(1) translateY(0); }
-        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; z-index: 200; }
+        /* 3. 縮小模式 */
+        .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; transform: scale(1); }
+        .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
+        .state-compact .favicon, .state-compact .right-zone { opacity: 0; pointer-events: none; }
+        .state-compact .domain-display { font-size: 13px; font-weight: 600; opacity: 1; }
+
+        /* 4. 編輯模式 (統一動畫主體) */
+        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; transform: translateX(0) translateY(0) scale(1); }
+        .is-editing .left-zone { 
+            width: 350px; height: 58px; top: 0; transform: translateX(0) translateY(0); 
+            background: transparent; border-radius: 29px; z-index: 200; 
+        }
+        .is-editing .left-header, .is-editing .menu-content, .is-editing .right-zone { 
+            opacity: 0; pointer-events: none; transition: 0.2s;
+        }
         .is-editing #url-input { display: block; }
-        .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content, .is-editing .domain-tag { display: none !important; }
 
     </style>
 </head>
@@ -141,10 +148,7 @@
                 <div class="left-header" id="click-trigger">
                     <img id="fav-icon" class="favicon" src="">
                     <span class="domain-display" id="display-text">wikipedia.org</span>
-                    <div class="domain-tag" id="popup-tag">
-                        <img id="fav-icon-popup" src="">
-                        <span id="popup-text">wikipedia.org</span>
-                    </div>
+                    <div class="domain-tag" id="popup-text">wikipedia.org</div>
                 </div>
                 
                 <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search or enter website">
@@ -177,9 +181,7 @@
                 const host = new URL(url).hostname.replace('www.', '');
                 document.getElementById('display-text').innerText = host;
                 document.getElementById('popup-text').innerText = host;
-                const icon = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
-                document.getElementById('fav-icon').src = icon;
-                document.getElementById('fav-icon-popup').src = icon;
+                document.getElementById('fav-icon').src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
             } catch(e) {}
         }
         updateBranding(iframe.src);
@@ -192,26 +194,18 @@
                 (state === 'simplified' ? ' state-simplified' : '');
         }
 
-        // 核心點擊控制邏輯
         document.getElementById('logo-btn').addEventListener('click', (e) => {
-            // 1. 縮小狀態優先復原
             if (currentState === 'compact') {
                 setUI(prevState || 'normal');
-                e.stopPropagation();
                 return;
             }
-
-            // 2. 簡化狀態開啟選單
             if (currentState === 'simplified' && !root.classList.contains('is-menu-open')) {
                 root.classList.add('is-menu-open');
-                e.stopPropagation();
                 return;
             }
-
-            // 3. 進入編輯模式 (一般模式點擊，或選單開啟後點擊 Header)
+            // 進入編輯：無論是在一般模式，還是在彈出視窗點擊 Header
             if (currentState === 'normal' || (root.classList.contains('is-menu-open') && e.target.closest('#click-trigger'))) {
                 enterEditMode();
-                e.stopPropagation();
             }
         });
 
@@ -241,7 +235,7 @@
             }
         });
 
-        // 捲動監控
+        // 捲動
         let lastY = 0;
         viewport.addEventListener('scroll', () => {
             if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing')) return;
@@ -249,7 +243,7 @@
             if (curY > 60 && curY > lastY && currentState !== 'compact') {
                 prevState = currentState;
                 setUI('compact');
-            } else if (curY < lastY - 10 && currentState === 'compact') {
+            } else if (curY < lastY - 15 && currentState === 'compact') {
                 setUI(prevState);
             }
             lastY = curY;
@@ -265,7 +259,7 @@
             else if (diff < -60) setUI('normal');
         });
 
-        // 禁止 Pill 上下滑動
+        // 禁止上下滑動
         document.getElementById('pill').addEventListener('touchmove', e => {
             const dy = Math.abs(e.touches[0].pageY - this.y);
             const dx = Math.abs(e.touches[0].pageX - this.x);
