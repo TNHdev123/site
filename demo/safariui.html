@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Safari Liquid - Popup Logic Fix</title>
+    <title>Safari Liquid - Wikipedia Restore</title>
     <style>
         :root {
             --glass-solid: rgba(255, 255, 255, 0.96);
@@ -34,7 +34,6 @@
         #iframe-holder { width: 100%; height: 5000px; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* 全域遮罩：用於點擊區塊外關閉選單 */
         #global-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0); z-index: 10000; display: none;
@@ -60,7 +59,6 @@
             transition: all 0.5s var(--fluid-ease); z-index: 1;
         }
 
-        /* 左側區塊：這是在簡化模式下會變大的主體 */
         .left-zone {
             position: absolute; width: 310px; height: 44px; top: 10px;
             background: var(--inner); border-radius: 22px;
@@ -70,16 +68,17 @@
 
         .left-header { 
             height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; 
-            transition: all 0.3s;
         }
-        .favicon { width: 18px; height: 18px; border-radius: 4px; }
+        .favicon { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; }
         .domain-display { color: var(--text); font-weight: 500; font-size: 15px; }
         
-        /* 彈出後的標籤 */
+        /* 彈出選單頂部的網域標籤 */
         .domain-tag { 
-            background: rgba(0,0,0,0.08); padding: 6px 14px; border-radius: 15px; 
+            background: rgba(0,0,0,0.06); padding: 6px 14px; border-radius: 15px; 
             font-size: 15px; color: var(--text); font-weight: 500; display: none; 
+            align-items: center; gap: 6px;
         }
+        .domain-tag img { width: 16px; height: 16px; border-radius: 3px; }
 
         #url-input {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -93,9 +92,8 @@
             display: flex; flex-direction: column; padding: 5px 0; 
             transition: 0.3s; 
         }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; font-weight: 400; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text); font-size: 16px; }
 
-        /* 右側區塊 */
         .right-zone {
             position: absolute; width: 310px; height: 40px; bottom: 10px;
             display: flex; justify-content: space-around; align-items: center;
@@ -103,14 +101,12 @@
         }
         .icon { color: var(--accent); font-size: 22px; transition: opacity 0.3s; }
 
-        /* --- 狀態切換邏輯 --- */
-
-        /* 1. 簡化狀態 (Initial Simplified) */
-        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); pointer-events: none; }
+        /* 狀態邏輯 */
+        .state-simplified .main-bg { opacity: 0; transform: scale(0.9); }
         .state-simplified .left-zone { 
             width: 58px; height: 58px; background: var(--glass-solid); 
             border-radius: 29px; top: 21px; transform: translateX(-120px); 
-            box-shadow: var(--shadow-strong); cursor: pointer;
+            box-shadow: var(--shadow-strong);
         }
         .state-simplified .domain-display { display: none; }
         .state-simplified .right-zone { 
@@ -119,45 +115,34 @@
             box-shadow: var(--shadow-strong); 
         }
 
-        /* 2. 簡化選單開啟 (Popup Open) */
         .is-menu-open .left-zone { 
-            width: 210px; height: 195px; border-radius: 35px; 
-            background: var(--menu-bg); 
-            transform: translateX(-55px) translateY(-115px); /* 向上放大並壓在右邊區塊上 */
+            width: 210px; height: 200px; border-radius: 35px; 
+            background: var(--menu-bg); transform: translateX(-55px) translateY(-115px);
             box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-            z-index: 100;
         }
-        .is-menu-open .left-header { 
-            height: 55px; justify-content: center; border-bottom: 0.5px solid rgba(0,0,0,0.05); 
-            background: transparent; cursor: pointer;
-        }
+        .is-menu-open .left-header { height: 55px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
         .is-menu-open .favicon, .is-menu-open .domain-display { display: none; }
-        .is-menu-open .domain-tag { display: block; } /* 顯示圖片中的圓角網址標籤 */
+        .is-menu-open .domain-tag { display: flex; }
         .is-menu-open .menu-content { opacity: 1; visibility: visible; }
-        
-        /* 選單開啟時，讓右側區塊變暗且不可點擊 */
         .is-menu-open .right-zone { opacity: 0.3; pointer-events: none; }
 
-        /* 3. 縮小狀態 (Compact) */
         .state-compact .main-bg { width: 160px; height: 44px; border-radius: 22px; background: var(--glass-trans); }
         .state-compact .left-zone { width: 160px; height: 44px; top: 28px; background: transparent; transform: translateX(0); box-shadow: none; }
         .state-compact .favicon { display: none; }
         .state-compact .domain-display { font-size: 13px; font-weight: 600; }
         .state-compact .right-zone { opacity: 0; transform: scale(0.5); pointer-events: none; }
 
-        /* 4. 編輯狀態 (Editing) */
-        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; z-index: 200; }
-        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; z-index: 210; }
+        .is-editing .main-bg { width: 350px; height: 58px; border-radius: 29px; opacity: 1; }
+        .is-editing .left-zone { width: 100%; height: 100%; top: 0; transform: translateX(0); background: transparent; }
         .is-editing #url-input { display: block; }
         .is-editing .left-header, .is-editing .right-zone, .is-editing .menu-content { display: none !important; }
-
     </style>
 </head>
 <body id="app-root">
 
     <div id="scroll-viewport">
         <div id="iframe-holder">
-            <iframe id="browser-frame" src="https://www.apple.com" scrolling="no"></iframe>
+            <iframe id="browser-frame" src="https://en.m.wikipedia.org/wiki/Liquid" scrolling="no"></iframe>
         </div>
     </div>
 
@@ -170,8 +155,11 @@
             <div class="left-zone" id="logo-btn">
                 <div class="left-header" id="trigger-area">
                     <img id="fav-icon" class="favicon" src="">
-                    <span class="domain-display" id="display-text">apple.com</span>
-                    <div class="domain-tag" id="popup-domain-tag">apple.com</div>
+                    <span class="domain-display" id="display-text">wikipedia.org</span>
+                    <div class="domain-tag" id="popup-domain-tag">
+                        <img id="fav-icon-popup" src="">
+                        <span id="popup-text">wikipedia.org</span>
+                    </div>
                 </div>
                 
                 <input type="text" id="url-input" spellcheck="false" autocomplete="off" placeholder="Search or enter website">
@@ -196,54 +184,42 @@
         const urlInput = document.getElementById('url-input');
         const viewport = document.getElementById('scroll-viewport');
         const favIcon = document.getElementById('fav-icon');
-
-        let currentState = 'normal';
-        let prevState = 'normal';
-        let lastScrollY = 0;
+        const favIconPopup = document.getElementById('fav-icon-popup');
 
         function updateBranding(url) {
             try {
                 const host = new URL(url).hostname.replace('www.', '');
                 document.getElementById('display-text').innerText = host;
-                document.getElementById('popup-domain-tag').innerText = host;
-                favIcon.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+                document.getElementById('popup-text').innerText = host;
+                const iconUrl = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+                favIcon.src = iconUrl;
+                favIconPopup.src = iconUrl;
             } catch(e) {}
         }
         updateBranding(iframe.src);
 
         function updateUIState(newState) {
             if (root.classList.contains('is-editing')) return;
-            currentState = newState;
             navRoot.className = 'safari-wrapper' + 
-                (currentState === 'compact' ? ' state-compact' : '') +
-                (currentState === 'simplified' ? ' state-simplified' : '');
+                (newState === 'compact' ? ' state-compact' : '') +
+                (newState === 'simplified' ? ' state-simplified' : '');
         }
 
-        // 核心邏輯：點擊觸發
         document.getElementById('logo-btn').addEventListener('click', (e) => {
-            // 如果是簡化狀態，點擊左邊圓圈 -> 開啟選單
+            const currentState = navRoot.classList.contains('state-simplified') ? 'simplified' : 
+                               (navRoot.classList.contains('state-compact') ? 'compact' : 'normal');
+
             if (currentState === 'simplified' && !root.classList.contains('is-menu-open')) {
                 root.classList.add('is-menu-open');
                 e.stopPropagation();
-                return;
-            }
-
-            // 如果選單已經開啟，點擊頂部標籤 -> 進入編輯
-            if (root.classList.contains('is-menu-open')) {
-                // 檢查是否點擊在頂部 header
-                if (e.target.closest('#trigger-area')) {
-                    enterEditMode();
-                }
+            } else if (root.classList.contains('is-menu-open')) {
+                if (e.target.closest('#trigger-area')) enterEditMode();
                 e.stopPropagation();
-                return;
-            }
-
-            // 如果是一般模式或縮小模式
-            if (currentState === 'normal') {
+            } else if (currentState === 'normal') {
                 enterEditMode();
                 e.stopPropagation();
             } else if (currentState === 'compact') {
-                updateUIState(prevState);
+                updateUIState('normal');
                 e.stopPropagation();
             }
         });
@@ -259,10 +235,8 @@
             root.classList.remove('is-menu-open');
             root.classList.remove('is-editing');
             urlInput.blur();
-            updateUIState(currentState);
         }
 
-        // 點擊外部關閉
         document.getElementById('global-overlay').addEventListener('touchstart', exitAll);
 
         urlInput.addEventListener('keypress', (e) => {
@@ -276,37 +250,21 @@
             }
         });
 
-        // 捲動縮小
         viewport.addEventListener('scroll', () => {
-            if (root.classList.contains('is-menu-open')) return;
+            if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing')) return;
             const currentScrollY = viewport.scrollTop;
-            const diff = currentScrollY - lastScrollY;
-            if (currentScrollY > 50 && diff > 5 && currentState !== 'compact') {
-                prevState = currentState;
-                updateUIState('compact');
-            } else if (diff < -15 && currentState === 'compact') {
-                updateUIState(prevState);
-            }
-            lastScrollY = currentScrollY;
+            if (currentScrollY > 60) updateUIState('compact');
+            else updateUIState('normal');
         });
 
-        // 左右滑動切換簡化模式
         let startX = 0;
         document.getElementById('pill').addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.getElementById('pill').addEventListener('touchend', e => {
-            if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing') || currentState === 'compact') return;
+            if (root.classList.contains('is-menu-open') || root.classList.contains('is-editing')) return;
             const diffX = e.changedTouches[0].clientX - startX;
-            if (diffX > 60 && currentState === 'normal') updateUIState('simplified');
-            else if (diffX < -60 && currentState === 'simplified') updateUIState('normal');
+            if (diffX > 60) updateUIState('simplified');
+            else if (diffX < -60) updateUIState('normal');
         });
-
-        // 禁止 Pill 上下滑動
-        document.getElementById('pill').addEventListener('touchmove', e => {
-            const deltaY = Math.abs(e.touches[0].pageY - this.lastY);
-            const deltaX = Math.abs(e.touches[0].pageX - this.lastX);
-            if (deltaY > deltaX) e.preventDefault();
-            this.lastY = e.touches[0].pageY; this.lastX = e.touches[0].pageX;
-        }, { passive: false });
     </script>
 </body>
 </html>
