@@ -10,96 +10,89 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <style>
         :root {
-            --bg: #ffffff; --text: #000000; --border: #000000; --accent: #007AFF; 
-            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30; --sub: #888888; --line: #e5e5e5;
+            --bg: #ffffff; --text: #000000; --accent: #007AFF; 
+            --safe: #34C759; --warn: #FFCC00; --danger: #FF3B30;
+            --line: #e5e5e5; --card: #f2f2f7;
         }
         @media (prefers-color-scheme: dark) {
-            :root { --bg: #000000; --text: #ffffff; --border: #ffffff; --sub: #aaaaaa; --line: #333333; }
+            :root { --bg: #000000; --text: #ffffff; --line: #333333; --card: #1c1c1e; }
         }
 
         body, html { height: 100%; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
-        .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; }
+        .view { display: none; height: 100%; width: 100%; flex-direction: column; box-sizing: border-box; overflow-y: auto; }
 
-        /* --- Landing View --- */
+        /* --- View 1: Landing --- */
         #landingView { justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        .hero-title { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px; margin: 0; }
-        .hero-subtitle { font-size: 1.2rem; font-weight: 500; opacity: 0.6; margin: 10px 0 40px 0; }
-        .btn-primary { 
-            background: var(--accent); color: white; padding: 18px 40px; border-radius: 50px; 
-            text-decoration: none; font-size: 1.2rem; font-weight: 800; transition: transform 0.2s;
-            border: 3px solid var(--border);
-        }
-        .btn-primary:active { transform: scale(0.95); }
+        .hero-title { font-size: 3rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; }
+        .hero-sub { opacity: 0.6; margin-bottom: 40px; font-weight: 500; }
+        .btn-main { background: var(--accent); color: white; padding: 18px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: 800; border: none; cursor: pointer; text-decoration: none; }
 
-        /* --- Home View (Generator) --- */
-        #homeView { justify-content: flex-start; align-items: center; padding: 30px 20px; overflow-y: auto; }
-        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
-        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -1.5px; text-align: center; }
-        label { font-weight: bold; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; margin-top: 4px; }
-        input, textarea { padding: 12px; font-size: 1rem; background: transparent; color: var(--text); border: 3px solid var(--border); outline: none; font-weight: 600; font-family: inherit; }
+        /* --- View 2: Creation (Home) --- */
+        #homeView { padding: 40px 20px; align-items: center; }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+        label { font-weight: bold; font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; margin-top: 5px; }
+        input, textarea { padding: 14px; font-size: 1rem; background: var(--card); color: var(--text); border: none; border-radius: 10px; outline: none; font-family: inherit; }
+        .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+        
+        /* Safety Meter */
+        .meter-container { margin-top: 10px; border: 1px solid var(--line); padding: 12px; border-radius: 12px; }
+        .meter-bar { height: 6px; width: 100%; background: #eee; border-radius: 3px; overflow: hidden; }
+        #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
+        #meterText { font-size: 0.7rem; font-weight: 800; margin-top: 8px; display: block; }
 
-        .switch-group { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        #getBtn { padding: 18px; font-size: 1.1rem; font-weight: 900; background: var(--accent); color: white; border: none; border-radius: 15px; cursor: pointer; margin-top: 20px; }
+
+        /* --- View 3: Install (App Store Style) --- */
+        #installView { padding: 40px 25px; align-items: center; }
+        .store-header { display: flex; width: 100%; max-width: 400px; gap: 20px; align-items: flex-start; margin-bottom: 30px; }
+        .store-icon { width: 110px; height: 110px; border-radius: 24px; flex-shrink: 0; object-fit: cover; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .store-info { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+        .store-name { font-size: 1.5rem; font-weight: 800; margin: 0; line-height: 1.2; text-align: left; }
+        
+        /* App Store "Get" Style Button */
+        #qrBtn { background: var(--accent); color: white; border: none; padding: 6px 24px; font-weight: 800; font-size: 0.9rem; border-radius: 20px; cursor: pointer; align-self: flex-start; }
+        
+        .store-divider { width: 100%; max-width: 400px; height: 1px; background-color: var(--line); margin: 20px 0; }
+        .store-section { width: 100%; max-width: 400px; text-align: left; }
+        .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
+        .store-description { font-size: 1rem; line-height: 1.5; opacity: 0.8; white-space: pre-wrap; }
+
+        .install-footer { margin-top: auto; padding: 40px 0; text-align: center; }
+        .instruction { font-size: 0.9rem; font-weight: 600; opacity: 0.7; }
+        .arrow { font-size: 2rem; animation: bounce 2s infinite; margin-top: 10px; }
+
+        /* Switches & Modals */
+        .switch { position: relative; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border: 2px solid var(--border); }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border: 2px solid var(--border); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        .meter-container { margin-top: 5px; border: 2px solid var(--border); padding: 10px; border-radius: 8px; }
-        .meter-bar { height: 10px; width: 100%; background: #eee; border: 1px solid var(--border); overflow: hidden; }
-        #meterFill { height: 100%; width: 0%; transition: width 0.3s; }
-        #meterText { font-size: 0.75rem; font-weight: 900; margin-top: 6px; display: block; }
-
-        .dev-tools { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-sub { flex: 1; padding: 10px; font-size: 0.8rem; font-weight: bold; background: transparent; color: var(--text); border: 2px solid var(--border); cursor: pointer; }
-
-        .upload-area { border: 3px dashed var(--border); padding: 15px; text-align: center; cursor: pointer; font-weight: bold; }
-        #iconPreview { width: 60px; height: 60px; border-radius: 12px; display: none; margin: 10px auto; border: 2px solid var(--border); object-fit: cover; }
-        #generateBtn { padding: 16px; font-size: 1.1rem; font-weight: 900; background: var(--accent); color: white; border: 3px solid var(--border); cursor: pointer; margin-top: 15px; }
-
-        /* --- Install View (App Store Style) --- */
-        #installView { justify-content: flex-start; align-items: center; padding: 40px 25px; overflow-y: auto; text-align: left; }
-        .store-header { display: flex; width: 100%; max-width: 400px; gap: 20px; align-items: center; margin-bottom: 25px; }
-        .store-icon { width: 100px; height: 100px; border-radius: 22px; border: 1px solid var(--line); flex-shrink: 0; object-fit: cover; background: #fff; }
-        .store-name { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; line-height: 1.2; flex-grow: 1; text-align: left; }
-        .store-divider { width: 100%; height: 1px; background-color: var(--line); margin: 20px 0; }
-        .store-section { width: 100%; max-width: 400px; }
-        .store-section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; text-align: left; }
-        .store-description { font-size: 1rem; line-height: 1.5; color: var(--text); opacity: 0.9; white-space: pre-wrap; text-align: left; }
-
-        .install-footer { margin-top: auto; padding: 30px 0; text-align: center; width: 100%; }
-        .instruction { font-size: 1rem; font-weight: 600; margin-bottom: 10px; }
-        .arrow { font-size: 2.5rem; animation: bounce 2s infinite; }
-
-        /* --- QR Modal --- */
-        #qrBtn { display: none; margin-top: 20px; background: var(--text); color: var(--bg); border: none; padding: 12px 28px; font-weight: 900; cursor: pointer; border-radius: 30px; }
-        #qrModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        #qrCanvas { width: 85vw; height: 85vw; max-width: 450px; background: #fff; border: 10px solid #fff; }
-        #closeQr { margin-top: 30px; font-weight: 900; border: 3px solid var(--border); padding: 10px 50px; cursor: pointer; }
-
+        #qrModal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
+        #qrCanvas { width: 80vw; max-width: 400px; background: #fff; padding: 10px; border-radius: 10px; }
+        
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
-        #appView { height: 100vh; width: 100vw; display: none; }
-        iframe { border: none; width: 100%; height: 100%; padding-bottom: env(safe-area-inset-bottom); }
+        #appView, iframe { height: 100vh; width: 100vw; border: none; display: none; }
     </style>
 </head>
 <body>
 
     <div id="landingView" class="view">
         <h1 class="hero-title">alwaysPWA</h1>
-        <p class="hero-subtitle">Serverless. Instant. Permanent.</p>
-        <a href="#home" target="_blank" class="btn-primary">Create PWA!</a>
+        <p class="hero-sub">Instant. Serverless. Permanent.</p>
+        <button class="btn-main" onclick="location.hash='#home'">Create PWA!</button>
     </div>
 
     <div id="homeView" class="view">
-        <h1>alwaysPWA</h1>
         <div class="input-group">
+            <h2 style="margin: 0 0 10px 0; font-weight: 900;">Developer</h2>
             <label>Target URL</label>
             <input type="url" id="targetUrl" placeholder="https://..." autocomplete="off">
             <label>App Name</label>
             <input type="text" id="targetName" placeholder="My App" autocomplete="off">
             <label>Description</label>
-            <textarea id="targetDesc" rows="3" placeholder="Enter app description..."></textarea>
+            <textarea id="targetDesc" rows="3" placeholder="App details..."></textarea>
             <label>Custom JS (Optional)</label>
             <input type="url" id="targetJs" placeholder="https://..." autocomplete="off">
             
@@ -108,29 +101,29 @@
                 <label class="switch"><input type="checkbox" id="iframeToggle" checked><span class="slider"></span></label>
             </div>
 
-            <div class="switch-group" style="background: rgba(0,122,255,0.05); border: 2px solid var(--accent); padding: 10px; border-radius: 8px;">
+            <div class="switch-group">
                 <span style="font-size: 0.85rem; font-weight: bold; color: var(--accent);">Adaptive QR Compression</span>
                 <label class="switch"><input type="checkbox" id="extremeToggle" checked><span class="slider"></span></label>
             </div>
 
             <label>App Icon</label>
-            <div class="upload-area" onclick="document.getElementById('iconFile').click()">
-                <span id="uploadText">Select Icon</span>
-                <img id="iconPreview">
+            <div style="background: var(--card); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer;" onclick="document.getElementById('iconFile').click()">
+                <span id="uploadText" style="font-weight: bold; font-size: 0.8rem;">Select Icon</span>
+                <img id="iconPreview" style="width: 60px; height: 60px; border-radius: 12px; display: none; margin: 10px auto; object-fit: cover;">
                 <input type="file" id="iconFile" accept="image/*" style="display:none">
             </div>
 
-            <div class="meter-container" id="meterContainer">
+            <div class="meter-container" id="meterContainer" style="display: none;">
                 <div class="meter-bar"><div id="meterFill"></div></div>
-                <span id="meterText">Analyze total length...</span>
+                <span id="meterText">Analyzing...</span>
             </div>
 
-            <button id="generateBtn">Generate PWA</button>
+            <button id="getBtn">Get PWA!</button>
 
-            <div class="dev-tools">
-                <button class="btn-sub" onclick="exportConfig()">Export JSON</button>
-                <button class="btn-sub" onclick="document.getElementById('importFile').click()">Import JSON</button>
-                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importConfig(this)">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button style="flex:1; padding: 10px; font-size: 0.7rem; font-weight: bold; background: var(--card); border: none; border-radius: 8px; color: var(--text);" onclick="exportJSON()">Export JSON</button>
+                <button style="flex:1; padding: 10px; font-size: 0.7rem; font-weight: bold; background: var(--card); border: none; border-radius: 8px; color: var(--text);" onclick="document.getElementById('importFile').click()">Import JSON</button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
             </div>
         </div>
     </div>
@@ -138,7 +131,10 @@
     <div id="installView" class="view">
         <div class="store-header">
             <img id="displayIcon" class="store-icon">
-            <h1 id="displayName" class="store-name"></h1>
+            <div class="store-info">
+                <h1 id="displayName" class="store-name"></h1>
+                <button id="qrBtn">SHARE</button>
+            </div>
         </div>
         <div class="store-divider"></div>
         <div class="store-section">
@@ -148,29 +144,26 @@
         <div class="install-footer">
             <div class="instruction">Tap <strong>Share</strong> and <strong>Add to Home Screen</strong></div>
             <div class="arrow">↓</div>
-            <button id="qrBtn">Share via QR Code</button>
         </div>
     </div>
 
     <div id="qrModal">
         <canvas id="qrCanvas"></canvas>
-        <div id="closeQr">Back</div>
+        <button onclick="document.getElementById('qrModal').style.display='none'" style="margin-top: 30px; border: none; background: var(--card); color: var(--text); padding: 10px 40px; border-radius: 20px; font-weight: 800;">Close</button>
     </div>
 
-    <div id="appView" class="view">
+    <div id="appView">
         <iframe id="appFrame"></iframe>
     </div>
 
     <script>
         let base64Icon = "";
-        let currentFile = null;
         let isScannable = false;
 
-        const compress = (str) => str ? LZString.compressToEncodedURIComponent(str) : "";
-        const decompress = (str) => str ? LZString.decompressFromEncodedURIComponent(str) : "";
+        const compress = (s) => LZString.compressToEncodedURIComponent(s || "");
+        const decompress = (s) => LZString.decompressFromEncodedURIComponent(s || "");
 
-        // 全域 URL 長度計算 (含壓縮文字)
-        function getFinalUrl(iconData) {
+        function getFinalUrl(icon) {
             const p = new URLSearchParams();
             p.set('u', compress(document.getElementById('targetUrl').value));
             p.set('n', compress(document.getElementById('targetName').value));
@@ -178,37 +171,41 @@
             p.set('j', compress(document.getElementById('targetJs').value));
             p.set('if', document.getElementById('iframeToggle').checked ? 't' : 'f');
             if (isScannable) p.set('q', '1');
-            return window.location.origin + window.location.pathname + "#" + p.toString() + "&i=" + encodeURIComponent(iconData || "");
+            return window.location.origin + window.location.pathname + "#" + p.toString() + "&i=" + encodeURIComponent(icon || "");
         }
 
         async function processIcon() {
-            if (!currentFile) return;
+            const file = document.getElementById('iconFile').files[0];
+            if (!file) return;
             const isAdaptive = document.getElementById('extremeToggle').checked;
-            const img = await loadImage(currentFile);
+            const img = await new Promise(res => {
+                const r = new FileReader(); r.onload = e => {
+                    const i = new Image(); i.onload = () => res(i); i.src = e.target.result;
+                }; r.readAsDataURL(file);
+            });
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-
-            let quality = 0.85; let size = 180; let result = "";
-            const LIMIT = 3900; 
+            let q = 0.85, sz = 180, res = "";
 
             if (!isAdaptive) {
-                canvas.width = 180; canvas.height = 180;
-                ctx.drawImage(img, 0, 0, 180, 180);
-                result = canvas.toDataURL('image/png'); 
+                canvas.width = sz; canvas.height = sz;
+                ctx.drawImage(img, 0, 0, sz, sz);
+                res = canvas.toDataURL('image/png');
             } else {
                 for (let i = 0; i < 10; i++) {
-                    canvas.width = size; canvas.height = size;
-                    ctx.clearRect(0, 0, size, size);
-                    ctx.drawImage(img, 0, 0, size, size);
-                    result = canvas.toDataURL('image/jpeg', quality);
-                    if (getFinalUrl(result).length <= LIMIT) break;
-                    if (quality > 0.3) quality -= 0.15; else size -= 20;
+                    canvas.width = sz; canvas.height = sz;
+                    ctx.clearRect(0, 0, sz, sz);
+                    ctx.drawImage(img, 0, 0, sz, sz);
+                    res = canvas.toDataURL('image/jpeg', q);
+                    if (getFinalUrl(res).length <= 3900) break;
+                    if (q > 0.3) q -= 0.15; else sz -= 20;
                 }
             }
-            base64Icon = result;
+            base64Icon = res;
             updateMeter();
-            document.getElementById('iconPreview').src = base64Icon;
-            document.getElementById('iconPreview').style.display = 'block';
+            const preview = document.getElementById('iconPreview');
+            preview.src = base64Icon; preview.style.display = 'block';
             document.getElementById('uploadText').style.display = 'none';
         }
 
@@ -221,85 +218,83 @@
             fill.style.width = Math.min(100, score) + '%';
             isScannable = len < 4300;
             fill.style.background = len < 3000 ? 'var(--safe)' : (len < 4300 ? 'var(--warn)' : 'var(--danger)');
-            text.innerText = `Total: ${len} chars. ${len < 3000 ? "EXCELLENT" : (len < 4300 ? "GOOD" : "TOO LONG")}`;
+            text.innerText = `Size: ${len} chars. ${len < 4300 ? "Ready for QR" : "Too Large"}`;
             text.style.color = fill.style.background;
         }
 
-        function exportConfig() {
-            const config = { u: document.getElementById('targetUrl').value, n: document.getElementById('targetName').value, d: document.getElementById('targetDesc').value, j: document.getElementById('targetJs').value, if: document.getElementById('iframeToggle').checked, i: base64Icon };
-            const blob = new Blob([JSON.stringify(config)], {type: "application/json"});
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `pwa-${config.n || 'config'}.json`; a.click();
+        function exportJSON() {
+            const data = { u: document.getElementById('targetUrl').value, n: document.getElementById('targetName').value, d: document.getElementById('targetDesc').value, j: document.getElementById('targetJs').value, if: document.getElementById('iframeToggle').checked, i: base64Icon };
+            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pwa-${data.n || 'config'}.json`; a.click();
         }
 
-        function importConfig(input) {
-            const file = input.files[0]; if (!file) return;
+        function importJSON(input) {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = e => {
                 const c = JSON.parse(e.target.result);
-                document.getElementById('targetUrl').value = c.u || c.url || "";
-                document.getElementById('targetName').value = c.n || c.name || "";
-                document.getElementById('targetDesc').value = c.d || c.desc || "";
-                document.getElementById('targetJs').value = c.j || c.js || "";
-                document.getElementById('iframeToggle').checked = c.if !== undefined ? c.if : (c.mode === 'iframe');
-                if (c.i || c.icon) { base64Icon = c.i || c.icon; document.getElementById('iconPreview').src = base64Icon; document.getElementById('iconPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; updateMeter(); }
+                document.getElementById('targetUrl').value = c.u || "";
+                document.getElementById('targetName').value = c.n || "";
+                document.getElementById('targetDesc').value = c.d || "";
+                document.getElementById('targetJs').value = c.j || "";
+                document.getElementById('iframeToggle').checked = c.if !== false;
+                if (c.i) {
+                    base64Icon = c.i;
+                    document.getElementById('iconPreview').src = base64Icon;
+                    document.getElementById('iconPreview').style.display = 'block';
+                    document.getElementById('uploadText').style.display = 'none';
+                    updateMeter();
+                }
             };
-            reader.readAsText(file);
+            reader.readAsText(input.files[0]);
         }
 
-        function loadImage(file) { return new Promise((res) => { const r = new FileReader(); r.onload = (e) => { const i = new Image(); i.onload = () => res(i); i.src = e.target.result; }; r.readAsDataURL(file); }); }
-
-        document.getElementById('iconFile').onchange = (e) => { currentFile = e.target.files[0]; processIcon(); };
-        document.getElementById('generateBtn').onclick = () => {
-            if (!document.getElementById('targetUrl').value || !document.getElementById('targetName').value || !base64Icon) return alert("Fill Name, URL and Icon!");
-            window.open(getFinalUrl(base64Icon), '_blank');
-        };
-
-        function init() {
-            const hash = location.hash.substring(1);
-            
-            // Routing Logic
+        function handleRoute() {
+            const hash = location.hash;
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-
+            
             if (!hash) {
                 document.getElementById('landingView').style.display = 'flex';
-                return;
-            }
-
-            if (hash === 'home') {
+            } else if (hash === '#home') {
                 document.getElementById('homeView').style.display = 'flex';
-                return;
-            }
-
-            // Handle PWA Params
-            const p = new URLSearchParams(hash);
-            const n = decompress(p.get('n')) || p.get('name');
-            const u = decompress(p.get('u')) || p.get('url');
-            const d = decompress(p.get('d')) || p.get('desc') || "No description provided.";
-            const j = decompress(p.get('j')) || p.get('js');
-            const i = decodeURIComponent(p.get('i') || p.get('icon'));
-            const isIf = (p.get('if') === 't') || (p.get('mode') === 'iframe');
-            
-            if (!n || !u) return (location.hash = ""); // Redirect to landing if invalid
-
-            document.title = n;
-            const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = i; document.head.appendChild(link);
-            const meta = document.createElement('meta'); meta.name = 'apple-mobile-web-app-title'; meta.content = n; document.head.appendChild(meta);
-
-            if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-                if (j) { const s = document.createElement('script'); s.src = j; document.head.appendChild(s); }
-                if (isIf) { document.getElementById('appView').style.display = 'block'; document.getElementById('appFrame').src = u; } else { window.location.replace(u); }
             } else {
-                document.getElementById('displayName').innerText = n; document.getElementById('displayIcon').src = i;
-                document.getElementById('displayDesc').innerText = d; document.getElementById('installView').style.display = 'flex';
-                if (p.get('q') === '1' || p.get('qr') === '1') {
-                    const b = document.getElementById('qrBtn'); b.style.display = 'inline-block';
-                    b.onclick = () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 850, level: 'L' }); document.getElementById('qrModal').style.display = 'flex'; };
+                const p = new URLSearchParams(hash.substring(1));
+                const n = decompress(p.get('n')) || p.get('name');
+                const u = decompress(p.get('u')) || p.get('url');
+                const i = decodeURIComponent(p.get('i') || p.get('icon') || "");
+                if (!u || !n) { location.hash = ""; return; }
+
+                if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+                    const js = decompress(p.get('j')) || p.get('js');
+                    if (js) { const s = document.createElement('script'); s.src = js; document.head.appendChild(s); }
+                    if (p.get('if') === 't' || p.get('mode') === 'iframe') {
+                        document.getElementById('appView').style.display = 'block';
+                        const f = document.getElementById('appFrame'); f.style.display = 'block'; f.src = u;
+                    } else { window.location.replace(u); }
+                } else {
+                    document.getElementById('installView').style.display = 'flex';
+                    document.getElementById('displayName').innerText = n;
+                    document.getElementById('displayIcon').src = i;
+                    document.getElementById('displayDesc').innerText = decompress(p.get('d')) || p.get('desc') || "No description.";
+                    
+                    const qBtn = document.getElementById('qrBtn');
+                    if (p.get('q') === '1' || p.get('qr') === '1') {
+                        qBtn.style.display = 'block';
+                        qBtn.onclick = () => {
+                            new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 800, level: 'L' });
+                            document.getElementById('qrModal').style.display = 'flex';
+                        };
+                    } else { qBtn.style.display = 'none'; }
+                    
+                    document.title = n;
+                    const link = document.createElement('link'); link.rel = 'apple-touch-icon'; link.href = i; document.head.appendChild(link);
                 }
-                document.getElementById('closeQr').onclick = () => document.getElementById('qrModal').style.display = 'none';
             }
         }
-        window.addEventListener('hashchange', init);
-        window.onload = init;
+
+        document.getElementById('iconFile').onchange = processIcon;
+        document.getElementById('getBtn').onclick = () => window.open(getFinalUrl(base64Icon), '_blank');
+        window.onhashchange = handleRoute;
+        window.onload = handleRoute;
     </script>
 </body>
 </html>
