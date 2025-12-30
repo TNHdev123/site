@@ -2,122 +2,152 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Cydia">
-    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAMAAAARGXGBAAAAM1BMVEUAAAD///8/Pz9fX19/f3+fn5+vr6+fn5+fn59/f39fX19PT08/Pz8fHx8fHx8fHx8fHx9K7mYkAAAAEHRSTlMAECBAQEBAYGBgcHCAgIDA0E3YpAAAAYtJREFUeNrt2tlygzAMBuGfS8AWCHv7v+mE0pS0mU6m7XhmPhYvIn4SkhA2m81ms9lstv8v69V6uVktN6v1S6/VfPZ6rXq99Hqterv06X/m09Wn0+V0Pp97VfXfX/t1u13X6/Z87v962O/S99KPhf1YOPvL/lg4nAtnf9kfC+dz4ewv+2PhfC6c/WV/LJzPhbO/7I+F87lw9pf9sXA+F87+sj8WzufC2V/2x8L5XDj7y/5YOJ8LZ3/ZHwvnc+HsL/tj4XwunP1lfyycz4Wzv+yPhfO5cPaX/bFwPhfO/rI/Fs7nwtlf9sfC+Vw4+8v+WDifC2d/2R8L53Ph7C/7Y+F8Lpz9ZX8snM+Fs7/sj4XzufD0y8F+u9lvN/ttN9v9dtpv97vNfrez2+7uN7vT3Znu1vR0pqcD3f2hu7W71Tt99Olfujvp7ky666S7Xrrrpbtuumun66e6fqrrpbp+XurXpLpU6uun6uek6tekuV6a66W5Xpq7X5vLp7l8mrtfm66X6Xp56T839A949H7j3AAAAABJRU5ErkJggg==">
-
-    <title>JailbreakMe</title>
+    <link rel="apple-touch-icon" href="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
+    <title>JailbreakMe 2.0</title>
     <style>
-        :root { --ios-green: linear-gradient(to bottom, #b4ddb4 0%, #83c783 50%, #52b152 51%, #008a00 100%); }
-        body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Arial, sans-serif; overflow: hidden; user-select: none; }
+        body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; user-select: none; }
+        #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; }
         
-        /* Layout Fix */
-        #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 0 100px 0; box-sizing: border-box; }
+        /* Original Info Panel */
+        header { padding: 45px 0 25px; text-align: center; color: white; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+        header h1 { font-size: 44px; margin: 0; font-weight: 500; letter-spacing: -1px; }
+        header p { margin: 0; opacity: 0.8; font-size: 15px; }
+
+        .glass-panel {
+            background: rgba(40, 40, 40, 0.75);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 12px;
+            width: 85%; max-width: 300px;
+            padding: 22px 18px;
+            text-align: center; color: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            position: relative; overflow: hidden;
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        }
+        .glass-panel::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(rgba(255,255,255,0.15), transparent); pointer-events: none;
+        }
+
+        /* Exploit Window (Dynamic Title/Msg) */
+        #exploit-overlay {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 270px; background: rgba(0,0,0,0.92); border: 1px solid #555; border-radius: 12px;
+            padding: 25px 15px; text-align: center; color: white; z-index: 1000;
+        }
+        #exploit-title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+        .progress-track { width: 100%; height: 18px; background: #111; border-radius: 9px; margin: 20px 0 12px; border: 1px solid #444; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(to bottom, #b4ddb4, #008a00); transition: width 0.3s; }
+        #status-msg { font-size: 13px; color: #bbb; min-height: 3em; line-height: 1.4; }
+
+        /* Enhanced Slider */
+        .bottom { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; }
+        .track { 
+            width: 280px; height: 56px; background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; 
+            position: relative; display: flex; align-items: center;
+        }
+        .slider-text { 
+            width: 100%; text-align: center; color: #fff; font-size: 21px; font-weight: 300;
+            background: linear-gradient(90deg, #555, #fff, #555); background-size: 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite;
+        }
+        .handle { 
+            width: 76px; height: 50px; background: linear-gradient(#fdfdfd, #9a9a9a); 
+            border-radius: 11px; position: absolute; left: 3px; cursor: pointer;
+            box-shadow: 0 1px 4px #000; display: flex; align-items: center; justify-content: center;
+        }
+        .handle::after { content: ''; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 13px solid #333; margin-left: 4px; }
+
+        /* Layers & Spinner */
+        #cydia-loading, #respring-layer, #reboot-layer, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { position: relative; width: 36px; height: 36px; margin-top: 25px; }
+        .spinner div { position: absolute; width: 10%; height: 28%; background: #fff; left: 45%; top: 36%; opacity: 0; border-radius: 50px; animation: fade 1s linear infinite; }
+        @keyframes fade { from { opacity: 1; } to { opacity: 0.15; } }
+        /* Spinner Blades (12) */
+        .spinner div:nth-child(1) { transform: rotate(0deg) translate(0, -140%); animation-delay: 0s; }
+        .spinner div:nth-child(2) { transform: rotate(30deg) translate(0, -140%); animation-delay: -0.91s; }
+        .spinner div:nth-child(3) { transform: rotate(60deg) translate(0, -140%); animation-delay: -0.83s; }
+        .spinner div:nth-child(4) { transform: rotate(90deg) translate(0, -140%); animation-delay: -0.75s; }
+        .spinner div:nth-child(5) { transform: rotate(120deg) translate(0, -140%); animation-delay: -0.66s; }
+        .spinner div:nth-child(6) { transform: rotate(150deg) translate(0, -140%); animation-delay: -0.58s; }
+        .spinner div:nth-child(7) { transform: rotate(180deg) translate(0, -140%); animation-delay: -0.5s; }
+        .spinner div:nth-child(8) { transform: rotate(210deg) translate(0, -140%); animation-delay: -0.41s; }
+        .spinner div:nth-child(9) { transform: rotate(240deg) translate(0, -140%); animation-delay: -0.33s; }
+        .spinner div:nth-child(10) { transform: rotate(270deg) translate(0, -140%); animation-delay: -0.25s; }
+        .spinner div:nth-child(11) { transform: rotate(300deg) translate(0, -140%); animation-delay: -0.16s; }
+        .spinner div:nth-child(12) { transform: rotate(330deg) translate(0, -140%); animation-delay: -0.08s; }
+
+        .silver-apple { width: 90px; height: 110px; background: linear-gradient(135deg, #eee, #888, #eee); -webkit-mask: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg') no-repeat center; -webkit-mask-size: contain; }
         
-        /* Exploiting Panel */
-        #exploit-overlay { display: none; width: 260px; background: rgba(0,0,0,0.92); border: 1px solid #444; border-radius: 12px; padding: 25px 15px; text-align: center; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; }
-        .progress-track { width: 100%; height: 14px; background: #1a1a1a; border-radius: 7px; margin-top: 20px; border: 1px solid #000; overflow: hidden; }
-        .progress-fill { width: 0%; height: 100%; background: var(--ios-green); transition: width 0.3s; }
-        #status-msg { font-size: 11px; color: #888; margin-top: 10px; font-family: monospace; }
-
-        /* Slider Fix */
-        .track { width: 280px; height: 52px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 12px; position: relative; display: flex; align-items: center; justify-content: center; }
-        .handle { width: 72px; height: 46px; background: linear-gradient(#fff, #999); border-radius: 10px; position: absolute; left: 3px; cursor: pointer; box-shadow: 0 2px 4px #000; }
-        .slider-text { color: #fff; font-size: 20px; background: linear-gradient(90deg, #444, #fff, #444); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
-
-        /* Fullscreen PWA Loading */
-        #cydia-loading { display: none; height: 100vh; background: #000; color: #fff; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 3000; }
-
-        /* RIP Animation */
-        #rip-text { opacity: 0; margin-top: 30px; text-align: center; transition: opacity 3s; }
-
-        /* Layers */
-        #respring-layer, #reboot-layer, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { position: relative; width: 40px; height: 40px; margin-top: 20px; }
-        .spinner div { position: absolute; width: 10%; height: 30%; background: #fff; left: 45%; top: 35%; border-radius: 50px; animation: fade 1s linear infinite; }
-        @keyframes fade { from { opacity: 1; } to { opacity: 0.2; } }
-        /* JS will populate spinner blades */
+        @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
     </style>
 </head>
 <body>
 
 <div id="viewport">
-    <header style="text-align:center;">
-        <h1 style="font-size:42px; color:white; margin:0;">JailbreakMe</h1>
-        <p style="color:white; opacity:0.6;">by comex</p>
+    <header>
+        <h1>JailbreakMe</h1>
+        <p>by comex</p>
     </header>
 
+    <div class="glass-panel" id="info-panel">
+        <b style="font-size:19px; display:block; margin-bottom:8px;">JailbreakMe</b>
+        <p style="font-size:14px; line-height:1.4; margin:0 0 15px 0;">Jailbreak to get tweaks and apps Apple won't allow in the App Store.</p>
+        <a href="#" style="color:#6ab2ff; text-decoration:none; font-size:14px; font-weight:bold;">More Info »</a>
+    </div>
+
     <div id="exploit-overlay">
-        <div style="font-weight:bold;">Jailbreaking...</div>
+        <div id="exploit-title">Jailbreaking...</div>
         <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
-        <div id="status-msg">Initializing stage...</div>
+        <div id="status-msg">Initializing exploit...</div>
     </div>
 
-    <div id="crying-info" style="display:none; text-align:center; color:white; padding:20px; background:rgba(0,0,0,0.8); border-radius:15px; width:280px; margin-bottom:100px;">
-        <b style="color:#ff4444; font-size:20px;">Cydia is crying X(</b><br><br>
-        <p style="font-size:14px;">Because you don't let him to go to your home screen, please add by yourself now ;(</p>
-    </div>
-
-    <div class="track" id="slider-box">
-        <div class="slider-text" id="stext">slide to jailbreak</div>
-        <div class="handle" id="handle"></div>
+    <div class="bottom">
+        <div class="track" id="track">
+            <div class="slider-text" id="stext">slide to jailbreak</div>
+            <div id="handle" class="handle"></div>
+        </div>
     </div>
 </div>
 
 <div id="cydia-loading">
-    <div style="font-size: 19px; font-weight: 300;">Downloading Cydia Data</div>
-    <div class="spinner" id="spinner1"></div>
+    <div style="font-size: 19px; letter-spacing: 0.5px; font-weight: 300;">Downloading Cydia Data</div>
+    <div class="spinner">
+        <div></div><div></div><div></div><div></div><div></div><div></div>
+        <div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
 </div>
 
-<div id="respring-layer"><div class="spinner" id="spinner2"></div></div>
-<div id="reboot-layer"><div style="width:95px; height:115px; background:linear-gradient(135deg, #eee, #888, #eee); -webkit-mask: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg') no-repeat center; -webkit-mask-size: contain;"></div></div>
-
+<div id="respring-layer"><div class="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+<div id="reboot-layer"><div class="silver-apple"></div></div>
 <div id="recovery-layer">
     <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/ITunes_logo.svg" style="width:130px; filter:saturate(0.2) brightness(0.65);">
-    <div style="width:2px; height:110px; background:linear-gradient(#fff, transparent); margin: 30px 0;"></div>
-    <div id="rip-text">
-        <div style="color:#444; font-size:26px; font-family:'Times New Roman'; font-weight:bold;">RIP <span id="dev-name">XD</span></div>
-        <div style="color:#444; font-size:17px; font-family:'Times New Roman';">2025 - 2025</div>
+    <div style="width:2px; height:110px; background:linear-gradient(#fff, transparent); margin: 30px auto;"></div>
+    <div style="color:#444; font-family:'Times New Roman', serif; text-align:center;">
+        <div style="font-size:26px; font-weight:bold; letter-spacing:1px;">RIP <span id="dev-type">XD</span></div>
+        <div style="font-size:17px; margin-top:5px;">2025 - 2025</div>
     </div>
 </div>
 
 <script>
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
     const ua = navigator.userAgent;
-    const isIOS = /iPhone|iPad|iPod/.test(ua);
-    const devName = ua.includes("iPad") ? "iPad" : (ua.includes("iPhone") ? "iPhone" : (ua.includes("iPod") ? "iPod" : "XD"));
-    document.getElementById('dev-name').innerText = devName;
+    const devType = ua.includes("iPad") ? "iPad" : (ua.includes("iPhone") ? "iPhone" : (ua.includes("iPod") ? "iPod" : "XD"));
+    document.getElementById('dev-type').innerText = devType;
 
-    // Populate Spinners
-    function makeSpinner(id) {
-        const s = document.getElementById(id);
-        for(let i=0; i<12; i++) {
-            let d = document.createElement('div');
-            d.style.transform = `rotate(${i*30}deg) translate(0, -140%)`;
-            d.style.animationDelay = `${-1 + (i*0.083)}s`;
-            s.appendChild(d);
-        }
-    }
-    makeSpinner('spinner1'); makeSpinner('spinner2');
-
-    // Logic for Non-Supported or PWA
-    if (isStandalone) {
+    if (isPWA) {
         document.getElementById('viewport').style.display = 'none';
-        if (isIOS) {
-            document.getElementById('cydia-loading').style.display = 'flex';
-            setTimeout(triggerDeath, 7000); // Wait 7s then die
-        } else {
-            // Non-iOS PWA: Straight to death
-            triggerDeath();
-        }
+        document.getElementById('cydia-loading').style.display = 'flex';
+        setTimeout(startFinalDisaster, 7000);
     }
 
-    // Slider Logic
-    const handle = document.getElementById('handle'), track = document.getElementById('slider-box');
-    let isDragging = false, startX = 0, max = 280 - 72 - 6;
+    const handle = document.getElementById('handle'), track = document.getElementById('track');
+    let isDragging = false, startX = 0, max = track.offsetWidth - handle.offsetWidth - 6;
 
     const start = (e) => { isDragging = true; startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; handle.style.transition = 'none'; };
     const move = (e) => {
@@ -125,44 +155,38 @@
         let x = (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) - startX;
         x = Math.max(0, Math.min(x, max));
         handle.style.transform = `translateX(${x}px)`;
+        document.getElementById('stext').style.opacity = 1 - (x/max);
     };
     const end = () => {
         if (!isDragging) return; isDragging = false;
         const x = parseInt(new WebKitCSSMatrix(window.getComputedStyle(handle).transform).m41);
-        if (x > max * 0.9) { handle.style.transform = `translateX(${max}px)`; startJailbreak(); }
-        else { handle.style.transition = '0.3s'; handle.style.transform = 'translateX(0)'; }
+        if (x > max * 0.95) { handle.style.transform = `translateX(${max}px)`; startExploit(); }
+        else { handle.style.transition = '0.3s'; handle.style.transform = 'translateX(0)'; document.getElementById('stext').style.opacity = 1; }
     };
-    handle.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
-    handle.addEventListener('touchstart', start); window.addEventListener('touchmove', move); window.addEventListener('touchend', end);
 
-    function startJailbreak() {
+    function startExploit() {
+        document.getElementById('info-panel').style.opacity = '0.2';
         document.getElementById('exploit-overlay').style.display = 'block';
-        const steps = [
-            {p: 10, m: "Fetching stage1..."},
-            {p: 25, m: "Exploiting FreeType..."},
-            {p: 45, m: "Building ROP chain..."},
-            {p: 70, m: "Bypassing sandbox..."},
-            {p: 90, m: "Injecting payload..."},
-            {p: 100, m: "Success."}
-        ];
-        let i = 0;
+        let p = 0;
         const iv = setInterval(() => {
-            if (i >= steps.length) {
+            p += 2;
+            document.getElementById('fill').style.width = p + '%';
+            if (p === 30) document.getElementById('status-msg').innerText = "Bypassing sandbox...";
+            if (p === 60) document.getElementById('status-msg').innerText = "Downloading Cydia core...";
+            if (p === 90) document.getElementById('status-msg').innerText = "Patching kernel...";
+            if (p >= 100) {
                 clearInterval(iv);
                 setTimeout(() => {
-                    document.getElementById('exploit-overlay').style.display = 'none';
-                    document.getElementById('slider-box').style.display = 'none';
-                    document.getElementById('crying-info').style.display = 'block';
-                }, 1000);
-                return;
+                    document.getElementById('exploit-title').innerText = "Cydia is crying X(";
+                    document.getElementById('exploit-title').style.color = "#ff4d4d";
+                    document.getElementById('status-msg').innerText = "Because you don't let him to go to your home screen, please add by yourself now ;(";
+                    document.getElementById('status-msg').style.color = "#fff";
+                }, 800);
             }
-            document.getElementById('fill').style.width = steps[i].p + '%';
-            document.getElementById('status-msg').innerText = steps[i].m;
-            i++;
-        }, 1500);
+        }, 120);
     }
 
-    function triggerDeath() {
+    function startFinalDisaster() {
         document.getElementById('cydia-loading').style.display = 'none';
         document.getElementById('respring-layer').style.display = 'flex';
         setTimeout(() => {
@@ -171,16 +195,13 @@
             setTimeout(() => {
                 document.getElementById('reboot-layer').style.display = 'none';
                 document.getElementById('recovery-layer').style.display = 'flex';
-                // Delay RIP Display
-                setTimeout(() => { document.getElementById('rip-text').style.opacity = "1"; }, 3000);
             }, 5000);
-        }, 4000);
+        }, 4500);
     }
-</script>
 
-<style>
-    @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
-</style>
+    handle.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+    handle.addEventListener('touchstart', start); window.addEventListener('touchmove', move); window.addEventListener('touchend', end);
+</script>
 
 </body>
 </html>
