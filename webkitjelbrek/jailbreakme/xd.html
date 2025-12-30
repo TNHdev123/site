@@ -12,63 +12,65 @@
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; user-select: none; }
         #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; }
         
-        /* Original Info Panel */
-        header { padding: 45px 0 25px; text-align: center; color: white; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
-        header h1 { font-size: 44px; margin: 0; font-weight: 500; letter-spacing: -1px; }
-        header p { margin: 0; opacity: 0.8; font-size: 15px; }
+        /* Updated Header based on image */
+        header { padding: 40px 0 20px; text-align: center; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+        header h1 { font-size: 46px; margin: 0; font-weight: 500; letter-spacing: -1px; }
+        header p { margin: 5px 0 0 0; opacity: 0.9; font-size: 16px; font-weight: 300; }
 
+        /* Information Panel from image */
         .glass-panel {
-            background: rgba(40, 40, 40, 0.75);
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 12px;
-            width: 85%; max-width: 300px;
-            padding: 22px 18px;
+            background: rgba(45, 45, 45, 0.7);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 15px;
+            width: 82%; max-width: 290px;
+            padding: 20px;
             text-align: center; color: white;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
             position: relative; overflow: hidden;
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
         .glass-panel::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
-            background: linear-gradient(rgba(255,255,255,0.15), transparent); pointer-events: none;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 45%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent); pointer-events: none;
         }
 
-        /* Exploit Window (Dynamic Title/Msg) */
+        /* Exploit Window Overlay */
         #exploit-overlay {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 270px; background: rgba(0,0,0,0.92); border: 1px solid #555; border-radius: 12px;
+            width: 270px; background: rgba(10,10,10,0.95); border: 1px solid #666; border-radius: 14px;
             padding: 25px 15px; text-align: center; color: white; z-index: 1000;
         }
-        #exploit-title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
-        .progress-track { width: 100%; height: 18px; background: #111; border-radius: 9px; margin: 20px 0 12px; border: 1px solid #444; overflow: hidden; }
+        #exploit-title { font-weight: bold; font-size: 19px; margin-bottom: 5px; }
+        .progress-track { width: 100%; height: 18px; background: #000; border-radius: 9px; margin: 22px 0 12px; border: 1px solid #333; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(to bottom, #b4ddb4, #008a00); transition: width 0.3s; }
-        #status-msg { font-size: 13px; color: #bbb; min-height: 3em; line-height: 1.4; }
+        #status-msg { font-size: 13px; color: #ccc; min-height: 3.5em; line-height: 1.5; }
 
-        /* Enhanced Slider */
-        .bottom { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; }
+        /* Slider with updated graphics */
+        .bottom { position: absolute; bottom: 70px; width: 100%; display: flex; justify-content: center; }
         .track { 
-            width: 280px; height: 56px; background: rgba(0,0,0,0.5); 
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; 
+            width: 290px; height: 58px; background: rgba(0,0,0,0.7); 
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; 
             position: relative; display: flex; align-items: center;
         }
         .slider-text { 
-            width: 100%; text-align: center; color: #fff; font-size: 21px; font-weight: 300;
-            background: linear-gradient(90deg, #555, #fff, #555); background-size: 200%;
+            width: 100%; text-align: center; color: #fff; font-size: 22px; font-weight: 300;
+            background: linear-gradient(90deg, #666, #fff, #666); background-size: 200%;
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite;
         }
         .handle { 
-            width: 76px; height: 50px; background: linear-gradient(#fdfdfd, #9a9a9a); 
-            border-radius: 11px; position: absolute; left: 3px; cursor: pointer;
-            box-shadow: 0 1px 4px #000; display: flex; align-items: center; justify-content: center;
+            width: 78px; height: 52px; background: linear-gradient(#fff 0%, #eee 50%, #999 100%); 
+            border-radius: 10px; position: absolute; left: 3px; cursor: pointer;
+            box-shadow: 0 1px 3px #000; display: flex; align-items: center; justify-content: center;
         }
-        .handle::after { content: ''; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 13px solid #333; margin-left: 4px; }
+        /* The Arrow in the handle */
+        .handle::after { content: ''; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 14px solid #444; margin-left: 5px; }
 
-        /* Layers & Spinner */
+        /* Generic layers */
         #cydia-loading, #respring-layer, #reboot-layer, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { position: relative; width: 36px; height: 36px; margin-top: 25px; }
+        .spinner { position: relative; width: 38px; height: 38px; margin-top: 25px; }
         .spinner div { position: absolute; width: 10%; height: 28%; background: #fff; left: 45%; top: 36%; opacity: 0; border-radius: 50px; animation: fade 1s linear infinite; }
         @keyframes fade { from { opacity: 1; } to { opacity: 0.15; } }
-        /* Spinner Blades (12) */
+        /* Spinner Blades */
         .spinner div:nth-child(1) { transform: rotate(0deg) translate(0, -140%); animation-delay: 0s; }
         .spinner div:nth-child(2) { transform: rotate(30deg) translate(0, -140%); animation-delay: -0.91s; }
         .spinner div:nth-child(3) { transform: rotate(60deg) translate(0, -140%); animation-delay: -0.83s; }
@@ -82,8 +84,6 @@
         .spinner div:nth-child(11) { transform: rotate(300deg) translate(0, -140%); animation-delay: -0.16s; }
         .spinner div:nth-child(12) { transform: rotate(330deg) translate(0, -140%); animation-delay: -0.08s; }
 
-        .silver-apple { width: 90px; height: 110px; background: linear-gradient(135deg, #eee, #888, #eee); -webkit-mask: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg') no-repeat center; -webkit-mask-size: contain; }
-        
         @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
     </style>
 </head>
@@ -92,13 +92,19 @@
 <div id="viewport">
     <header>
         <h1>JailbreakMe</h1>
-        <p>by comex</p>
+        <p>by comex (et al.)</p>
     </header>
 
-    <div class="glass-panel" id="info-panel">
-        <b style="font-size:19px; display:block; margin-bottom:8px;">JailbreakMe</b>
-        <p style="font-size:14px; line-height:1.4; margin:0 0 15px 0;">Jailbreak to get tweaks and apps Apple won't allow in the App Store.</p>
-        <a href="#" style="color:#6ab2ff; text-decoration:none; font-size:14px; font-weight:bold;">More Info »</a>
+    <div class="glass-panel">
+        <b style="font-size:16px; display:block; margin-bottom:10px;">JailbreakMe</b>
+        <p style="font-size:14px; line-height:1.3; margin:0;">
+            Jailbreak to get tweaks and apps Apple won't allow in the App Store.<br>
+            Free, legal, safe.
+        </p>
+        <p style="font-size:14px; line-height:1.3; margin:12px 0;">
+            You should sync with iTunes before using this tool.
+        </p>
+        <a href="#" style="color:#fff; text-decoration:none; font-size:17px; font-weight:bold;">More Info »</a>
     </div>
 
     <div id="exploit-overlay">
@@ -124,7 +130,7 @@
 </div>
 
 <div id="respring-layer"><div class="spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
-<div id="reboot-layer"><div class="silver-apple"></div></div>
+<div id="reboot-layer"><div style="width:90px; height:110px; background:linear-gradient(135deg, #eee, #888, #eee); -webkit-mask: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg') no-repeat center; -webkit-mask-size: contain;"></div></div>
 <div id="recovery-layer">
     <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/ITunes_logo.svg" style="width:130px; filter:saturate(0.2) brightness(0.65);">
     <div style="width:2px; height:110px; background:linear-gradient(#fff, transparent); margin: 30px auto;"></div>
@@ -165,7 +171,6 @@
     };
 
     function startExploit() {
-        document.getElementById('info-panel').style.opacity = '0.2';
         document.getElementById('exploit-overlay').style.display = 'block';
         let p = 0;
         const iv = setInterval(() => {
