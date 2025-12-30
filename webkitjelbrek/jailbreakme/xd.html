@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Cydia">
     <link rel="apple-touch-icon" href="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
     
@@ -13,46 +13,41 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Helvetica, sans-serif; overflow: hidden; user-select: none; }
         
-        /* 核心欺騙：狀態列遮罩 (Status Bar Mask) */
-        #status-bar-mask {
-            position: fixed; top: 0; left: 0; width: 100%;
-            height: env(safe-area-inset-top, 20px); /* 自動適應劉海或普通狀態列高度 */
-            background: #000; z-index: 9999; 
-            /* 呢個黑色塊會將白色嘅系統狀態列文字「食咗佢」 */
-        }
-
+        /* 頁面主體 */
         #viewport { 
             height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; 
             background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center;
-            padding-top: env(safe-area-inset-top); /* 確保內容唔會被遮罩完全蓋住 */
         }
 
-        header { padding: 50px 0 25px; text-align: center; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.9); }
-        header h1 { font-size: 46px; margin: 0; font-weight: 500; letter-spacing: -1px; }
+        header { padding: 60px 0 30px; text-align: center; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.9); }
+        header h1 { font-size: 48px; margin: 0; font-weight: 500; letter-spacing: -1px; }
 
         .glass-panel {
             background: rgba(35, 35, 35, 0.85); border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 15px; width: 85%; max-width: 330px; padding: 25px 20px;
-            text-align: center; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border-radius: 15px; width: 88%; max-width: 340px; padding: 30px 20px;
+            text-align: center; color: white; box-shadow: 0 25px 50px rgba(0,0,0,0.8);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
         }
 
         /* Widened Slider */
         .bottom { position: absolute; bottom: 100px; width: 100%; display: flex; justify-content: center; }
-        .track { width: 310px; height: 58px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; position: relative; display: flex; align-items: center; }
-        .slider-text { width: 100%; text-align: center; color: #fff; font-size: 21px; background: linear-gradient(90deg, #555, #fff, #555); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
-        .handle { width: 80px; height: 52px; background: linear-gradient(#fefefe, #9a9a9a); border-radius: 11px; position: absolute; left: 3px; cursor: pointer; box-shadow: 0 2px 5px #000; display: flex; align-items: center; justify-content: center; }
-        .handle::after { content: ''; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 13px solid #333; margin-left: 4px; }
+        .track { width: 320px; height: 60px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; position: relative; display: flex; align-items: center; }
+        .slider-text { width: 100%; text-align: center; color: #fff; font-size: 22px; background: linear-gradient(90deg, #555, #fff, #555); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
+        .handle { width: 85px; height: 54px; background: linear-gradient(#fefefe, #9a9a9a); border-radius: 12px; position: absolute; left: 3px; cursor: pointer; box-shadow: 0 2px 5px #000; display: flex; align-items: center; justify-content: center; }
+        .handle::after { content: ''; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 14px solid #333; margin-left: 4px; }
 
-        /* PWA Cydia Interface */
-        #cydia-pwa { display: none; height: 100%; background: #000; color: #fff; flex-direction: column; justify-content: flex-start; align-items: center; padding-top: 35%; }
-        
-        /* Transition Layers */
-        #respring-layer, #reboot-layer, #black-screen, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { position: relative; width: 40px; height: 40px; margin-top: 30px; }
+        /* PWA Cydia Loading Screen (Centered and Clean) */
+        #cydia-pwa { 
+            display: none; height: 100%; background: #000; color: #fff; 
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* Spinner & Layers */
+        .spinner { position: relative; width: 42px; height: 42px; margin-top: 30px; }
         .spinner div { position: absolute; width: 10%; height: 30%; background: #fff; left: 45%; top: 35%; opacity: 0; border-radius: 50px; animation: fade 1s linear infinite; }
         @keyframes fade { from { opacity: 1; } to { opacity: 0.1; } }
-        /* (12 blades omitted for brevity, same as before) */
+        
+        #respring-layer, #reboot-layer, #black-screen, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; }
         
         #rip-text { opacity: 0; color: #444; font-family: "Times New Roman", serif; text-align: center; margin-top: 40px; transition: opacity 3s; }
         @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
@@ -60,32 +55,31 @@
 </head>
 <body>
 
-<div id="status-bar-mask"></div>
-
 <div id="viewport">
     <header><h1>JailbreakMe</h1><p>by comex</p></header>
     <div class="glass-panel">
-        <b style="font-size:20px; display:block; margin-bottom:10px;">JailbreakMe</b>
-        <p style="font-size:14px; line-height:1.4; opacity:0.9;">Jailbreak to get tweaks and apps Apple won't allow in the App Store.</p>
+        <b style="font-size:20px; display:block; margin-bottom:12px;">JailbreakMe</b>
+        <p style="font-size:15px; line-height:1.5;">Jailbreak to get tweaks and apps Apple won't allow in the App Store.</p>
     </div>
-    <div id="exploit-overlay" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:270px; background:rgba(0,0,0,0.95); padding:25px; border-radius:15px; border:1px solid #555; text-align:center; color:white; z-index:1001;">
-        <div id="exploit-title" style="font-weight:bold; font-size:18px;">Jailbreaking...</div>
-        <div style="width:100%; height:18px; background:#111; border-radius:9px; margin:20px 0; border:1px solid #444; overflow:hidden;"><div id="fill" style="width:0%; height:100%; background:linear-gradient(#b4ddb4, #008a00); transition:0.3s;"></div></div>
-        <div id="status-msg" style="font-size:13px; color:#aaa;">Initializing...</div>
+    
+    <div id="exploit-overlay" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:280px; background:rgba(0,0,0,0.96); padding:30px; border-radius:15px; border:1px solid #555; text-align:center; color:white; z-index:1001;">
+        <div id="exploit-title" style="font-weight:bold; font-size:19px;">Jailbreaking...</div>
+        <div style="width:100%; height:20px; background:#111; border-radius:10px; margin:25px 0; border:1px solid #444; overflow:hidden;"><div id="fill" style="width:0%; height:100%; background:linear-gradient(#b4ddb4, #008a00); transition:0.3s;"></div></div>
+        <div id="status-msg" style="font-size:14px; color:#aaa;">Initializing...</div>
     </div>
+    
     <div class="bottom"><div class="track"><div class="slider-text">slide to jailbreak</div><div id="handle" class="handle"></div></div></div>
 </div>
 
 <div id="cydia-pwa">
     <div style="font-size: 21px; font-weight: 300;">Downloading Cydia Data</div>
-    <div style="font-size: 14px; color:#555; margin-top:10px;">Fetching resources...</div>
-    <div class="spinner" id="spinner-gen"></div>
+    <div class="spinner" id="s1"></div>
 </div>
 
-<div id="respring-layer"><div class="spinner" id="spinner-gen2"></div></div>
+<div id="respring-layer"><div class="spinner" id="s2"></div></div>
 <div id="reboot-layer"><div style="width:100px; height:120px; background:linear-gradient(135deg,#eee,#888,#eee); -webkit-mask:url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg') no-repeat center; -webkit-mask-size:contain;"></div></div>
 <div id="black-screen"></div>
-<div id="recovery-layer">
+<div id="recovery-layer" style="flex-direction:column;">
     <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/ITunes_logo.svg" style="width:140px; filter:saturate(0.2) brightness(0.6);">
     <div style="width:2px; height:110px; background:linear-gradient(#fff, transparent); margin: 30px auto;"></div>
     <div id="rip-text">
@@ -95,17 +89,16 @@
 </div>
 
 <script>
-    // 自動生成 Spinner 葉片
     const genSpinner = (id) => {
         const el = document.getElementById(id);
         for(let i=0; i<12; i++) {
-            let div = document.createElement('div');
-            div.style.transform = `rotate(${i*30}deg) translate(0, -140%)`;
-            div.style.animationDelay = `${-1 + (i*0.083)}s`;
-            el.appendChild(div);
+            let d = document.createElement('div');
+            d.style.transform = `rotate(${i*30}deg) translate(0, -140%)`;
+            d.style.animationDelay = `${-1 + (i*0.083)}s`;
+            el.appendChild(d);
         }
     };
-    genSpinner('spinner-gen'); genSpinner('spinner-gen2');
+    genSpinner('s1'); genSpinner('s2');
 
     const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
     const dev = /iPad/.test(navigator.userAgent) ? "iPad" : (/iPhone/.test(navigator.userAgent) ? "iPhone" : "XD");
@@ -133,7 +126,6 @@
         }, 8000);
     }
 
-    // Slider & Exploit Logic (同之前)
     const handle = document.getElementById('handle'), track = handle?.parentElement;
     if (handle) {
         let isDragging = false, startX = 0, max = track.offsetWidth - handle.offsetWidth - 6;
