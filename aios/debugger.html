@@ -2,136 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIOS | Mobile Debugger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AIOS | System Root Debugger</title>
     <style>
-        :root { --primary: #007aff; --bg: #1a1a1a; --card-bg: #2d2d2d; --text: #e0e0e0; }
-        body { font-family: -apple-system, sans-serif; padding: 10px; background: var(--bg); color: var(--text); margin: 0; }
-        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid #444; box-sizing: border-box; }
-        h2 { color: var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 0 0 10px 0; }
+        :root { --primary: #007aff; --bg: #000; --card-bg: #1c1c1e; --text: #fff; --danger: #ff453a; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         
-        /* System Panel - Responsive Grid */
-        .system-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .data-field { display: flex; flex-direction: column; gap: 4px; }
-        .data-field label { font-size: 11px; color: var(--primary); font-weight: bold; }
-        .data-field input { background: #121212; border: 1px solid #444; color: white; padding: 8px; border-radius: 6px; font-size: 13px; }
+        /* Security Overlay */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .auth-input { background: #333; border: none; color: white; padding: 15px; border-radius: 10px; width: 80%; max-width: 300px; font-size: 24px; text-align: center; letter-spacing: 5px; margin-bottom: 20px; outline: none; }
+        
+        /* Main Layout */
+        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        h2 { color: var(--primary); font-size: 1.2rem; margin: 0 0 15px 0; }
+        
+        /* System Grid */
+        .system-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .data-field label { font-size: 10px; color: #888; font-weight: bold; }
+        .data-field input { background: #2c2c2e; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 13px; width: 100%; box-sizing: border-box; }
 
-        /* Main Grid Layout */
         .main-grid { display: flex; flex-direction: column; gap: 15px; }
         @media (min-width: 768px) { .main-grid { flex-direction: row; } }
 
-        .editor-container, .list-container { flex: 1; display: flex; flex-direction: column; }
-        .section-title { font-size: 0.75rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
-        
-        textarea { width: 100%; height: 300px; font-family: "SF Mono", monospace; background: #121212; color: #00ff41; padding: 10px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; font-size: 12px; resize: vertical; }
-        
-        /* App List Styling */
-        .app-list { background: #1e1e1e; border-radius: 8px; padding: 8px; height: 300px; overflow-y: auto; border: 1px solid #333; }
-        .app-item { display: flex; align-items: center; gap: 10px; padding: 8px; background: #383838; margin-bottom: 6px; border-radius: 8px; border: 1px solid #444; }
-        .app-info { flex-grow: 1; min-width: 0; }
-        .app-name { font-weight: bold; font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .app-id { font-size: 10px; color: #aaa; }
-        
-        /* Sort Buttons - Bigger for touch */
-        .sort-btns { display: flex; gap: 4px; }
-        .sort-btns button { padding: 8px 12px; background: #444; color: white; border: 1px solid #555; border-radius: 4px; font-size: 14px; }
+        /* JSON Editor */
+        textarea { width: 100%; height: 350px; font-family: "SF Mono", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 10px; border: 1px solid #333; box-sizing: border-box; font-size: 12px; }
 
-        /* Controls Area */
-        .controls { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        button { padding: 12px 16px; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; flex: 1; min-width: 120px; }
-        .btn-fetch { background: var(--primary); color: white; }
-        .btn-save { background: #34c759; color: white; }
-        .btn-respring { background: #f39c12; color: white; text-decoration: none; text-align: center; line-height: 1.2; }
-        #status-text { width: 100%; font-size: 11px; color: #888; text-align: center; margin-top: 5px; }
+        /* Full Storage Monitor */
+        .storage-monitor { margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; }
+        .storage-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .tag { background: #3a3a3c; padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid #48484a; }
+        .tag:hover { background: var(--primary); }
+
+        /* Floating Controls */
+        .controls { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-save { background: #32d74b; color: #000; }
+        .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>🛠️ AIOS Pro Debugger</h2>
+
+    <div id="auth-overlay" style="display:none;">
+        <h1 style="color:var(--primary)">🔐 System Root</h1>
+        <p>Passcode Required to access LocalStorage</p>
+        <input type="password" id="passInput" class="auth-input" maxlength="4" placeholder="••••">
+        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Unlock</button>
+    </div>
+
+    <div class="card" id="main-content">
+        <h2>🛠️ AIOS Root Debugger</h2>
         
         <div class="system-panel">
+            <div class="data-field"><label>WALLPAPER</label><input type="text" id="sys-wallpaper"></div>
             <div class="data-field"><label>PASSCODE</label><input type="text" id="sys-passcode"></div>
             <div class="data-field"><label>THEME</label><input type="text" id="sys-theme"></div>
-            <div class="data-field"><label>WALLPAPER</label><input type="text" id="sys-wallpaper"></div>
         </div>
 
         <div class="main-grid">
-            <div class="editor-container">
-                <div class="section-title">Raw JSON Editor</div>
+            <div style="flex:1">
+                <div style="font-size:11px; color:#888; margin-bottom:5px;">OBJECT EDITOR (installedApps)</div>
                 <textarea id="jsonEditor" spellcheck="false"></textarea>
             </div>
-            <div class="list-container">
-                <div class="section-title">Visual Sorting</div>
-                <div id="appList" class="app-list"></div>
-            </div>
+        </div>
+
+        <div class="storage-monitor">
+            <div style="font-size:11px; color:#888;">BROWSER LOCALSTORAGE KEYS (Click to edit)</div>
+            <div id="storage-tags" class="storage-tags"></div>
         </div>
         
         <div class="controls">
-            <button class="btn-fetch" onclick="fetchAll()">📥 Sync Data</button>
-            <button class="btn-save" onclick="saveAll()">💾 Commit</button>
-            <a href="index.html" class="btn-respring">🔄 Respring</a>
-            <div id="status-text">Ready to mod.</div>
+            <button class="btn-save" onclick="saveAll()">💾 Commit Changes</button>
+            <a href="index.html" class="btn-respring">🔄 Respring AIOS</a>
         </div>
+        <div id="status" style="text-align:center; font-size:11px; margin-top:10px; color:#888;"></div>
     </div>
 
     <script>
+        const storedPasscode = localStorage.getItem('userPasscode');
+        const overlay = document.getElementById('auth-overlay');
         const editor = document.getElementById('jsonEditor');
-        const appListEl = document.getElementById('appList');
-        const statusEl = document.getElementById('status-text');
+
+        // Security Check
+        window.onload = function() {
+            if (storedPasscode && storedPasscode !== "") {
+                overlay.style.display = 'flex';
+            } else {
+                fetchAll();
+            }
+        };
+
+        function checkAuth() {
+            const input = document.getElementById('passInput').value;
+            if (input === storedPasscode) {
+                overlay.style.display = 'none';
+                fetchAll();
+            } else {
+                alert("Incorrect Passcode. Access Denied.");
+            }
+        }
 
         function fetchAll() {
-            const appsData = localStorage.getItem('installedApps');
-            if (appsData) {
-                const apps = JSON.parse(appsData);
-                editor.value = JSON.stringify(apps, null, 4);
-                renderAppList(apps);
-            }
+            // Fetch Apps
+            const apps = localStorage.getItem('installedApps');
+            editor.value = apps ? JSON.stringify(JSON.parse(apps), null, 4) : "[]";
+
+            // Fetch Quick Fields
             document.getElementById('sys-passcode').value = localStorage.getItem('userPasscode') || '';
             document.getElementById('sys-theme').value = localStorage.getItem('currentTheme') || '';
             document.getElementById('sys-wallpaper').value = localStorage.getItem('homeWallpaper') || '';
-            statusEl.innerText = "Local data synced successfully.";
-        }
 
-        function renderAppList(apps) {
-            appListEl.innerHTML = "";
-            apps.forEach((app, index) => {
-                const div = document.createElement('div');
-                div.className = 'app-item';
-                div.innerHTML = `
-                    <div class="app-info"><span class="app-name">${app.name}</span><span class="app-id">${app.id}</span></div>
-                    <div class="sort-btns">
-                        <button onclick="moveApp(${index}, -1)">▲</button>
-                        <button onclick="moveApp(${index}, 1)">▼</button>
-                    </div>`;
-                appListEl.appendChild(div);
-            });
-        }
-
-        function moveApp(index, direction) {
-            const apps = JSON.parse(editor.value);
-            const newIndex = index + direction;
-            if (newIndex >= 0 && newIndex < apps.length) {
-                const temp = apps[index];
-                apps[index] = apps[newIndex];
-                apps[newIndex] = temp;
-                editor.value = JSON.stringify(apps, null, 4);
-                renderAppList(apps);
+            // Fetch All Keys
+            const tagsContainer = document.getElementById('storage-tags');
+            tagsContainer.innerHTML = "";
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerText = key;
+                tag.onclick = () => {
+                    const val = localStorage.getItem(key);
+                    try {
+                        editor.value = JSON.stringify(JSON.parse(val), null, 4);
+                    } catch(e) {
+                        editor.value = val;
+                    }
+                    document.getElementById('status').innerText = "Now editing: " + key;
+                };
+                tagsContainer.appendChild(tag);
             }
         }
 
         function saveAll() {
             try {
-                const appsData = editor.value;
-                JSON.parse(appsData);
-                localStorage.setItem('installedApps', appsData);
+                // Determine what we are saving
+                const currentEdit = document.getElementById('status').innerText.replace("Now editing: ", "") || "installedApps";
+                let rawValue = editor.value;
+                
+                // If it's JSON, validate it
+                if (rawValue.startsWith('{') || rawValue.startsWith('[')) {
+                    JSON.parse(rawValue); 
+                }
+
+                localStorage.setItem(currentEdit, rawValue);
+
+                // Sync Quick Fields
                 localStorage.setItem('userPasscode', document.getElementById('sys-passcode').value);
                 localStorage.setItem('currentTheme', document.getElementById('sys-theme').value);
                 localStorage.setItem('homeWallpaper', document.getElementById('sys-wallpaper').value);
-                statusEl.innerText = "✅ Committed! Tap Respring to apply.";
-                statusEl.style.color = "#34c759";
-            } catch (e) { alert("JSON format error!"); }
+
+                document.getElementById('status').innerText = "✅ Successfully saved to " + currentEdit;
+                document.getElementById('status').style.color = "#32d74b";
+                fetchAll();
+            } catch (e) {
+                alert("Format Error! Check your syntax.");
+            }
         }
-        window.onload = fetchAll;
     </script>
 </body>
 </html>
