@@ -8,108 +8,154 @@
         :root { --primary: #007aff; --bg: #000; --card-bg: #1c1c1e; --text: #fff; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; overflow-x: hidden; }
         
-        /* Security Lock Screen */
-        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        /* 1. Launcher/Checking Screen */
+        #check-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 2. Security Auth Screen */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .auth-input { background: #2c2c2e; border: 2px solid #444; color: white; padding: 15px; border-radius: 12px; width: 80%; max-width: 250px; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; }
-        .auth-input:focus { border-color: var(--primary); }
-        
-        /* Layout */
-        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid #333; box-sizing: border-box; }
-        h2 { color: var(--primary); font-size: 1.1rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }
-        
-        .section-title { font-size: 10px; color: #888; text-transform: uppercase; margin: 15px 0 5px 0; font-weight: bold; letter-spacing: 1px; }
 
-        /* Quick Edit Bar */
+        /* 3. Layout Manager Popup */
+        #layout-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: none; padding: 20px; align-items: center; justify-content: center; }
+        .modal-content { background: #1c1c1e; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; border: 1px solid #333; }
+        .sort-item { display: flex; align-items: center; justify-content: space-between; background: #2c2c2e; padding: 10px; margin-bottom: 5px; border-radius: 8px; font-size: 13px; }
+
+        /* Main UI */
+        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid #333; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .quick-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .data-field label { font-size: 9px; color: #666; display: block; margin-bottom: 4px; }
         .data-field input { background: #000; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 12px; width: 100%; box-sizing: border-box; }
+        
+        textarea { width: 100%; height: 350px; font-family: "SF Mono", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 12px; border: 1px solid #333; font-size: 11px; }
 
-        /* JSON Editor */
-        textarea { width: 100%; height: 320px; font-family: "SF Mono", "Menlo", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 12px; border: 1px solid #333; box-sizing: border-box; font-size: 11px; line-height: 1.4; }
+        .storage-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .tag { background: #2c2c2e; padding: 6px 12px; border-radius: 8px; font-size: 10px; cursor: pointer; border: 1px solid #3a3a3c; }
+        .tag.active { border-color: var(--primary); background: rgba(0,122,255,0.2); }
 
-        /* Storage Explorer */
-        .storage-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag { background: #2c2c2e; padding: 8px 14px; border-radius: 10px; font-size: 11px; cursor: pointer; border: 1px solid #3a3a3c; transition: 0.2s; }
-        .tag:active { transform: scale(0.95); background: var(--primary); }
-        .tag.active { border-color: var(--primary); background: rgba(0, 122, 255, 0.2); }
-
-        /* Action Buttons */
         .actions { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .btn-layout { background: var(--primary); color: white; font-size: 12px; padding: 8px 15px; }
         .btn-save { background: #32d74b; color: #000; }
         .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        
-        #status { text-align: center; margin-top: 10px; font-size: 11px; color: #888; min-height: 14px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay" style="display:none;">
-        <h1 style="font-size: 1.5rem;">🔐 AIOS Root Access</h1>
-        <p style="color:#888; font-size: 0.9rem;">Enter DevicePasscode to proceed</p>
-        <input type="password" id="passInput" class="auth-input" placeholder="••••" autofocus>
-        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Unlock System</button>
+    <div id="check-screen">
+        <div class="spinner"></div>
+        <div style="color:#888; letter-spacing: 2px;">CHECKING SYSTEM...</div>
     </div>
 
-    <div class="card" id="main-content">
-        <h2>🛠️ Root Debugger</h2>
+    <div id="auth-overlay">
+        <h1>🔐 SECURE BOOT</h1>
+        <p style="color:#888">Password required for Root Access</p>
+        <input type="password" id="passInput" class="auth-input" placeholder="••••">
+        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Verify</button>
+    </div>
+
+    <div id="layout-modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">📦 App Layout</h3>
+            <div id="sort-list" style="max-height: 300px; overflow-y: auto;"></div>
+            <button onclick="closeLayout()" style="width:100%; margin-top:15px; background:#444; color:white;">Close</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toolbar">
+            <h2>🛠️ Root Debugger</h2>
+            <button class="btn-layout" onclick="openLayout()">📦 Manage Layout</button>
+        </div>
         
         <div class="quick-bar">
-            <div class="data-field"><label>DEVICE PASSCODE</label><input type="text" id="sys-passcode"></div>
-            <div class="data-field"><label>THEME MODE</label><input type="text" id="sys-theme"></div>
-            <div class="data-field"><label>WALLPAPER URL</label><input type="text" id="sys-wallpaper"></div>
+            <div class="data-field"><input type="text" id="sys-passcode" placeholder="Passcode"></div>
+            <div class="data-field"><input type="text" id="sys-theme" placeholder="Theme"></div>
+            <div class="data-field"><input type="text" id="sys-wallpaper" placeholder="Wallpaper URL"></div>
         </div>
 
-        <div class="section-title" id="editor-label">Currently Editing: installedApps</div>
         <textarea id="jsonEditor" spellcheck="false"></textarea>
 
-        <div class="section-title">Global Data Tags (Click to Inspect)</div>
         <div id="storage-tags" class="storage-tags"></div>
         
         <div class="actions">
             <button class="btn-save" onclick="saveData()">💾 Commit</button>
             <a href="index.html" class="btn-respring">🔄 Respring</a>
         </div>
-        <div id="status"></div>
     </div>
 
     <script>
         const editor = document.getElementById('jsonEditor');
-        const statusEl = document.getElementById('status');
         let currentTargetKey = 'installedApps';
 
-        // Check DevicePasscode on load
+        // 1. Boot Logic
         window.onload = function() {
-            const devicePass = localStorage.getItem('DevicePasscode');
-            if (devicePass && devicePass !== "") {
-                document.getElementById('auth-overlay').style.display = 'flex';
-            } else {
-                init();
-            }
+            setTimeout(() => {
+                const devicePass = localStorage.getItem('DevicePasscode');
+                document.getElementById('check-screen').style.opacity = '0';
+                setTimeout(() => document.getElementById('check-screen').style.display = 'none', 500);
+
+                if (devicePass && devicePass !== "") {
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                } else {
+                    init();
+                }
+            }, 1200); // Simulate check
         };
 
         function checkAuth() {
-            const input = document.getElementById('passInput').value;
-            const actual = localStorage.getItem('DevicePasscode');
-            if (input === actual) {
+            if (document.getElementById('passInput').value === localStorage.getItem('DevicePasscode')) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 init();
             } else {
-                alert("Access Denied: Incorrect Passcode");
-                document.getElementById('passInput').value = "";
+                alert("Wrong Passcode");
             }
         }
 
         function init() {
             refreshTags();
             loadKey('installedApps');
-            
-            // Sync quick edit fields
             document.getElementById('sys-passcode').value = localStorage.getItem('DevicePasscode') || '';
             document.getElementById('sys-theme').value = localStorage.getItem('currentTheme') || '';
             document.getElementById('sys-wallpaper').value = localStorage.getItem('homeWallpaper') || '';
         }
 
+        // 2. Layout Management
+        function openLayout() {
+            document.getElementById('layout-modal').style.display = 'flex';
+            const apps = JSON.parse(localStorage.getItem('installedApps') || "[]");
+            renderSortList(apps);
+        }
+
+        function renderSortList(apps) {
+            const list = document.getElementById('sort-list');
+            list.innerHTML = "";
+            apps.forEach((app, i) => {
+                const item = document.createElement('div');
+                item.className = 'sort-item';
+                item.innerHTML = `<span>${app.name}</span> <div>
+                    <button onclick="move(${i}, -1)">▲</button>
+                    <button onclick="move(${i}, 1)">▼</button>
+                </div>`;
+                list.appendChild(item);
+            });
+        }
+
+        function move(index, dir) {
+            let apps = JSON.parse(localStorage.getItem('installedApps'));
+            const newIdx = index + dir;
+            if (newIdx >= 0 && newIdx < apps.length) {
+                [apps[index], apps[newIdx]] = [apps[newIdx], apps[index]];
+                localStorage.setItem('installedApps', JSON.stringify(apps));
+                renderSortList(apps);
+                if (currentTargetKey === 'installedApps') loadKey('installedApps');
+            }
+        }
+
+        function closeLayout() { document.getElementById('layout-modal').style.display = 'none'; }
+
+        // 3. Core Logic
         function refreshTags() {
             const container = document.getElementById('storage-tags');
             container.innerHTML = "";
@@ -126,36 +172,17 @@
         function loadKey(key) {
             currentTargetKey = key;
             const val = localStorage.getItem(key);
-            document.getElementById('editor-label').innerText = "Currently Editing: " + key;
-            try {
-                editor.value = JSON.stringify(JSON.parse(val), null, 4);
-            } catch(e) {
-                editor.value = val;
-            }
+            try { editor.value = JSON.stringify(JSON.parse(val), null, 4); }
+            catch(e) { editor.value = val; }
             refreshTags();
         }
 
         function saveData() {
-            try {
-                // Save the current editor content
-                let content = editor.value;
-                if (content.startsWith('{') || content.startsWith('[')) {
-                    JSON.parse(content); // validation
-                }
-                localStorage.setItem(currentTargetKey, content);
-
-                // Sync the quick fields as well
-                localStorage.setItem('DevicePasscode', document.getElementById('sys-passcode').value);
-                localStorage.setItem('currentTheme', document.getElementById('sys-theme').value);
-                localStorage.setItem('homeWallpaper', document.getElementById('sys-wallpaper').value);
-
-                statusEl.innerText = "✅ Committed to " + currentTargetKey;
-                statusEl.style.color = "#32d74b";
-                setTimeout(() => { statusEl.innerText = ""; }, 3000);
-                refreshTags();
-            } catch (e) {
-                alert("JSON Syntax Error! Please fix before saving.");
-            }
+            localStorage.setItem(currentTargetKey, editor.value);
+            localStorage.setItem('DevicePasscode', document.getElementById('sys-passcode').value);
+            localStorage.setItem('currentTheme', document.getElementById('sys-theme').value);
+            localStorage.setItem('homeWallpaper', document.getElementById('sys-wallpaper').value);
+            alert("Changes Committed!");
         }
     </script>
 </body>
