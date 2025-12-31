@@ -3,32 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AIOS Switcher | Maintenance</title>
+    <title>AIOS Switcher | Status</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/all.min.css" rel="stylesheet">
     <link href="css/styles_1.css" rel="stylesheet">
     <style>
-        /* 直接加入 Coming Soon 特色樣式，確保風格統一 */
-        .coming-soon-container {
+        .unavailable-container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            padding: 40px 20px;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 320px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 50px 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            max-width: 350px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
         .status-icon {
-            font-size: 3rem;
-            color: #ff9f0a; /* 經典 iOS 警告橘 */
-            margin-bottom: 20px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
+            font-size: 3.5rem;
+            color: #ff3b30; /* iOS System Red */
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 10px rgba(255, 59, 48, 0.5));
         }
         .main-app {
             background: #000;
@@ -38,17 +33,28 @@
             justify-content: center;
         }
         .return-btn {
-            margin-top: 30px;
-            background: #007aff;
-            color: white;
+            margin-top: 35px;
+            background: #ffffff;
+            color: #000;
             border: none;
-            padding: 12px 25px;
-            border-radius: 12px;
-            font-weight: bold;
+            padding: 14px 30px;
+            border-radius: 14px;
+            font-weight: 700;
             text-decoration: none;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
-        .return-btn:hover { background: #0056b3; color: white; }
+        .return-btn:hover { 
+            background: #007aff; 
+            color: #fff; 
+            transform: translateY(-2px);
+        }
+        .hint-text {
+            color: #555;
+            font-size: 0.75rem;
+            margin-top: 20px;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -62,38 +68,36 @@
         </div>
     </div>
 
-    <div id="mainApp" class="main-app">
-        <div class="coming-soon-container">
+    <div id="mainApp" class="main-app" style="display: none;">
+        <div class="unavailable-container">
             <div class="status-icon">
-                <i class="fas fa-tools"></i>
+                <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h2 style="color: #fff; font-weight: 800; margin-bottom: 10px;">Coming Soon</h2>
-            <p style="color: #888; font-size: 0.9rem; line-height: 1.6;">
-                The OS Switching module is currently under maintenance for a better AI experience.
+            <h2 style="color: #fff; font-weight: 800; margin-bottom: 15px; font-size: 1.5rem;">
+                Service Temporarily Unavailable
+            </h2>
+            <p style="color: #aaa; font-size: 0.95rem; line-height: 1.6;">
+                The switcher module is currently offline for architectural adjustments.
             </p>
             
-            <hr style="border-color: rgba(255,255,255,0.1); margin: 25px 0;">
-            
-            <p style="color: #007aff; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
-                Estimated Release: 2026
-            </p>
-
             <a href="index.html" class="return-btn">
-                <i class="fas fa-home me-2"></i> Return Home
+                <i class="fas fa-chevron-left me-2"></i> Back to Home
             </a>
+
+            <p class="hint-text">Deployment will resume when the mood strikes.</p>
         </div>
     </div>
 
     <script>
-        // 簡單的啟動邏輯
         window.onload = function() {
             setTimeout(() => {
-                document.getElementById('splashScreen').style.opacity = '0';
+                const splash = document.getElementById('splashScreen');
+                splash.style.opacity = '0';
                 setTimeout(() => {
-                    document.getElementById('splashScreen').style.display = 'none';
+                    splash.style.display = 'none';
                     document.getElementById('mainApp').style.display = 'flex';
-                }, 500);
-            }, 1500);
+                }, 600);
+            }, 1200);
         }
     </script>
 </body>
