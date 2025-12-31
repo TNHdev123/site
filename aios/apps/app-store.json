@@ -1001,7 +1001,7 @@
       "icon": "cydia2",
       "iconColor": "#f39c12",
       "url": "https://appv2.cydia2.com/appv2free/",
-      "category": "System",
+      "category": "app",
       "type": "website",
       "fallbackIcon": "package"
     }
