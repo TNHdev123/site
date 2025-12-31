@@ -1,0 +1,266 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AIOS Switcher</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/all.min.css" rel="stylesheet">
+    <link href="css/styles_1.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="logo-container">
+                <i class="fas fa-exchange-alt logo-icon"></i>
+            </div>
+            <h1 class="app-title">AIOS Switcher</h1>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Window -->
+    <div id="mainApp" class="main-app" style="display: none;">
+        <div class="container-fluid h-100">
+            <div class="row h-100">
+                <div class="col-12 d-flex flex-column justify-content-center align-items-center">
+                    <!-- Logo at top -->
+                    <div class="top-logo">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span class="ms-2">AIOS Switcher</span>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="app-description-text">
+                        <p>Install your preferred OS from following and feel it</p>
+                    </div>
+
+                    <!-- Main Access Buttons Grid -->
+                    <div class="main-access-buttons-grid">
+                        <button class="main-access-btn" data-app="blossm">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Blossm</span>
+                        </button>
+                        <button class="main-access-btn" data-app="floramuse">
+                            <i class="fas fa-tree"></i>
+                            <span>FloraMuse</span>
+                        </button>
+                        <button class="main-access-btn" data-app="petalbloom">
+                            <i class="fas fa-leaf"></i>
+                            <span>PetalBloom</span>
+                        </button>
+                        <button class="main-access-btn" data-app="bloomora">
+                            <i class="fas fa-star"></i>
+                            <span>Bloomora</span>
+                        </button>
+                        <button class="main-access-btn" data-app="daisydash">
+                            <i class="fas fa-seedling"></i>
+                            <span>DaisyDash</span>
+                        </button>
+                        <button class="main-access-btn" data-app="tuliptrail">
+                            <i class="fas fa-sun"></i>
+                            <span>TulipTrail</span>
+                        </button>
+                        <button class="main-access-btn" data-app="poppypulse">
+                            <i class="fas fa-heart"></i>
+                            <span>PoppyPulse</span>
+                        </button>
+                    </div>
+
+                                                             <!-- Bottom Button -->
+                    <div class="bottom-buttons">
+                        <button class="bottom-btn guide-btn">
+                            <i class="fas fa-book"></i>
+                            <span>Guide</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="loading-modal" style="display: none;">
+        <div class="loading-container">
+            <div class="loading-header">
+                <h2 class="loading-title">OS Installation</h2>
+            </div>
+            <div class="loading-content">
+                <div class="loading-circle">
+                    <div class="loading-progress" id="loadingProgress"></div>
+                    <div class="loading-text" id="loadingText">Switching...</div>
+                </div>
+                <div class="loading-status">
+                    <p id="loadingStatus">Preparing your new operating system...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Iframe Modal -->
+    <div id="iframeModal" class="iframe-modal" style="display: none;">
+        <div class="iframe-container">
+            <div class="iframe-header">
+                <button id="closeIframe" class="close-btn">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span class="close-btn-text">Switch to another OS</span>
+                </button>
+                <span class="iframe-title">Web Application</span>
+            </div>
+            <iframe id="webIframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <!-- Guide Modal -->
+    <div id="guideModal" class="guide-modal" style="display: none;">
+        <div class="guide-container">
+            <div class="guide-header">
+                <h2 class="guide-title">
+                    AIOS Simulator Guide
+                </h2>
+                <button id="closeGuide" class="guide-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="guide-content">
+                <div class="guide-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Access AIOS Switcher</h3>
+                        <p>Click the main "ACCESS" button to enter the AIOS simulator selection screen.</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Choose Your AIOS</h3>
+                        <p>Select from seven beautiful AIOS variants: Blossm, FloraMuse, PetalBloom, Bloomora, DaisyDash, TulipTrail, or PoppyPulse.</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Switch Between OS</h3>
+                        <p>Use the draggable "Switch to another OS" button to return to the selection screen.</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Explore AIOS Features</h3>
+                        <p>Discover AI-powered apps: Camera, Calculator, AI Assistant, Terminal, and more.</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Customize Your Experience</h3>
+                        <p>Use AI to UI feature to customize the interface with themes and styles.</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h3>Enjoy Seamless Switching</h3>
+                        <p>Switch between different AIOS instances instantly for a unique experience each time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal" style="display: none;">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h2 class="settings-title">
+                    Settings
+                </h2>
+                <button id="closeSettings" class="settings-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="settings-content">
+                <!-- Theme Section -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h3>Theme Settings</h3>
+                        <p>Customize the appearance of your AIOS Switcher</p>
+                    </div>
+                    <div class="theme-options">
+                        <div class="theme-option active" data-theme="dark">
+                            <div class="theme-preview dark-theme">
+                                <div class="preview-header"></div>
+                                <div class="preview-content"></div>
+                            </div>
+                            <span>Dark Theme</span>
+                        </div>
+                        <div class="theme-option" data-theme="light">
+                            <div class="theme-preview light-theme">
+                                <div class="preview-header"></div>
+                                <div class="preview-content"></div>
+                            </div>
+                            <span>Light Theme</span>
+                        </div>
+                        <div class="theme-option" data-theme="neon">
+                            <div class="theme-preview neon-theme">
+                                <div class="preview-header"></div>
+                                <div class="preview-content"></div>
+                            </div>
+                            <span>Neon Theme</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Section -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h3>Color Palette</h3>
+                        <p>Choose your preferred accent colors</p>
+                    </div>
+                    <div class="color-options">
+                        <div class="color-option active" data-color="green">
+                            <div class="color-preview green-preview"></div>
+                            <span>Emerald</span>
+                        </div>
+                        <div class="color-option" data-color="blue">
+                            <div class="color-preview blue-preview"></div>
+                            <span>Ocean</span>
+                        </div>
+                        <div class="color-option" data-color="purple">
+                            <div class="color-preview purple-preview"></div>
+                            <span>Royal</span>
+                        </div>
+                        <div class="color-option" data-color="orange">
+                            <div class="color-preview orange-preview"></div>
+                            <span>Sunset</span>
+                        </div>
+                        <div class="color-option" data-color="pink">
+                            <div class="color-preview pink-preview"></div>
+                            <span>Rose</span>
+                        </div>
+                        <div class="color-option" data-color="cyan">
+                            <div class="color-preview cyan-preview"></div>
+                            <span>Aqua</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/script_1.js"></script>
+
+
+</body></html>
