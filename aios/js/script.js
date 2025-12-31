@@ -1,11 +1,11 @@
-// ==========================================================
-// AI Mobile OS - Full System Script (Restoration Fixed Version)
-// ==========================================================
+// =========================================================================
+// AI Mobile OS - Full System Script (FIXED FOR RESTORE & PWA)
+// =========================================================================
 
 const OPENAI_API_KEY = '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';
 const OPENAI_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// --- 全局變量 (核心修正：優先讀取 localStorage 以支援還原自訂 App) ---
+// --- 全局變量 (核心修正：確保與 localStorage 同步) ---
 let currentCalculation = '';
 let calculatorDisplay = '';
 let phoneNumber = '';
@@ -18,7 +18,7 @@ let currentLockWallpaper = localStorage.getItem('lockWallpaper') || '';
 let cameraStream = null;
 let currentCameraFacingMode = 'user';
 
-// 系統預設名單 (當完全無資料時使用)
+// --- 預設系統 App 名單 (當完全無備份資料時使用) ---
 const defaultApps = [
     { id: "cydia2", name: "Cydia 😭", icon: "cydia2", iconColor: "#f39c12", type: "website", url: "https://tnhdev123.github.io/site/webkitjelbrek/jailbreakme/xd.html" },
     { id: "youtube", name: "YouTube", icon: "https://www.youtube.com/apple-touch-icon.png", iconColor: "#ff0000", type: "website", url: "https://www.youtube.com" },
@@ -29,26 +29,15 @@ const defaultApps = [
     { id: "phone", name: "Phone", icon: "phone", iconColor: "#2ecc71", type: "system" },
     { id: "app-store", name: "App Store", icon: "shopping-basket", iconColor: "#3498db", type: "system" },
     { id: "ai-assistant", name: "AI Assistant", icon: "robot", iconColor: "#e67e22", type: "system" },
-    { id: "ai-math", name: "AI Math", icon: "square-root-alt", iconColor: "#e74c3c", type: "system" }
+    { id: "ai-math", name: "AI Math", icon: "square-root-alt", iconColor: "#e74c3c", type: "system" },
+    { id: "ai-messages", name: "AI Messages", icon: "comment-dots", iconColor: "#3498db", type: "system" },
+    { id: "ai-to-ui", name: "AI to UI", icon: "paint-brush", iconColor: "#9b59b6", type: "system" }
 ];
 
-// 關鍵：從存儲讀取已安裝列表
+// 初始化已安裝列表：優先從備份讀取
 let installedApps = JSON.parse(localStorage.getItem('installedApps')) || defaultApps;
 
-// --- IndexedDB 初始化 (相簿功能) ---
-const DB_NAME = 'userPhotosDB';
-const STORE_NAME = 'photos';
-let db;
-async function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        request.onsuccess = e => { db = e.target.result; resolve(); };
-        request.onerror = e => reject(e.target.error);
-    });
-}
-
-// --- 渲染桌面 (動態支援所有自訂 App) ---
+// --- 渲染桌面 (自動繪製備份檔中的所有 App) ---
 function renderApps() {
     const appsGrid = document.getElementById('appsGrid');
     if (!appsGrid) return;
@@ -57,13 +46,17 @@ function renderApps() {
     installedApps.forEach(app => {
         const appDiv = document.createElement('div');
         appDiv.className = 'app-icon';
+        
+        // 智能識別圖標：網址或 FontAwesome 名稱
         const isUrl = app.icon && (app.icon.startsWith('http') || app.icon.includes('.'));
         const iconContent = isUrl 
             ? `<img src="${app.icon}" style="width:100%; height:100%; border-radius:12px; object-fit:cover;">`
             : `<i class="fas fa-${app.icon}"></i>`;
 
         appDiv.innerHTML = `
-            <div class="icon-box" style="background-color: ${app.iconColor || '#333'}">${iconContent}</div>
+            <div class="icon-box" style="background-color: ${app.iconColor || '#333'}">
+                ${iconContent}
+            </div>
             <span class="app-name">${app.name}</span>
         `;
         appDiv.onclick = () => openApp(app.id);
@@ -71,17 +64,19 @@ function renderApps() {
     });
 }
 
-// --- 開啟 App (萬能適配器) ---
+// --- 開啟 App (修正版：支援系統 App + 第三方備份 App) ---
 function openApp(appId) {
-    // 檢查是否被 App Lock 鎖住 (稍後會有 Patch)
+    // 檢查 App Lock (如果你有定義 _isLocked)
     if (window._isLocked && window._isLocked(appId)) return;
 
     const targetApp = installedApps.find(a => a.id === appId);
     
-    // 如果是第三方網站 (還原來的)
+    // 如果是第三方網站 (還原備份來的)
     if (targetApp && targetApp.type === 'website') {
+        const webBrowser = document.getElementById('web-browser-window') || document.getElementById('web-browser');
         const webIframe = document.getElementById('webIframe');
         const iframeTitle = document.querySelector('.iframe-title');
+        
         if (webIframe) {
             webIframe.src = targetApp.url;
             if (iframeTitle) iframeTitle.textContent = targetApp.name;
@@ -90,7 +85,7 @@ function openApp(appId) {
         }
     }
 
-    // 原生系統功能
+    // 原生系統功能對接
     switch(appId) {
         case 'calculator': showAppWindow('calculator'); break;
         case 'settings': showAppWindow('settings'); break;
@@ -100,17 +95,46 @@ function openApp(appId) {
         case 'app-store': showAppWindow('app-store'); break;
         case 'ai-assistant': showAppWindow('ai-assistant'); break;
         case 'ai-math': showAppWindow('ai-math'); break;
+        case 'ai-messages': showAppWindow('ai-messages'); break;
         case 'ai-to-ui': showAppWindow('ai-to-ui'); break;
     }
 }
 
-// --- 介面控制核心 ---
+// --- 核心備份還原處理 (修正 PWA 刷新問題) ---
+function importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // 寫入所有備份資料到 localStorage
+            Object.keys(data).forEach(key => {
+                const value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key];
+                localStorage.setItem(key, value);
+            });
+            
+            alert("You finally believe me.😭 - Respringing...");
+            location.reload(); 
+        } catch (err) {
+            alert("Backup corrupted or invalid.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+// --- 視窗管理 ---
 function showAppWindow(appId) {
     const windows = document.querySelectorAll('.app-window');
     windows.forEach(win => win.classList.remove('active'));
+    
     const target = document.getElementById(appId + '-window') || document.getElementById(appId);
-    if (target) target.classList.add('active');
-    document.getElementById('homeScreen').style.display = 'none';
+    if (target) {
+        target.classList.add('active');
+        document.getElementById('homeScreen').style.display = 'none';
+    }
 }
 
 function closeApp() {
@@ -120,48 +144,31 @@ function closeApp() {
     if (cameraStream) stopCamera();
 }
 
-// --- 修正備份還原邏輯 (支援自訂名單) ---
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            Object.keys(data).forEach(key => {
-                localStorage.setItem(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key]);
-            });
-            alert("You finally believe me.😭");
-            location.reload(); 
-        } catch (err) { alert("Invalid Backup File"); }
-    };
-    reader.readAsText(file);
-}
-
-// --- 初始化加載 ---
-window.addEventListener('DOMContentLoaded', async () => {
-    await initDB();
+// --- 初始化 (確保 DOM 加載完畢後執行) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // 渲染桌面
     renderApps();
+    
+    // 初始化時鐘
     updateClock();
     setInterval(updateClock, 1000);
     
-    // 綁定還原按鈕 (假設 ID 係 importBackupBtn)
-    const fileInput = document.getElementById('backupFileInput');
-    if (fileInput) fileInput.onchange = handleFileSelect;
+    // 綁定備份按鈕 (請確保你的 HTML 中備份 input ID 是 backupFileInput)
+    const backupInput = document.getElementById('backupFileInput');
+    if (backupInput) backupInput.onchange = importBackup;
+
+    // 保留你原本的 IndexedDB 初始化與 Passcode 檢查邏輯
+    if (typeof initDB === 'function') initDB();
 });
 
 function updateClock() {
     const now = new Date();
-    if (document.getElementById('current-time'))
-        document.getElementById('current-time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (document.getElementById('current-date'))
-        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    const timeEl = document.getElementById('current-time');
+    const dateEl = document.getElementById('current-date');
+    if (timeEl) timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (dateEl) dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-// ==========================================================
-// 此處請保留你原本代碼中關於：
-// 1. 計算機按鈕點擊邏輯 (calcBtnClick)
-// 2. AI Assistant API Fetch 邏輯
-// 3. Camera Start/Stop 邏輯
-// 4. App Lock (Passcode) 的 Patch 邏輯
-// ==========================================================
+// =========================================================================
+// [請將你原本 script.js 中關於 Calculator, Camera, AI API 的具體實作接在下方]
+// =========================================================================
