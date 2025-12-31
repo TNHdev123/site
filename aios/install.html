@@ -41,28 +41,37 @@
         <div class="subtitle">Add AIOS to your Home Screen to begin installation</div>
         
         <div class="guide-box">
-            <div class="step"><i class="fas fa-share-square"></i><span>Tap the <b>Share</b> button in the Safari menu bar.</span></div>
-            <div class="step"><i class="fas fa-plus-square"></i><span>Scroll down and select <b>Add to Home Screen</b>.</span></div>
-            <div class="step"><i class="fas fa-arrow-circle-right"></i><span>Tap <b>Add</b> to finalize and launch AIOS.</span></div>
+            <div class="step"><i class="fas fa-share-square"></i><span>Tap the <b>Share</b> button in the Safari menu bar. [cite: 2025-12-30]</span></div>
+            <div class="step"><i class="fas fa-plus-square"></i><span>Scroll down and select <b>Add to Home Screen</b>. [cite: 2025-12-30]</span></div>
+            <div class="step"><i class="fas fa-arrow-circle-right"></i><span>Tap <b>Add</b> to finalize and launch AIOS. [cite: 2025-12-30]</span></div>
         </div>
         
         <div class="safari-arrow"><i class="fas fa-chevron-down"></i></div>
     </div>
 
     <script>
+        // Detection for iOS PWA mode
         const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
         window.onload = function() {
             setTimeout(() => {
                 if (isStandalone) {
-                    // 「本頁切換」至 index.html
-                    window.location.replace("index.html");
+                    // Forcing same-tab navigation in iOS PWA [cite: 2025-12-30]
+                    window.location.assign("index.html");
                 } else {
                     document.getElementById('splash').style.display = 'none';
                     document.getElementById('install-ui').style.display = 'flex';
                 }
             }, 1200);
         };
+
+        // Extra guard to prevent new tabs for internal links
+        document.addEventListener('click', (e) => {
+            if (isStandalone && e.target.tagName === 'A') {
+                e.preventDefault();
+                window.location.assign(e.target.href);
+            }
+        }, false);
     </script>
 </body>
 </html>
