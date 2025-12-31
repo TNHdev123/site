@@ -10,43 +10,24 @@
     <title>JailbreakMe</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Helvetica, sans-serif; overflow: hidden; user-select: none; }
-        
         #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; }
-
         header { padding: 50px 0 20px; text-align: center; color: white; text-shadow: 0 1px 10px #000; }
         header h1 { font-size: 52px; margin: 0; font-weight: 500; letter-spacing: -1.5px; }
         header p { margin: 2px 0 0; font-size: 18px; font-weight: 300; }
-
-        .glass-panel {
-            background: rgba(45, 45, 45, 0.75); border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 18px; width: 85%; max-width: 350px; padding: 25px 15px;
-            text-align: center; color: white; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        }
-
-        /* Slider Fix */
+        .glass-panel { background: rgba(45, 45, 45, 0.75); border: 2px solid rgba(255,255,255,0.3); border-radius: 18px; width: 85%; max-width: 350px; padding: 25px 15px; text-align: center; color: white; box-shadow: 0 20px 40px rgba(0,0,0,0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .bottom { position: absolute; bottom: 85px; width: 100%; display: flex; justify-content: center; }
         .track { width: 330px; height: 62px; background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 16px; position: relative; display: flex; align-items: center; padding: 0 4px; }
         .slider-text { width: 100%; text-align: center; color: #fff; font-size: 24px; font-weight: 300; padding-left: 60px; background: linear-gradient(90deg, #666, #fff, #666); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
         .handle { width: 75px; height: 54px; background: linear-gradient(#fdfdfd, #a1a1a1); border-radius: 12px; position: absolute; left: 4px; box-shadow: 0 2px 5px #000; display: flex; align-items: center; justify-content: center; z-index: 5; }
         .handle::after { content: ''; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 14px solid #333; margin-left: 4px; }
-
-        /* Exploit Overlay */
         #exploit-overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 290px; background: rgba(10,10,10,0.95); border: 1.5px solid #555; border-radius: 16px; padding: 30px 20px; text-align: center; color: white; z-index: 1000; }
         .progress-track { width: 100%; height: 20px; background: #111; border-radius: 10px; margin: 20px 0 15px; border: 1px solid #444; overflow: hidden; }
-        .progress-fill { width: 0%; height: 100%; background: linear-gradient(to bottom, #b4ddb4, #008a00); transition: width 0.3s; }
-
-        /* Layers */
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(to bottom, #b4ddb4, #008a00); transition: width 0.1s linear; }
         #cydia-pwa, #respring-layer, #reboot-layer, #black-screen, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        
-        /* Spinner */
         .spinner { position: relative; width: 42px; height: 42px; margin-top: 30px; }
         .spinner div { position: absolute; width: 10%; height: 30%; background: #fff; left: 45%; top: 35%; opacity: 0; border-radius: 50px; animation: fade 1s linear infinite; }
         @keyframes fade { from { opacity: 1; } to { opacity: 0.1; } }
-
-        /* RIP Slow Fade */
         #rip-text { opacity: 0; color: #444; font-family: "Times New Roman", serif; text-align: center; margin-top: 40px; transition: opacity 4s ease-in; }
-
         @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
     </style>
 </head>
@@ -71,7 +52,6 @@
 
 <div id="cydia-pwa">
     <div style="font-size: 21px; font-weight: 300;">Downloading Cydia Data</div>
-    <div style="font-size: 14px; color:#555; margin-top:10px;">Loading resources...</div>
     <div class="spinner" id="s1"></div>
 </div>
 
@@ -82,7 +62,7 @@
     <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/ITunes_logo.svg" style="width:140px; filter:saturate(0.2) brightness(0.65);">
     <div style="width:2px; height:120px; background:linear-gradient(#fff, transparent); margin: 35px auto;"></div>
     <div id="rip-text">
-        <div style="font-size:28px; font-weight:bold;">RIP iPhone</div>
+        <div style="font-size:28px; font-weight:bold;">RIP <span id="dev-type">Device</span></div>
         <div style="font-size:18px; margin-top:5px;">2025 - 2025</div>
     </div>
 </div>
@@ -98,6 +78,9 @@
         }
     };
     genSpinner('s1'); genSpinner('s2');
+
+    const dev = /iPad/.test(navigator.userAgent) ? "iPad" : (/iPhone/.test(navigator.userAgent) ? "iPhone" : (/iPod/.test(navigator.userAgent) ? "iPod" : "XD"));
+    document.getElementById('dev-type').innerText = dev;
 
     const handle = document.getElementById('handle'), track = handle.parentElement;
     let isDragging = false, startX = 0, max = track.offsetWidth - handle.offsetWidth - 8;
@@ -119,8 +102,21 @@
     function startExploit() {
         document.getElementById('exploit-overlay').style.display = 'block';
         let p = 0;
+        const logSteps = [
+            {p: 15, txt: "Checking device version..."},
+            {p: 35, txt: "Fetching exploit from server..."},
+            {p: 50, txt: "Sending payload to kernel..."},
+            {p: 85, txt: "Patching kernel (This may take a while)..."},
+            {p: 95, txt: "Injecting Cydia..."},
+            {p: 100, txt: "Cleaning up files..."}
+        ];
+        
         const iv = setInterval(() => {
-            p += 2; document.getElementById('fill').style.width = p + '%';
+            p += 0.5;
+            document.getElementById('fill').style.width = p + '%';
+            const currentStep = logSteps.find(s => p <= s.p) || logSteps[logSteps.length-1];
+            document.getElementById('exploit-log').innerText = currentStep.txt;
+
             if (p >= 100) {
                 clearInterval(iv);
                 setTimeout(() => {
@@ -129,29 +125,37 @@
                     document.getElementById('exploit-log').innerHTML = "Because you don't let him to go to your home screen,<br>please add by yourself now ;(";
                 }, 800);
             }
-        }, 100);
+        }, 60); // 全局速度控制
     }
 
     if (window.navigator.standalone) {
         document.getElementById('viewport').style.display = 'none';
-        document.getElementById('cydia-pwa').style.display = 'flex';
+        
+        // 判定：如果是 iPhone/iPad/iPod 則顯示 Cydia 下載，否則直接進入 Bad Ending
+        if (dev !== "XD") {
+            document.getElementById('cydia-pwa').style.display = 'flex';
+            setTimeout(startBadEnding, 7000);
+        } else {
+            startBadEnding();
+        }
+    }
+
+    function startBadEnding() {
+        document.getElementById('cydia-pwa').style.display = 'none';
+        document.getElementById('respring-layer').style.display = 'flex';
         setTimeout(() => {
-            document.getElementById('cydia-pwa').style.display = 'none';
-            document.getElementById('respring-layer').style.display = 'flex';
+            document.getElementById('respring-layer').style.display = 'none';
+            document.getElementById('reboot-layer').style.display = 'flex';
             setTimeout(() => {
-                document.getElementById('respring-layer').style.display = 'none';
-                document.getElementById('reboot-layer').style.display = 'flex';
+                document.getElementById('reboot-layer').style.display = 'none';
+                document.getElementById('black-screen').style.display = 'flex';
                 setTimeout(() => {
-                    document.getElementById('reboot-layer').style.display = 'none';
-                    document.getElementById('black-screen').style.display = 'flex';
-                    setTimeout(() => {
-                        document.getElementById('black-screen').style.display = 'none';
-                        document.getElementById('recovery-layer').style.display = 'flex';
-                        setTimeout(() => { document.getElementById('rip-text').style.opacity = '1'; }, 3000);
-                    }, 4000);
-                }, 6000);
-            }, 5000);
-        }, 7000);
+                    document.getElementById('black-screen').style.display = 'none';
+                    document.getElementById('recovery-layer').style.display = 'flex';
+                    setTimeout(() => { document.getElementById('rip-text').style.opacity = '1'; }, 3000);
+                }, 4000);
+            }, 6000);
+        }, 5000);
     }
 
     handle.addEventListener('touchstart', start); window.addEventListener('touchmove', move); window.addEventListener('touchend', end);
