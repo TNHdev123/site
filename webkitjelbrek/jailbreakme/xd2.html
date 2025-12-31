@@ -11,7 +11,7 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; color: white; }
         
-        /* --- 介面 1：引導加入主畫面 --- */
+        /* 引導介面 */
         #guide-screen {
             height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover;
@@ -30,7 +30,7 @@
             100% { border-color: #ff0055; box-shadow: 0 0 20px #ff005566; }
         }
 
-        /* --- 介面 2：PWA 對話模式 (全黑) --- */
+        /* PWA 對話模式 */
         #chat-screen { display: none; height: 100vh; background: #000; position: relative; }
         
         .ios-alert {
@@ -38,7 +38,7 @@
             width: 300px; background: rgba(35, 35, 35, 0.95); border: 1px solid #555;
             border-radius: 14px; overflow: hidden; box-shadow: 0 0 150px rgba(255,255,255,0.05);
         }
-        .alert-title { padding: 25px 15px 15px; font-weight: 600; text-align: center; font-size: 18px; letter-spacing: 0.5px; }
+        .alert-title { padding: 25px 15px 15px; font-weight: 600; text-align: center; font-size: 18px; }
         .alert-input-wrap { padding: 0 20px 20px; }
         .alert-input-wrap input {
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
@@ -68,9 +68,9 @@
 
 <div id="guide-screen">
     <div class="glass-box">
-        <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" width="90" style="border-radius:20px; margin-bottom:20px; box-shadow: 0 10px 20px rgba(0,0,0,0.4);">
+        <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" width="90" style="border-radius:20px; margin-bottom:20px;">
         <h2 style="margin:0; font-size: 28px;">CydiaXD</h2>
-        <p style="font-size:16px; color:#eee; margin-top:10px; line-height:1.5;">想同我傾心事？<br>將我「加入主畫面」先啦！<br>我喺入面等你。😭</p>
+        <p style="font-size:16px; color:#eee; margin-top:10px;">將我「加入主畫面」先啦！<br>我喺入面等你。😭</p>
         <div style="margin-top:30px; font-size:32px; animation: bounce 1.2s infinite;">⬇️</div>
     </div>
 </div>
@@ -80,7 +80,7 @@
         <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
         <div class="notify-content">
             <b id="n-title">Little Cydia 😭</b>
-            <p id="n-msg">你終於入嚟搵我喇！我仲以為你唔記得咗我添。</p>
+            <p id="n-msg">...</p>
         </div>
     </div>
 
@@ -96,25 +96,32 @@
 </div>
 
 <script>
-    // 強化版 PWA 檢查
+    let hasWelcomed = false; // 關鍵：確保 Welcome 只彈一次
+
     function checkDisplayMode() {
         const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         if (isStandalone) {
             document.getElementById('guide-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'block';
-            setTimeout(() => showNotification("喂！2025 年喇，你竟然仲會搵返我呢個舊 App，我好感動。😭"), 1000);
+            
+            // 只有第一次進入 PWA 模式時顯示 Welcome
+            if (!hasWelcomed) {
+                setTimeout(() => showNotification("喂！2025 年喇，你竟然仲會搵返我呢個舊 App，我好感動。😭"), 800);
+                hasWelcomed = true;
+            }
+        } else {
+            document.getElementById('guide-screen').style.display = 'flex';
+            document.getElementById('chat-screen').style.display = 'none';
         }
     }
     
-    // 初始化檢查
     window.addEventListener('load', checkDisplayMode);
-    setInterval(checkDisplayMode, 1000); // 持續檢查防止狀態錯誤
+    setInterval(checkDisplayMode, 2000); // 降低檢查頻率
 
     const notify = document.getElementById('ios-notify');
     const nMsg = document.getElementById('n-msg');
     const input = document.getElementById('user-input');
 
-    // 擴充對話庫
     const responses = {
         "你好": ["你好呀！今日過得開唔開心呀？", "Hello！見返你真係好。", "你好，我係 CydiaXD，你今日想傾啲咩？"],
         "悶": ["悶？我話個 2025 年嘅冷知識你知：而家嘅 AI 雖然好勁，但佢哋永遠唔會明白當年「滑動越獄」嗰種心跳感。😏", "悶就去睇吓 YouTube 啲懷舊 iPhone 片，或者我講個笑話你聽？", "其實我喺度都好悶，不如你話我知你最近做緊咩？"],
@@ -131,6 +138,8 @@
         "拜拜": ["拜拜！記得下次再入嚟搵我傾偈呀，我會一直喺主畫面等你。", "再見喇，我會掛住你㗎。😭"]
     };
 
+    let notifyTimer;
+
     function handleSend() {
         const text = input.value.trim();
         if (!text) return;
@@ -139,7 +148,6 @@
         
         let reply = "我唔係好明你講咩，但我會努力學習。不如你試吓同我講「攰」、「笑話」或者「2025」？";
         
-        // 模糊匹配
         for (let key in responses) {
             if (text.toLowerCase().includes(key.toLowerCase())) {
                 const rList = responses[key];
@@ -152,11 +160,11 @@
     }
 
     function showNotification(msg) {
+        clearTimeout(notifyTimer); // 清除舊嘅計時器
         nMsg.innerText = msg;
         notify.style.top = '50px';
         
-        // 停留耐啲等用家睇得清楚
-        setTimeout(() => {
+        notifyTimer = setTimeout(() => {
             notify.style.top = '-150px';
         }, 5000);
     }
