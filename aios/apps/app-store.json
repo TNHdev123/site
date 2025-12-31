@@ -985,12 +985,12 @@
       "type": "website"
     },
     {
-      "id": "jbme",
+      "id": "debugger",
       "name": "JailbreakMe",
       "description": "Package manager for AIOS",
       "icon": "https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png",
       "iconColor": "#f39c12",
-      "url": "https://tnhdev123.github.io/site/webkitjelbrek/jailbreakme/xd.html",
+      "url": "https://tnhdev123.github.io/site/aios/debugger.html",
       "category": "System",
       "type": "website",
       "fallbackIcon": "package"
