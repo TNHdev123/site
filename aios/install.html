@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AIOS">
     
-    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAAB49yMnAAAANlBMVEVHcEyxub3FyczMzMz///+9vr/BwsPExMTGxsfS0tLV1dXW1tfY2Njc3Nzg4OHp6enr6+vt7e3p6v9SAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO2W2XLCMAxESbe0S7v0//9mSAtMaSFTmAn0YV6GsSdbXmS7NAnDMGzDtjzSAnf0YI6fK9AnS9w5pAeCof0QzByH4MphCPYchmDPYQjOHIbgS8yYfMshGvFvOYQ7+pZDuKJvOYS79S2HcLshhDkhhBkhhDkhhBkhhDkhhDkhxIUh3AnBkhAsCcGSEGx97W9C8P72f0/S8yH/u7v9p+V9m57/vOQvW69uufX7Nn3vtu/v9v8t/8X6m9pX9Z7929H+G2D/D7H/90S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S+6W9/X+C3Uf4r9b+m/x7fX/Pf7H+p/S37/Uf8v/v+f3L/v9Bf0F/f1/69/4uOAn+vP/uX96f0F/QX8BT0p86v8P0l/QX9Bf0P+jPyD679M/9N+nf+q/789Of0z/YfpD+iP6Y/rj+mP6vP4p/V3/v/6v/wN96f+K/7n+fP8XHe9/AOMqY/wByK96v8pYf48p/wXId9/6A8vI8vMB+996P+C89wB+3/X/A8j686/M236+Lfv5fN+2fV7e9uO2v9uOfXrbj/3Y9nH7X9v+t/0L1l/YX9D9NfoB/Z5D7v9A//l8e/T8B25GAAAAAElFTkSuQmCC">
+    <link rel="apple-touch-icon" href="/aios/aios.png">
     
     <link href="css/all.min.css" rel="stylesheet">
     <style>
@@ -23,18 +23,19 @@
         .title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
         .subtitle { font-size: 15px; color: #888; margin-bottom: 40px; }
         
-        /* Guide Box */
-        .guide-box { background: #1c1c1e; border-radius: 18px; padding: 20px; width: 100%; max-width: 300px; border: 1px solid #333; position: relative; }
+        /* Guide Box (Switcher Style) */
+        .guide-box { background: rgba(28, 28, 30, 0.8); backdrop-filter: blur(10px); border-radius: 18px; padding: 20px; width: 100%; max-width: 300px; border: 1px solid #333; position: relative; }
         .step { display: flex; align-items: center; margin-bottom: 15px; font-size: 14px; text-align: left; }
         .step i { font-size: 20px; width: 35px; color: #007aff; text-align: center; margin-right: 12px; }
+        .step:last-child { margin-bottom: 0; }
         
-        /* Safari Arrow */
+        /* Safari Arrow Animation */
         .safari-arrow { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); animation: bounce 2s infinite; color: #007aff; font-size: 24px; }
         
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0) translateX(-50%);} 40% {transform: translateY(-10px) translateX(-50%);} 60% {transform: translateY(-5px) translateX(-50%);} }
         
-        /* Splash Screen */
-        #splash { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* Splash/Detection Screen */
+        #splash { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .loading-dots span { width: 8px; height: 8px; background: #007aff; border-radius: 50%; display: inline-block; margin: 0 4px; animation: dots 1.4s infinite ease-in-out both; }
         .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
         .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
@@ -44,27 +45,27 @@
 <body>
 
     <div id="splash">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAAB49yMnAAAANlBMVEVHcEyxub3FyczMzMz///+9vr/BwsPExMTGxsfS0tLV1dXW1tfY2Njc3Nzg4OHp6enr6+vt7e3p6v9SAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO2W2XLCMAxESbe0S7v0//9mSAtMaSFTmAn0YV6GsSdbXmS7NAnDMGzDtjzSAnf0YI6fK9AnS9w5pAeCof0QzByH4MphCPYchmDPYQjOHIbgS8yYfMshGvFvOYQ7+pZDuKJvOYS79S2HcLshhDkhhBkhhDkhhBkhhDkhhDkhxIWh3AnBkhAsCcGSEGx97W9C8P72f0/S8yH/u7v9p+V9m57/vOQvW69uufX7Nn3vtu/v9v8t/8X6m9pX9Z7929H+G2D/D7H/90S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S+6W9/X+C3Uf4r9b+m/x7fX/Pf7H+p/S37/Uf8v/v+f3L/v9Bf0F/f1/69/4uOAn+vP/uX96f0F/QX8BT0p86v8P0l/QX9Bf0P+jPyD679M/9N+nf+q/789Of0z/YfpD+iP6Y/rj+mP6vP4p/V3/v/6v/wN96f+K/7n+fP8XHe9/AOMqY/wByK96v8pYf48p/wXId9/6A8vI8vMB+996P+C89wB+3/X/A8j686/M236+Lfv5fN+2fV7e9uO2v9uOfXrbj/3Y9nH7X9v+t/0L1l/YX9D9NfoB/Z5D7v9A//l8e/T8B25GAAAAAElFTkSuQmCC" class="app-icon" style="filter: brightness(0.8);">
+        <img src="/aios/aios.png" class="app-icon" style="filter: brightness(0.8);">
         <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
 
     <div class="container" id="install-ui" style="display:none;">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAAB49yMnAAAANlBMVEVHcEyxub3FyczMzMz///+9vr/BwsPExMTGxsfS0tLV1dXW1tfY2Njc3Nzg4OHp6enr6+vt7e3p6v9SAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO2W2XLCMAxESbe0S7v0//9mSAtMaSFTmAn0YV6GsSdbXmS7NAnDMGzDtjzSAnf0YI6fK9AnS9w5pAeCof0QzByH4MphCPYchmDPYQjOHIbgS8yYfMshGvFvOYQ7+pZDuKJvOYS79S2HcLshhDkhhBkhhDkhhBkhhDkhhDkhxIWh3AnBkhAsCcGSEGx97W9C8P72f0/S8yH/u7v9p+V9m57/vOQvW69uufX7Nn3vtu/v9v8t/8X6m9pX9Z7929H+G2D/D7H/90S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S8S0S+6W9/X+C3Uf4r9b+m/x7fX/Pf7H+p/S37/Uf8v/v+f3L/v9Bf0F/f1/69/4uOAn+vP/uX96f0F/QX8BT0p86v8P0l/QX9Bf0P+jPyD679M/9N+nf+q/789Of0z/YfpD+iP6Y/rj+mP6vP4p/V3/v/6v/wN96f+K/7n+fP8XHe9/AOMqY/wByK96v8pYf48p/wXId9/6A8vI8vMB+996P+C89wB+3/X/A8j686/M236+Lfv5fN+2fV7e9uO2v9uOfXrbj/3Y9nH7X9v+t/0L1l/YX9D9NfoB/Z5D7v9A//l8e/T8B25GAAAAAElFTkSuQmCC" class="app-icon">
-        <div class="title">AIOS Switcher</div>
-        <div class="subtitle">Install AIOS to your Home Screen</div>
+        <img src="/aios/aios.png" class="app-icon">
+        <div class="title">AIOS</div>
+        <div class="subtitle">Install to Home Screen to begin</div>
         
         <div class="guide-box">
             <div class="step">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Tap the <b>Share</b> button in the Safari toolbar.</span>
+                <i class="fas fa-share-square"></i>
+                <span>Tap the <b>Share</b> button in Safari.</span>
             </div>
             <div class="step">
                 <i class="fas fa-plus-square"></i>
-                <span>Scroll down and select <b>Add to Home Screen</b>.</span>
+                <span>Select <b>Add to Home Screen</b>.</span>
             </div>
             <div class="step">
                 <i class="fas fa-check-circle"></i>
-                <span>Tap <b>Add</b> to finalize the installation.</span>
+                <span>Confirm <b>Add</b> to install AIOS.</span>
             </div>
         </div>
         
@@ -74,20 +75,23 @@
     </div>
 
     <script>
-        // Check if the app is running in standalone mode (PWA)
-        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        // Detection Logic [cite: 2025-12-31]
+        const isPWA = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
         window.onload = function() {
             setTimeout(() => {
-                if (isStandalone) {
-                    // It's a PWA! Redirect to main system in current tab
-                    window.location.href = "index.html";
+                if (isPWA) {
+                    // Redirect directly to the system in the same tab [cite: 2025-12-31]
+                    window.location.replace("index.html");
                 } else {
-                    // It's Safari! Show install instructions
-                    document.getElementById('splash').style.display = 'none';
-                    document.getElementById('install-ui').style.display = 'flex';
+                    // Show installation guide for Safari users [cite: 2025-12-31]
+                    document.getElementById('splash').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('splash').style.display = 'none';
+                        document.getElementById('install-ui').style.display = 'flex';
+                    }, 500);
                 }
-            }, 1000);
+            }, 1200);
         };
     </script>
     
