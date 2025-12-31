@@ -998,10 +998,19 @@
     {
       "id": "catfafa",
       "name": "🐱🐱🐱",
-      "description": "A Cat Game",
+      "description": "🐱Cat Game.🐱",
       "icon": "https://tnttc2.github.io/iog.github.io/🐱🐱🐱.png",
       "url" :"https://tnttc2.github.io/iog.github.io/🐱🐱🐱.html",
       "category": "Game",
+      "type": "website"
+    },
+    {
+      "id": "tnte",
+      "name": "TNTExplorer",
+      "description": "A Web Explorer.",
+      "icon": "https://tnttc2.github.io/iog.github.io/TNTExplorer/icon.png",
+      "url" :"https://tnttc2.github.io/iog.github.io/TNTExplorer/latest.html",
+      "category": "Web",
       "type": "website"
     }
   ]
