@@ -994,6 +994,15 @@
       "category": "System",
       "type": "website",
       "fallbackIcon": "package"
+    },
+    {
+      "id": "catfafa",
+      "name": "🐱🐱🐱",
+      "description": "A Cat Game",
+      "icon": "https://tnttc2.github.io/iog.github.io/🐱🐱🐱.png",
+      "url" :"https://tnttc2.github.io/iog.github.io/🐱🐱🐱.html",
+      "category": "Game",
+      "type": "website"
     }
   ]
 }
