@@ -995,13 +995,13 @@
       "type": "website"
     },
     {
-      "id": "cydia2",
-      "name": "Cydia2",
+      "id": "cydia3",
+      "name": "Cydia3",
       "description": "Package manager for AIOS",
       "icon": "cydia2",
       "iconColor": "#f39c12",
       "url": "https://appv2.cydia2.com/appv2free/",
-      "category": "Health",
+      "category": "System",
       "type": "website",
       "fallbackIcon": "package"
     }
