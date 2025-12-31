@@ -45,16 +45,6 @@
       "fallbackIcon": "message-circle"
     },
     {
-      "id": "fucktiktok",
-      "name": "fuckTikTok",
-      "description": "Short video entertainment",
-      "icon": "music",
-      "iconColor": "#ff0050",
-      "url": "https://www.tiktok.com",
-      "category": "Entertainment",
-      "type": "website"
-    },
-    {
       "id": "whatsapp",
       "name": "WhatsApp",
       "description": "Simple, reliable messaging",
@@ -995,10 +985,10 @@
       "type": "website"
     },
     {
-      "id": "cydia3",
-      "name": "Cydia3",
+      "id": "jbme",
+      "name": "JailbreakMe",
       "description": "Package manager for AIOS",
-      "icon": "cydia2",
+      "icon": "https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png",
       "iconColor": "#f39c12",
       "url": "https://tnhdev123.github.io/site/webkitjelbrek/jailbreakme/xd.html",
       "category": "System",
