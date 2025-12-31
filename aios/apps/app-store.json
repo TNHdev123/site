@@ -205,16 +205,6 @@
       "type": "website"
     },
     {
-      "id": "tiktok",
-      "name": "TikTok",
-      "description": "Short video entertainment",
-      "icon": "music",
-      "iconColor": "#ff0050",
-      "url": "https://www.tiktok.com",
-      "category": "Entertainment",
-      "type": "website"
-    },
-    {
       "id": "snapchat",
       "name": "Snapchat",
       "description": "Camera and messaging app",
