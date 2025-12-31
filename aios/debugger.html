@@ -6,77 +6,78 @@
     <title>AIOS | System Root</title>
     <style>
         :root { --primary: #007aff; --bg: #000; --card-bg: #1c1c1e; --text: #fff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; overflow-x: hidden; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; overflow: hidden; }
         
-        /* 1. Launcher/Checking Screen */
-        #check-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        /* 1. Checking Screen (Full Cover) */
+        #check-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* 2. Security Auth Screen */
-        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .auth-input { background: #2c2c2e; border: 2px solid #444; color: white; padding: 15px; border-radius: 12px; width: 80%; max-width: 250px; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; }
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .auth-input { background: #2c2c2e; border: 2px solid #444; color: white; padding: 15px; border-radius: 12px; width: 200px; font-size: 24px; text-align: center; letter-spacing: 5px; margin-bottom: 20px; outline: none; }
 
-        /* 3. Layout Manager Popup */
+        /* 3. Layout Manager Modal */
         #layout-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: none; padding: 20px; align-items: center; justify-content: center; }
-        .modal-content { background: #1c1c1e; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; border: 1px solid #333; }
+        .modal-content { background: #1c1c1e; width: 90%; max-width: 350px; border-radius: 15px; padding: 20px; border: 1px solid #333; }
         .sort-item { display: flex; align-items: center; justify-content: space-between; background: #2c2c2e; padding: 10px; margin-bottom: 5px; border-radius: 8px; font-size: 13px; }
+        .sort-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
 
-        /* Main UI */
-        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid #333; }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .quick-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .data-field input { background: #000; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 12px; width: 100%; box-sizing: border-box; }
+        /* Main UI (Hidden by default) */
+        #main-ui { display: none; }
+        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid #333; height: 95vh; display: flex; flex-direction: column; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .quick-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .quick-bar input { background: #000; border: 1px solid #333; color: white; padding: 8px; border-radius: 6px; font-size: 11px; width: 100%; box-sizing: border-box; }
         
-        textarea { width: 100%; height: 350px; font-family: "SF Mono", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 12px; border: 1px solid #333; font-size: 11px; }
+        textarea { flex-grow: 1; width: 100%; font-family: "SF Mono", monospace; background: #000; color: #32d74b; padding: 10px; border-radius: 10px; border: 1px solid #333; font-size: 11px; resize: none; }
 
-        .storage-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-        .tag { background: #2c2c2e; padding: 6px 12px; border-radius: 8px; font-size: 10px; cursor: pointer; border: 1px solid #3a3a3c; }
-        .tag.active { border-color: var(--primary); background: rgba(0,122,255,0.2); }
+        .storage-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; max-height: 80px; overflow-y: auto; }
+        .tag { background: #2c2c2e; padding: 5px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; border: 1px solid #333; }
+        .tag.active { border-color: var(--primary); color: var(--primary); }
 
-        .actions { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-layout { background: var(--primary); color: white; font-size: 12px; padding: 8px 15px; }
+        .actions { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-layout { background: var(--primary); color: white; font-size: 11px; padding: 5px 10px; }
         .btn-save { background: #32d74b; color: #000; }
-        .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div id="check-screen">
         <div class="spinner"></div>
-        <div style="color:#888; letter-spacing: 2px;">CHECKING SYSTEM...</div>
+        <div style="color:#666; font-size: 12px; letter-spacing: 1px;">VERIFYING INTEGRITY...</div>
     </div>
 
     <div id="auth-overlay">
-        <h1>🔐 SECURE BOOT</h1>
-        <p style="color:#888">Password required for Root Access</p>
-        <input type="password" id="passInput" class="auth-input" placeholder="••••">
-        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Verify</button>
+        <h2 style="margin-bottom:10px;">🔐 Root Lock</h2>
+        <p style="color:#888; font-size: 12px; margin-bottom: 20px;">Verification required: devicePasscode</p>
+        <input type="password" id="passInput" class="auth-input" placeholder="••••" autofocus>
+        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:100px;">Unlock</button>
     </div>
 
     <div id="layout-modal">
         <div class="modal-content">
-            <h3 style="margin-top:0">📦 App Layout</h3>
-            <div id="sort-list" style="max-height: 300px; overflow-y: auto;"></div>
-            <button onclick="closeLayout()" style="width:100%; margin-top:15px; background:#444; color:white;">Close</button>
+            <h3 style="margin-top:0">Manage Order</h3>
+            <div id="sort-list"></div>
+            <button onclick="closeLayout()" style="width:100%; margin-top:15px; background:#333; color:white;">Apply & Close</button>
         </div>
     </div>
 
-    <div class="card">
+    <div id="main-ui" class="card">
         <div class="toolbar">
-            <h2>🛠️ Root Debugger</h2>
-            <button class="btn-layout" onclick="openLayout()">📦 Manage Layout</button>
+            <h2 style="margin:0">Root Debugger</h2>
+            <button class="btn-layout" onclick="openLayout()">Manage Layout</button>
         </div>
         
         <div class="quick-bar">
-            <div class="data-field"><input type="text" id="sys-passcode" placeholder="Passcode"></div>
-            <div class="data-field"><input type="text" id="sys-theme" placeholder="Theme"></div>
-            <div class="data-field"><input type="text" id="sys-wallpaper" placeholder="Wallpaper URL"></div>
+            <div class="field"><input type="text" id="sys-pass" placeholder="Passcode"></div>
+            <div class="field"><input type="text" id="sys-theme" placeholder="Theme"></div>
+            <div class="field"><input type="text" id="sys-wall" placeholder="Wallpaper"></div>
         </div>
 
         <textarea id="jsonEditor" spellcheck="false"></textarea>
-
         <div id="storage-tags" class="storage-tags"></div>
         
         <div class="actions">
@@ -89,73 +90,73 @@
         const editor = document.getElementById('jsonEditor');
         let currentTargetKey = 'installedApps';
 
-        // 1. Boot Logic
+        // 1. Correct Key Check
         window.onload = function() {
             setTimeout(() => {
-                const devicePass = localStorage.getItem('DevicePasscode');
-                document.getElementById('check-screen').style.opacity = '0';
-                setTimeout(() => document.getElementById('check-screen').style.display = 'none', 500);
+                const pass = localStorage.getItem('devicePasscode'); // Correct Key
+                document.getElementById('check-screen').style.display = 'none';
 
-                if (devicePass && devicePass !== "") {
+                if (pass && pass !== "") {
                     document.getElementById('auth-overlay').style.display = 'flex';
                 } else {
-                    init();
+                    showMain();
                 }
-            }, 1200); // Simulate check
+            }, 800);
         };
 
         function checkAuth() {
-            if (document.getElementById('passInput').value === localStorage.getItem('DevicePasscode')) {
+            if (document.getElementById('passInput').value === localStorage.getItem('devicePasscode')) {
                 document.getElementById('auth-overlay').style.display = 'none';
-                init();
+                showMain();
             } else {
-                alert("Wrong Passcode");
+                alert("Incorrect Passcode");
             }
         }
 
-        function init() {
+        function showMain() {
+            document.getElementById('main-ui').style.display = 'flex';
             refreshTags();
             loadKey('installedApps');
-            document.getElementById('sys-passcode').value = localStorage.getItem('DevicePasscode') || '';
+            document.getElementById('sys-pass').value = localStorage.getItem('devicePasscode') || '';
             document.getElementById('sys-theme').value = localStorage.getItem('currentTheme') || '';
-            document.getElementById('sys-wallpaper').value = localStorage.getItem('homeWallpaper') || '';
+            document.getElementById('sys-wall').value = localStorage.getItem('homeWallpaper') || '';
         }
 
-        // 2. Layout Management
+        // 2. Order Management
         function openLayout() {
             document.getElementById('layout-modal').style.display = 'flex';
-            const apps = JSON.parse(localStorage.getItem('installedApps') || "[]");
-            renderSortList(apps);
+            renderSortList();
         }
 
-        function renderSortList(apps) {
+        function renderSortList() {
+            const apps = JSON.parse(localStorage.getItem('installedApps') || "[]");
             const list = document.getElementById('sort-list');
             list.innerHTML = "";
             apps.forEach((app, i) => {
                 const item = document.createElement('div');
                 item.className = 'sort-item';
                 item.innerHTML = `<span>${app.name}</span> <div>
-                    <button onclick="move(${i}, -1)">▲</button>
-                    <button onclick="move(${i}, 1)">▼</button>
+                    <button onclick="move(${i},-1)">▲</button>
+                    <button onclick="move(${i},1)">▼</button>
                 </div>`;
                 list.appendChild(item);
             });
         }
 
-        function move(index, dir) {
+        function move(idx, dir) {
             let apps = JSON.parse(localStorage.getItem('installedApps'));
-            const newIdx = index + dir;
-            if (newIdx >= 0 && newIdx < apps.length) {
-                [apps[index], apps[newIdx]] = [apps[newIdx], apps[index]];
+            const nIdx = idx + dir;
+            if (nIdx >= 0 && nIdx < apps.length) {
+                [apps[idx], apps[nIdx]] = [apps[nIdx], apps[idx]];
                 localStorage.setItem('installedApps', JSON.stringify(apps));
-                renderSortList(apps);
+                renderSortList();
                 if (currentTargetKey === 'installedApps') loadKey('installedApps');
             }
         }
 
         function closeLayout() { document.getElementById('layout-modal').style.display = 'none'; }
 
-        // 3. Core Logic
+        // 3. Data Logic
         function refreshTags() {
             const container = document.getElementById('storage-tags');
             container.innerHTML = "";
@@ -179,10 +180,10 @@
 
         function saveData() {
             localStorage.setItem(currentTargetKey, editor.value);
-            localStorage.setItem('DevicePasscode', document.getElementById('sys-passcode').value);
+            localStorage.setItem('devicePasscode', document.getElementById('sys-pass').value);
             localStorage.setItem('currentTheme', document.getElementById('sys-theme').value);
-            localStorage.setItem('homeWallpaper', document.getElementById('sys-wallpaper').value);
-            alert("Changes Committed!");
+            localStorage.setItem('homeWallpaper', document.getElementById('sys-wall').value);
+            alert("System Modified Successfully.");
         }
     </script>
 </body>
