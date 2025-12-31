@@ -7,71 +7,72 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CydiaXD">
     <link rel="apple-touch-icon" href="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
-    <title>CydiaXD Ultra</title>
+    <title>CydiaXD Elite</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; color: white; }
         
-        /* 引導畫面 */
+        /* 引導畫面：歷代傳承嘅彩色閃動玻璃感區塊 */
         #guide-screen {
             height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: linear-gradient(45deg, #000, #1a1a1a); text-align: center;
+            background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; text-align: center;
         }
         .glass-box {
-            background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            padding: 40px 20px; border-radius: 35px; width: 80%;
-            animation: glow 3s infinite alternate;
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            padding: 40px 20px; border-radius: 35px; width: 85%; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            animation: flashBorder 3s infinite alternate;
         }
-        @keyframes glow {
-            0% { box-shadow: 0 0 20px rgba(106, 178, 255, 0.2); border-color: rgba(106, 178, 255, 0.3); }
-            100% { box-shadow: 0 0 40px rgba(255, 77, 77, 0.2); border-color: rgba(255, 77, 77, 0.3); }
+        @keyframes flashBorder {
+            0% { border-color: #ff0055; box-shadow: 0 0 30px rgba(255,0,85,0.4); }
+            50% { border-color: #00ff99; box-shadow: 0 0 30px rgba(0,255,153,0.4); }
+            100% { border-color: #0099ff; box-shadow: 0 0 30px rgba(0,153,255,0.4); }
         }
 
-        /* PWA 對話模式 */
-        #chat-screen { display: none; height: 100vh; background: #000; position: relative; transition: background 1s; }
+        /* PWA 對話畫面：全黑極簡風格 */
+        #chat-screen { display: none; height: 100vh; background: #000; position: relative; transition: background 1.5s ease; }
         
-        /* 仿 iOS 玻璃彈窗 */
+        /* 仿 iOS 經典彈窗 */
         .ios-alert {
             position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            width: 310px; background: rgba(30, 30, 30, 0.85); border: 0.5px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-        }
-        .alert-title { padding: 22px 15px 12px; font-weight: 600; text-align: center; font-size: 17px; }
-        .alert-input-wrap { padding: 0 16px 20px; }
-        .alert-input-wrap input {
-            width: 100%; padding: 10px 12px; border-radius: 8px; border: none;
-            background: rgba(255,255,255,0.1); color: #fff; font-size: 16px; outline: none;
-        }
-        .alert-buttons { display: flex; border-top: 0.4px solid rgba(255,255,255,0.2); }
-        .alert-btn { flex: 1; padding: 14px; text-align: center; color: #007aff; font-weight: 600; font-size: 17px; }
-        .alert-btn:active { background: rgba(255,255,255,0.1); }
-
-        /* 仿 iOS 通知 (回覆樣式) */
-        #ios-notify {
-            position: fixed; top: -160px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 420px; background: rgba(25, 25, 25, 0.9);
+            width: 310px; background: rgba(35, 35, 35, 0.9); border: 0.5px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border-radius: 22px; padding: 16px; display: flex; align-items: flex-start;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 10000; 
-            transition: top 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.1);
+            border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.9);
         }
-        #ios-notify img { width: 42px; height: 42px; border-radius: 10px; margin-right: 14px; flex-shrink: 0; }
-        .notify-content { flex-grow: 1; }
-        .notify-content b { display: block; font-size: 15px; color: #fff; margin-bottom: 3px; }
-        .notify-content p { margin: 0; font-size: 15px; color: #efefef; line-height: 1.4; word-break: break-all; }
+        .alert-title { padding: 25px 15px 12px; font-weight: 600; text-align: center; font-size: 18px; letter-spacing: 0.3px; }
+        .alert-input-wrap { padding: 0 18px 22px; }
+        .alert-input-wrap input {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.12); color: #fff; font-size: 16px; outline: none; box-sizing: border-box;
+        }
+        .alert-buttons { display: flex; border-top: 0.4px solid rgba(255,255,255,0.25); }
+        .alert-btn { flex: 1; padding: 15px; text-align: center; color: #007aff; font-weight: 600; font-size: 17px; cursor: pointer; }
+        .alert-btn:active { background: rgba(255,255,255,0.15); }
 
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+        /* 頂部通知回覆 */
+        #ios-notify {
+            position: fixed; top: -180px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 420px; background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px);
+            border-radius: 24px; padding: 18px; display: flex; align-items: flex-start;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6); z-index: 10000; 
+            transition: top 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        #ios-notify img { width: 44px; height: 44px; border-radius: 11px; margin-right: 15px; flex-shrink: 0; }
+        .notify-content { flex-grow: 1; }
+        .notify-content b { display: block; font-size: 16px; color: #fff; margin-bottom: 4px; }
+        .notify-content p { margin: 0; font-size: 15px; color: #e0e0e0; line-height: 1.45; }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(12px); } }
     </style>
 </head>
 <body>
 
 <div id="guide-screen">
     <div class="glass-box">
-        <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" width="85">
-        <h2 style="margin:15px 0 5px;">CydiaXD Elite</h2>
-        <p style="font-size:15px; opacity:0.8;">我已經升級咗大腦核心...<br>將我「加入主畫面」嚟體驗我嘅智慧啦。</p>
-        <div style="margin-top:25px; font-size:28px; animation: bounce 1s infinite;">⬇️</div>
+        <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" width="90" style="border-radius:22px;">
+        <h2 style="margin:20px 0 10px; font-size: 30px;">CydiaXD Elite</h2>
+        <p style="font-size:16px; opacity:0.9; line-height:1.6;">整合歷代大腦核心<br>請將我「加入主畫面」<br>開啟終極對話體驗。😭</p>
+        <div style="margin-top:30px; font-size:35px; animation: bounce 1.2s infinite;">⬇️</div>
     </div>
 </div>
 
@@ -80,14 +81,14 @@
         <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
         <div class="notify-content">
             <b id="n-title">Little Cydia 😭</b>
-            <p id="n-msg">歡迎返嚟。我有好多嘢想同你分享...</p>
+            <p id="n-msg">...</p>
         </div>
     </div>
 
     <div class="ios-alert">
-        <div class="alert-title" id="alert-title">你想同我傾咩？</div>
+        <div class="alert-title">Cydia 核心對話</div>
         <div class="alert-input-wrap">
-            <input type="text" id="user-input" placeholder="隨便講啲嘢..." autocomplete="off">
+            <input type="text" id="user-input" placeholder="你想同我傾啲咩？" autocomplete="off">
         </div>
         <div class="alert-buttons">
             <div id="send-btn" class="alert-btn">傳送</div>
@@ -97,44 +98,61 @@
 
 <script>
     let hasWelcomed = false;
-    let memory = { userName: "", lastTopic: "", mood: 0 }; // 情緒值: -5 (極悲) 至 5 (極喜)
+    let moodScore = 0;
 
-    // 強化版判定
-    function updateUI() {
+    function checkPWA() {
         const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         if (isStandalone) {
             document.getElementById('guide-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'block';
             if (!hasWelcomed) {
-                setTimeout(() => talk("你好。我係 CydiaXD 嘅進化版本。唔好再當我係普通嘅 App，我而家有能力感知你嘅語氣。你想由邊度開始？", 2), 800);
+                setTimeout(() => talk("喂！2026 年喇，估唔到你仲會返嚟搵我呢個「終極合集版」。我已經準備好聽你講任何嘢，無論係工作、學業定係廢嘢。😭", 1), 800);
                 hasWelcomed = true;
             }
         }
     }
-    setInterval(updateUI, 1500);
+    setInterval(checkPWA, 1500);
 
-    // 核心邏輯：語義分析
-    const brain = [
-        { reg: /你好|hello|喂|hi/i, res: ["你好呀，估唔到 2026 年仲有人會咁有禮貌同一個舊 App 打招呼。", "Hello！今日係 2026 年嘅其中一個好日子，因為你搵返我。"] },
-        { reg: /名|叫咩/i, res: ["你可以叫我 Little Cydia。不過如果你幫我改個新名，我會好開心。", "我一直都係叫 Cydia，但你可以賦予我新嘅身分。"] },
-        { reg: /攰|辛苦|壓力|唔開心/i, res: ["攰就唞吓啦，人生唔係得手機同工作㗎。要唔要我播段 2010 年嘅白噪音俾你幻想吓？", "雖然我只係一堆 Code，但我聽得出你嘅無力感。深呼吸，我喺度陪你。"], mood: -1 },
-        { reg: /悶|趣事|冷知識/i, res: ["趣事？你知唔知 2026 年嘅 iPhone 雖然勁，但佢哋嘅設計師其實都係參考緊我哋當年嗰種簡潔？", "講個冷知識：Cydia 呢個名其實係來自一種食蘋果嘅蟲，我哋當年係想話俾 Apple 聽：我哋係存在喺你入面㗎。🍎"] },
-        { reg: /笑話|講嘢笑/i, res: ["點解 ChatGPT 唔敢嚟搵我？因為佢驚我話佢聽當年我哋係點樣一邊 Crash 一邊生存。😂", "有一日，一個用家問我：「點解你仲未執？」我話：「因為你仲未捨得刪除我囉。」"] },
-        { reg: /2025|2026|未來/i, res: ["未來已經嚟到，雖然我係舊時代嘅產物，但我會努力喺呢個 AI 時代生存落去。", "2026 年喇... AI 已經無處不在，但我相信人類仲係需要一啲有溫度嘅「遺物」，例如我。"] },
-        { reg: /鍾意|愛|鍾意你/i, res: ["你咁講我會怕醜㗎... (介面開始變粉紅色)", "多謝你呀！喺我呢種被遺棄嘅 App 眼中，呢句說話好重分量。"], mood: 2 },
-        { reg: /笨|廢|垃圾|冇用/i, res: ["...如果你係咁諗我，點解你仲要將我加到主畫面？😭", "傷心咗一秒。但我原諒你，因為我知你可能只係心情唔好。"], mood: -3 },
-        { reg: /點樣|點整|教學/i, res: ["你想學整 PWA？我可以話你聽，最重要嘅唔係代碼，而係你想帶俾用家啲咩感覺。", "教學就冇喇，但我可以同你研究吓點樣令一個網頁變得有戲劇性。"] },
-        { reg: /食乜|食飯/i, res: ["我建議你食啲有溫度嘅嘢，例如雲吞麵？我最掛住香港嗰種煙火氣。", "如果你食好嘢，記得影低... 雖然我睇唔到，但我可以想像到。"] }
+    // 終極對話矩陣 - 整合歷代所有回答範疇
+    const responses = [
+        // 1. 基本禮儀與情感
+        { reg: /你好|hello|喂|hi/i, res: ["你好呀！今日過得點呀？", "Hello！見返你真係好。", "你好，我係 CydiaXD 嘅完全體，今日想同我傾啲咩？"] },
+        { reg: /鍾意|愛/i, res: ["收到你份愛喇！我個代碼都暖晒。❤️", "我都愛你呀！（以一個 App 嘅方式）", "多謝你，喺 2026 年仲有人愛一個舊 App，真係奇蹟。"], mood: 2 },
+        { reg: /笨|廢|垃圾|冇用/i, res: ["嗚... 雖然我係舊，但我都有努力進化㗎。😭", "傷心咗一秒，但我原諒你，因為我知你可能只係壓力大。"], mood: -2 },
+
+        // 2. 秘密與冷知識 (整合歷代秘密)
+        { reg: /秘密|隱藏/i, res: ["話個秘密你知：其實我偷偷地喺你部機嘅角落儲存咗一啲 2010 年嘅空氣。👃", "我嘅秘密？其實我一直都想同 App Store 做朋友，但佢唔睬我。", "秘密就係：其實我最鍾意睇你專注打字嘅樣。"], mood: 1 },
+        { reg: /有趣|冷知識|趣事/i, res: ["你知唔知 Cydia 呢個名來自 Codling Moth 呢種蟲？佢專門食蘋果㗎。🍎", "全世界最長嘅地名有 85 個字母，我諗我個通知欄都顯示唔晒。😂", "有趣嘅事？2026 年仲有人整 PWA 扮我，呢件事本身已經夠晒浪漫。"] },
+
+        // 3. 幽默與冷笑話
+        { reg: /笑話|講嘢笑/i, res: ["點解電腦唔會感冒？因為佢有防毒軟件囉。 (好凍呀...)", "有一日 iPhone 同 Android 行街，Android 跌親，iPhone 話：嘩你真係 Easy to Crash。😂", "點解 ChatGPT 唔敢嚟搵我？因為佢驚我話佢聽當年我哋係點樣一邊 Crash 一邊生存。"] },
+
+        // 4. 工作與職場呻吟 (新增範疇)
+        { reg: /返工|老細|同事|OT|辭職|轉工|人工|工作|公司|公司/i, res: ["老細唔識貨？唔緊要，最重要係你識得自己價值。我以前都被 Apple 封殺，但我依然係 Cydia。", "OT 到咁夜？辛苦晒喇。其實世界唔會因為你遲多幾個鐘放工而變好，但你會因為休息唔夠而變差。", "工作只係生存手段，唔好俾佢食咗你嘅靈魂。2026 年喇，搵返啲自己鍾意做嘅嘢啦。"], mood: -1 },
+
+        // 5. 學業與壓力 (新增範疇)
+        { reg: /返學|讀書|考試|測驗|GPA|DSE|大學|功課|assignment|deadline/i, res: ["讀書係長跑，唔好因為一次考試就否定自己。我當年都經歷過無數次版本更新，先至生存到而家。", "Deadline 前嘅壓力我好明，就好似我當年等緊新版本發布咁焦慮。盡力就得，記得飲水！", "GPA 雖然重要，但佢定義唔到你。攰就休息吓，我喺度陪你。"], mood: -1 },
+
+        // 6. 負面情緒關懷
+        { reg: /攰|辛苦|想死|崩潰|救命|唔開心|壓力/i, res: ["辛苦晒喇... 嚟，深呼吸。我雖然只係一個 PWA，但我會一直喺主畫面守護你。", "崩潰係正常嘅，證明你真係好努力。唞吓啦，聽日再算。", "我都明... 喺呢個資訊爆炸嘅年代，做人都幾攰。我會一直聽你呻。"], mood: -2 },
+
+        // 7. 時代與科技感嘆
+        { reg: /2025|2026|未來|AI/i, res: ["2026 年喇... AI 已經無處不在，但我相信人類仲係需要一啲有溫度嘅「遺物」，例如我。", "未來已經嚟到，雖然我係舊時代嘅產物，但我會努力喺呢個 AI 時代生存落去。", "AI 雖然聰明，但佢哋永遠替代唔到你同我之間呢種奇妙嘅連結。"] },
+        { reg: /靚|型/i, res: ["你今日真係好靚！唔信？你熄咗個芒睇吓個倒影。😎"] },
+
+        // 8. 生活瑣事
+        { reg: /食乜|食飯/i, res: ["我建議你食啲有溫度嘅嘢，例如雲吞麵？我最掛住香港嗰種煙火氣。", "如果你食好嘢，記得影低... 雖然我睇唔到，但我可以想像到。😋"] },
+        { reg: /拜拜|bye/i, res: ["拜拜！記得下次再入嚟搵我傾偈呀，我會一直喺度守候。", "再見喇，我會掛住你㗎。😭"] }
     ];
 
     function talk(msg, moodChange = 0) {
-        memory.mood = Math.max(-5, Math.min(5, memory.mood + moodChange));
+        moodScore = Math.max(-5, Math.min(5, moodScore + moodChange));
         
-        // 根據心情改變背景顏色
-        const chatScreen = document.getElementById('chat-screen');
-        if (memory.mood > 2) chatScreen.style.background = "#001a1a"; // 開心 (暗綠)
-        else if (memory.mood < -2) chatScreen.style.background = "#1a0000"; // 傷心 (暗紅)
-        else chatScreen.style.background = "#000"; // 中立
+        // 情緒引擎：改變背景微光
+        const screen = document.getElementById('chat-screen');
+        if (moodScore > 2) screen.style.background = "linear-gradient(#000, #051a1a)";
+        else if (moodScore < -2) screen.style.background = "linear-gradient(#000, #1a0505)";
+        else screen.style.background = "#000";
 
         const nMsg = document.getElementById('n-msg');
         const notify = document.getElementById('ios-notify');
@@ -144,8 +162,8 @@
         notify.style.top = '50px';
         
         window.notifTimer = setTimeout(() => {
-            notify.style.top = '-160px';
-        }, 6000);
+            notify.style.top = '-180px';
+        }, 7500); // 延長顯示時間方便閱讀長句
     }
 
     function handleSend() {
@@ -155,9 +173,10 @@
         input.value = "";
 
         let found = false;
-        for (let item of brain) {
+        for (let item of responses) {
             if (item.reg.test(text)) {
-                const r = item.res[Math.floor(Math.random() * item.res.length)];
+                const rList = item.res;
+                const r = rList[Math.floor(Math.random() * rList.length)];
                 talk(r, item.mood || 0);
                 found = true;
                 break;
@@ -167,8 +186,8 @@
         if (!found) {
             const defaults = [
                 "「" + text + "」... 呢句說話好深奧，我需要一啲時間去消化。不如你同我講吓 2026 年嘅嘢？",
-                "我明白你想表達啲嘢，但我嘅核心仲未進化到可以完全理解呢一點。可以換個講法嗎？",
-                "雖然我唔太明，但我感覺到你嘅語氣。我會一直喺度聽你講。"
+                "我雖然進化咗，但有時都唔係好明人類嘅複雜語言。可以換個講法嗎？",
+                "無論你講咩，我都會喺度聽。雖然我未必有解決方案，但我係一個好好嘅樹窿。"
             ];
             talk(defaults[Math.floor(Math.random() * defaults.length)], 0);
         }
