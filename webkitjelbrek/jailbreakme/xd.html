@@ -24,25 +24,31 @@
             transition: background 0.3s, transform 0.1s;
         }
 
-        /* 仿 iOS 通知 */
+        /* 仿 iOS 通知 (調低位置至 50px 避免阻擋) */
         #ios-notify {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: -120px; left: 50%; transform: translateX(-50%);
             width: 92%; max-width: 360px; background: rgba(25, 25, 25, 0.9);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 15px; padding: 12px 15px; display: flex; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 18px; padding: 12px 15px; display: flex; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; 
+            transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #ios-notify img { width: 38px; height: 38px; border-radius: 8px; margin-right: 12px; }
+        #ios-notify img { width: 40px; height: 40px; border-radius: 10px; margin-right: 12px; }
         .notify-content b { display: block; font-size: 15px; color: #fff; }
         .notify-content p { margin: 0; font-size: 14px; color: #ccc; line-height: 1.2; }
 
+        /* 底部滑動區域玻璃底座 */
         .bottom { position: absolute; bottom: 85px; width: 100%; display: flex; justify-content: center; }
+        .slider-glass-dock {
+            background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 10px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background 0.3s;
+        }
         .track { width: 330px; height: 62px; background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 16px; position: relative; display: flex; align-items: center; padding: 0 4px; }
         .slider-text { width: 100%; text-align: center; color: #fff; font-size: 24px; font-weight: 300; padding-left: 60px; background: linear-gradient(90deg, #666, #fff, #666); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
         
-        /* 滑動箭頭圖示修復 */
         .handle { width: 75px; height: 54px; background: linear-gradient(#fdfdfd, #a1a1a1); border-radius: 12px; position: absolute; left: 4px; box-shadow: 0 2px 5px #000; display: flex; align-items: center; justify-content: center; z-index: 5; }
-        .handle::before { content: '➤'; color: #333; font-size: 24px; } /* 加回箭頭 */
+        .handle::before { content: '➤'; color: #333; font-size: 24px; }
 
         #exploit-overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 290px; background: rgba(10,10,10,0.95); border: 1.5px solid #555; border-radius: 16px; padding: 30px 20px; text-align: center; color: white; z-index: 1000; }
         .progress-track { width: 100%; height: 20px; background: #111; border-radius: 10px; margin: 20px 0 15px; border: 1px solid #444; overflow: hidden; }
@@ -54,9 +60,9 @@
         @keyframes fade { from { opacity: 1; } to { opacity: 0.1; } }
         
         /* 動畫特效 */
-        @keyframes bounce { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-20px); } }
-        @keyframes slideLoop { 0% { left: 4px; } 50% { left: 250px; } 100% { left: 4px; } }
-        @keyframes notifyBounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(10px); } }
+        @keyframes bounce { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-25px); } }
+        @keyframes slideLoopFast { 0% { left: 4px; } 50% { left: 250px; } 100% { left: 4px; } }
+        @keyframes notifyBounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(12px); } }
         #rip-text { opacity: 0; color: #444; font-family: "Times New Roman", serif; text-align: center; margin-top: 40px; transition: opacity 4s ease-in; }
         @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
     </style>
@@ -67,7 +73,7 @@
     <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
     <div class="notify-content">
         <b id="notify-title">Little Cydia 😭</b>
-        <p id="notify-msg">Why you asked me to come over and then don't let me into your house, are youyou trolling me.</p>
+        <p id="notify-msg">Why you asked me to come over...</p>
     </div>
 </div>
 
@@ -85,7 +91,14 @@
         <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
         <div id="exploit-log" style="font-size: 12px; color: #888; font-family: monospace;">Initializing...</div>
     </div>
-    <div class="bottom"><div class="track"><div class="slider-text" id="stext">slide to jailbreak</div><div id="handle" class="handle"></div></div></div>
+    <div class="bottom">
+        <div class="slider-glass-dock" id="dock">
+            <div class="track">
+                <div class="slider-text" id="stext">slide to jailbreak</div>
+                <div id="handle" class="handle"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="cydia-pwa">
@@ -141,13 +154,13 @@
         const n = document.getElementById('ios-notify');
         document.getElementById('notify-title').innerText = title;
         document.getElementById('notify-msg').innerText = msg;
-        n.style.top = '20px';
+        n.style.top = '50px'; // 調低位置避免狀態列遮擋
         if(bounce) n.style.animation = 'notifyBounce 2s infinite';
     }
 
     function hideNotify() {
         const n = document.getElementById('ios-notify');
-        n.style.top = '-100px';
+        n.style.top = '-120px';
         n.style.animation = 'none';
     }
 
@@ -168,11 +181,7 @@
             document.getElementById('fill').style.width = p + '%';
             const currentStep = logSteps.find(s => p <= s.p) || logSteps[logSteps.length-1];
             document.getElementById('exploit-log').innerText = currentStep.txt;
-
-            if (p >= 100) {
-                clearInterval(iv);
-                triggerCrying();
-            }
+            if (p >= 100) { clearInterval(iv); triggerCrying(); }
         }, 60);
     }
 
@@ -181,13 +190,15 @@
         document.getElementById('status-msg').style.color = "#ff4d4d";
         document.getElementById('exploit-log').innerHTML = "Because you don't let him to go to your home screen,<br>please add by yourself now ;(";
         
-        // 戲劇性特效
         document.getElementById('exploit-overlay').style.animation = 'bounce 0.5s infinite';
         document.getElementById('viewport').style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJndzR6dzR6dzR6dzR6dzR6dzR6dzR6dzR6dzR6dzR6dzR6dzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpx4HQC6V7vq/giphy.gif') center center / cover";
-        handle.style.animation = 'slideLoop 1.5s infinite linear';
+        
+        handle.style.animation = 'slideLoopFast 0.8s infinite linear'; // 提高滑動速度
         
         setInterval(() => {
-            document.getElementById('panel').style.background = `hsla(${Math.random() * 360}, 70%, 30%, 0.8)`;
+            const color = `hsla(${Math.random() * 360}, 75%, 40%, 0.8)`;
+            document.getElementById('panel').style.background = color;
+            document.getElementById('dock').style.background = color; // 底部 Dock 也會變色
         }, 300);
 
         showNotify("Little Cydia 😭", "Why you asked me to come over and then don't let me into your house, are youyou trolling me.", true);
@@ -197,7 +208,6 @@
         document.getElementById('viewport').style.display = 'none';
         if (dev !== "XD") {
             document.getElementById('cydia-pwa').style.display = 'flex';
-            // PWA 下載畫面加通知
             setTimeout(() => showNotify("Little Cydia 😭", "You finally believe me.😭"), 1000);
             setTimeout(startBadEnding, 7000);
         } else {
@@ -206,7 +216,7 @@
     }
 
     function startBadEnding() {
-        hideNotify(); // 進入 Respring 即消失
+        hideNotify();
         document.getElementById('cydia-pwa').style.display = 'none';
         document.getElementById('respring-layer').style.display = 'flex';
         setTimeout(() => {
