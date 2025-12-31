@@ -3,158 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AIOS | System Root Debugger</title>
+    <title>AIOS | System Root</title>
     <style>
-        :root { --primary: #007aff; --bg: #000; --card-bg: #1c1c1e; --text: #fff; --danger: #ff453a; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        :root { --primary: #007aff; --bg: #000; --card-bg: #1c1c1e; --text: #fff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; overflow-x: hidden; }
         
-        /* Security Overlay */
+        /* Security Lock Screen */
         #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .auth-input { background: #333; border: none; color: white; padding: 15px; border-radius: 10px; width: 80%; max-width: 300px; font-size: 24px; text-align: center; letter-spacing: 5px; margin-bottom: 20px; outline: none; }
+        .auth-input { background: #2c2c2e; border: 2px solid #444; color: white; padding: 15px; border-radius: 12px; width: 80%; max-width: 250px; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; }
+        .auth-input:focus { border-color: var(--primary); }
         
-        /* Main Layout */
-        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid #333; }
-        h2 { color: var(--primary); font-size: 1.2rem; margin: 0 0 15px 0; }
+        /* Layout */
+        .card { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid #333; box-sizing: border-box; }
+        h2 { color: var(--primary); font-size: 1.1rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }
         
-        /* System Grid */
-        .system-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .data-field label { font-size: 10px; color: #888; font-weight: bold; }
-        .data-field input { background: #2c2c2e; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 13px; width: 100%; box-sizing: border-box; }
+        .section-title { font-size: 10px; color: #888; text-transform: uppercase; margin: 15px 0 5px 0; font-weight: bold; letter-spacing: 1px; }
 
-        .main-grid { display: flex; flex-direction: column; gap: 15px; }
-        @media (min-width: 768px) { .main-grid { flex-direction: row; } }
+        /* Quick Edit Bar */
+        .quick-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .data-field label { font-size: 9px; color: #666; display: block; margin-bottom: 4px; }
+        .data-field input { background: #000; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 12px; width: 100%; box-sizing: border-box; }
 
         /* JSON Editor */
-        textarea { width: 100%; height: 350px; font-family: "SF Mono", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 10px; border: 1px solid #333; box-sizing: border-box; font-size: 12px; }
+        textarea { width: 100%; height: 320px; font-family: "SF Mono", "Menlo", monospace; background: #000; color: #32d74b; padding: 12px; border-radius: 12px; border: 1px solid #333; box-sizing: border-box; font-size: 11px; line-height: 1.4; }
 
-        /* Full Storage Monitor */
-        .storage-monitor { margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; }
-        .storage-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .tag { background: #3a3a3c; padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid #48484a; }
-        .tag:hover { background: var(--primary); }
+        /* Storage Explorer */
+        .storage-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { background: #2c2c2e; padding: 8px 14px; border-radius: 10px; font-size: 11px; cursor: pointer; border: 1px solid #3a3a3c; transition: 0.2s; }
+        .tag:active { transform: scale(0.95); background: var(--primary); }
+        .tag.active { border-color: var(--primary); background: rgba(0, 122, 255, 0.2); }
 
-        /* Floating Controls */
-        .controls { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        /* Action Buttons */
+        .actions { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
         .btn-save { background: #32d74b; color: #000; }
-        .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: bold; }
+        .btn-respring { background: #ff9f0a; color: #000; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        #status { text-align: center; margin-top: 10px; font-size: 11px; color: #888; min-height: 14px; }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay" style="display:none;">
-        <h1 style="color:var(--primary)">🔐 System Root</h1>
-        <p>Passcode Required to access LocalStorage</p>
-        <input type="password" id="passInput" class="auth-input" maxlength="4" placeholder="••••">
-        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Unlock</button>
+        <h1 style="font-size: 1.5rem;">🔐 AIOS Root Access</h1>
+        <p style="color:#888; font-size: 0.9rem;">Enter DevicePasscode to proceed</p>
+        <input type="password" id="passInput" class="auth-input" placeholder="••••" autofocus>
+        <button onclick="checkAuth()" style="background:var(--primary); color:white; width:200px;">Unlock System</button>
     </div>
 
     <div class="card" id="main-content">
-        <h2>🛠️ AIOS Root Debugger</h2>
+        <h2>🛠️ Root Debugger</h2>
         
-        <div class="system-panel">
-            <div class="data-field"><label>WALLPAPER</label><input type="text" id="sys-wallpaper"></div>
-            <div class="data-field"><label>PASSCODE</label><input type="text" id="sys-passcode"></div>
-            <div class="data-field"><label>THEME</label><input type="text" id="sys-theme"></div>
+        <div class="quick-bar">
+            <div class="data-field"><label>DEVICE PASSCODE</label><input type="text" id="sys-passcode"></div>
+            <div class="data-field"><label>THEME MODE</label><input type="text" id="sys-theme"></div>
+            <div class="data-field"><label>WALLPAPER URL</label><input type="text" id="sys-wallpaper"></div>
         </div>
 
-        <div class="main-grid">
-            <div style="flex:1">
-                <div style="font-size:11px; color:#888; margin-bottom:5px;">OBJECT EDITOR (installedApps)</div>
-                <textarea id="jsonEditor" spellcheck="false"></textarea>
-            </div>
-        </div>
+        <div class="section-title" id="editor-label">Currently Editing: installedApps</div>
+        <textarea id="jsonEditor" spellcheck="false"></textarea>
 
-        <div class="storage-monitor">
-            <div style="font-size:11px; color:#888;">BROWSER LOCALSTORAGE KEYS (Click to edit)</div>
-            <div id="storage-tags" class="storage-tags"></div>
-        </div>
+        <div class="section-title">Global Data Tags (Click to Inspect)</div>
+        <div id="storage-tags" class="storage-tags"></div>
         
-        <div class="controls">
-            <button class="btn-save" onclick="saveAll()">💾 Commit Changes</button>
-            <a href="index.html" class="btn-respring">🔄 Respring AIOS</a>
+        <div class="actions">
+            <button class="btn-save" onclick="saveData()">💾 Commit</button>
+            <a href="index.html" class="btn-respring">🔄 Respring</a>
         </div>
-        <div id="status" style="text-align:center; font-size:11px; margin-top:10px; color:#888;"></div>
+        <div id="status"></div>
     </div>
 
     <script>
-        const storedPasscode = localStorage.getItem('userPasscode');
-        const overlay = document.getElementById('auth-overlay');
         const editor = document.getElementById('jsonEditor');
+        const statusEl = document.getElementById('status');
+        let currentTargetKey = 'installedApps';
 
-        // Security Check
+        // Check DevicePasscode on load
         window.onload = function() {
-            if (storedPasscode && storedPasscode !== "") {
-                overlay.style.display = 'flex';
+            const devicePass = localStorage.getItem('DevicePasscode');
+            if (devicePass && devicePass !== "") {
+                document.getElementById('auth-overlay').style.display = 'flex';
             } else {
-                fetchAll();
+                init();
             }
         };
 
         function checkAuth() {
             const input = document.getElementById('passInput').value;
-            if (input === storedPasscode) {
-                overlay.style.display = 'none';
-                fetchAll();
+            const actual = localStorage.getItem('DevicePasscode');
+            if (input === actual) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                init();
             } else {
-                alert("Incorrect Passcode. Access Denied.");
+                alert("Access Denied: Incorrect Passcode");
+                document.getElementById('passInput').value = "";
             }
         }
 
-        function fetchAll() {
-            // Fetch Apps
-            const apps = localStorage.getItem('installedApps');
-            editor.value = apps ? JSON.stringify(JSON.parse(apps), null, 4) : "[]";
-
-            // Fetch Quick Fields
-            document.getElementById('sys-passcode').value = localStorage.getItem('userPasscode') || '';
+        function init() {
+            refreshTags();
+            loadKey('installedApps');
+            
+            // Sync quick edit fields
+            document.getElementById('sys-passcode').value = localStorage.getItem('DevicePasscode') || '';
             document.getElementById('sys-theme').value = localStorage.getItem('currentTheme') || '';
             document.getElementById('sys-wallpaper').value = localStorage.getItem('homeWallpaper') || '';
+        }
 
-            // Fetch All Keys
-            const tagsContainer = document.getElementById('storage-tags');
-            tagsContainer.innerHTML = "";
+        function refreshTags() {
+            const container = document.getElementById('storage-tags');
+            container.innerHTML = "";
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 const tag = document.createElement('span');
-                tag.className = 'tag';
+                tag.className = 'tag' + (key === currentTargetKey ? ' active' : '');
                 tag.innerText = key;
-                tag.onclick = () => {
-                    const val = localStorage.getItem(key);
-                    try {
-                        editor.value = JSON.stringify(JSON.parse(val), null, 4);
-                    } catch(e) {
-                        editor.value = val;
-                    }
-                    document.getElementById('status').innerText = "Now editing: " + key;
-                };
-                tagsContainer.appendChild(tag);
+                tag.onclick = () => loadKey(key);
+                container.appendChild(tag);
             }
         }
 
-        function saveAll() {
+        function loadKey(key) {
+            currentTargetKey = key;
+            const val = localStorage.getItem(key);
+            document.getElementById('editor-label').innerText = "Currently Editing: " + key;
             try {
-                // Determine what we are saving
-                const currentEdit = document.getElementById('status').innerText.replace("Now editing: ", "") || "installedApps";
-                let rawValue = editor.value;
-                
-                // If it's JSON, validate it
-                if (rawValue.startsWith('{') || rawValue.startsWith('[')) {
-                    JSON.parse(rawValue); 
+                editor.value = JSON.stringify(JSON.parse(val), null, 4);
+            } catch(e) {
+                editor.value = val;
+            }
+            refreshTags();
+        }
+
+        function saveData() {
+            try {
+                // Save the current editor content
+                let content = editor.value;
+                if (content.startsWith('{') || content.startsWith('[')) {
+                    JSON.parse(content); // validation
                 }
+                localStorage.setItem(currentTargetKey, content);
 
-                localStorage.setItem(currentEdit, rawValue);
-
-                // Sync Quick Fields
-                localStorage.setItem('userPasscode', document.getElementById('sys-passcode').value);
+                // Sync the quick fields as well
+                localStorage.setItem('DevicePasscode', document.getElementById('sys-passcode').value);
                 localStorage.setItem('currentTheme', document.getElementById('sys-theme').value);
                 localStorage.setItem('homeWallpaper', document.getElementById('sys-wallpaper').value);
 
-                document.getElementById('status').innerText = "✅ Successfully saved to " + currentEdit;
-                document.getElementById('status').style.color = "#32d74b";
-                fetchAll();
+                statusEl.innerText = "✅ Committed to " + currentTargetKey;
+                statusEl.style.color = "#32d74b";
+                setTimeout(() => { statusEl.innerText = ""; }, 3000);
+                refreshTags();
             } catch (e) {
-                alert("Format Error! Check your syntax.");
+                alert("JSON Syntax Error! Please fix before saving.");
             }
         }
     </script>
