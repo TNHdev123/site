@@ -10,19 +10,43 @@
     <title>JailbreakMe</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: "Helvetica Neue", Helvetica, sans-serif; overflow: hidden; user-select: none; }
-        #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; }
+        #viewport { height: 100%; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; position: relative; display: flex; flex-direction: column; align-items: center; transition: background 0.5s; }
+        
+        /* iOS Banner Notification */
+        #ios-banner {
+            position: fixed; top: -100px; left: 10px; right: 10px; height: 80px;
+            background: rgba(25, 25, 25, 0.95); border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 5000;
+            display: flex; align-items: center; padding: 0 20px; color: white;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #ios-banner.show { top: 50px; animation: bannerBounce 2s infinite; }
+        @keyframes bannerBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
         header { padding: 50px 0 20px; text-align: center; color: white; text-shadow: 0 1px 10px #000; }
         header h1 { font-size: 52px; margin: 0; font-weight: 500; letter-spacing: -1.5px; }
         header p { margin: 2px 0 0; font-size: 18px; font-weight: 300; }
+
         .glass-panel { background: rgba(45, 45, 45, 0.75); border: 2px solid rgba(255,255,255,0.3); border-radius: 18px; width: 85%; max-width: 350px; padding: 25px 15px; text-align: center; color: white; box-shadow: 0 20px 40px rgba(0,0,0,0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        
         .bottom { position: absolute; bottom: 85px; width: 100%; display: flex; justify-content: center; }
         .track { width: 330px; height: 62px; background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 16px; position: relative; display: flex; align-items: center; padding: 0 4px; }
         .slider-text { width: 100%; text-align: center; color: #fff; font-size: 24px; font-weight: 300; padding-left: 60px; background: linear-gradient(90deg, #666, #fff, #666); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; }
         .handle { width: 75px; height: 54px; background: linear-gradient(#fdfdfd, #a1a1a1); border-radius: 12px; position: absolute; left: 4px; box-shadow: 0 2px 5px #000; display: flex; align-items: center; justify-content: center; z-index: 5; }
-        .handle::after { content: ''; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 14px solid #333; margin-left: 4px; }
+
         #exploit-overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 290px; background: rgba(10,10,10,0.95); border: 1.5px solid #555; border-radius: 16px; padding: 30px 20px; text-align: center; color: white; z-index: 1000; }
         .progress-track { width: 100%; height: 20px; background: #111; border-radius: 10px; margin: 20px 0 15px; border: 1px solid #444; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(to bottom, #b4ddb4, #008a00); transition: width 0.1s linear; }
+
+        /* Tantrum Animations */
+        @keyframes windowJump { 0%, 100% { margin-top: 0; } 50% { margin-top: -30px; } }
+        @keyframes sliderCrazy { 0%, 100% { left: 4px; } 50% { left: 250px; } }
+        @keyframes glassFlash { 0% { background: rgba(255, 0, 0, 0.5); } 33% { background: rgba(0, 255, 0, 0.5); } 66% { background: rgba(0, 0, 255, 0.5); } 100% { background: rgba(255, 0, 0, 0.5); } }
+
+        .crying #exploit-overlay { animation: windowJump 0.2s infinite; }
+        .crying .handle { animation: sliderCrazy 0.4s infinite ease-in-out; }
+        .crying .glass-panel, .crying .track { animation: glassFlash 0.3s infinite; }
+
         #cydia-pwa, #respring-layer, #reboot-layer, #black-screen, #recovery-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { position: relative; width: 42px; height: 42px; margin-top: 30px; }
         .spinner div { position: absolute; width: 10%; height: 30%; background: #fff; left: 45%; top: 35%; opacity: 0; border-radius: 50px; animation: fade 1s linear infinite; }
@@ -31,7 +55,15 @@
         @keyframes shine { 0% { background-position: 150%; } 100% { background-position: -150%; } }
     </style>
 </head>
-<body>
+<body id="main-body">
+
+<div id="ios-banner">
+    <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" style="width:45px; height:45px; border-radius:10px; margin-right:15px;">
+    <div>
+        <div style="font-weight: bold; font-size: 15px;">Little Cydia 😭</div>
+        <div style="font-size: 13px; opacity: 0.9;">Why you asked me to come over and then don't let me into your house, are youyou trolling me.</div>
+    </div>
+</div>
 
 <div id="viewport">
     <header><h1>JailbreakMe</h1><p>by comex (et al.)</p></header>
@@ -120,18 +152,22 @@
             if (p >= 100) {
                 clearInterval(iv);
                 setTimeout(() => {
+                    // Trigger Tantrum Scale
+                    document.getElementById('main-body').classList.add('crying');
+                    document.getElementById('viewport').style.backgroundImage = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJndXIzcXVrdnI0Z3oxbmZ2emRzZGF6ZHZ6dzZ6Znh6Znh6Znh6Znh6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/L2z7uYM5qn830YUR0r/giphy.gif')";
                     document.getElementById('status-msg').innerText = "Cydia is crying X(";
                     document.getElementById('status-msg').style.color = "#ff4d4d";
                     document.getElementById('exploit-log').innerHTML = "Because you don't let him to go to your home screen,<br>please add by yourself now ;(";
+                    
+                    // Show iOS Notification
+                    document.getElementById('ios-banner').classList.add('show');
                 }, 800);
             }
-        }, 60); // 全局速度控制
+        }, 60);
     }
 
     if (window.navigator.standalone) {
         document.getElementById('viewport').style.display = 'none';
-        
-        // 判定：如果是 iPhone/iPad/iPod 則顯示 Cydia 下載，否則直接進入 Bad Ending
         if (dev !== "XD") {
             document.getElementById('cydia-pwa').style.display = 'flex';
             setTimeout(startBadEnding, 7000);
