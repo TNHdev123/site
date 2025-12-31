@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AIOS | System Data & Layout Debugger</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #1a1a1a; color: #e0e0e0; }
+        .card { max-width: 900px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 15px; border: 1px solid #444; }
+        h2 { color: #007aff; display: flex; align-items: center; gap: 10px; }
+        .grid-container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        textarea { 
+            width: 100%; height: 500px; font-family: monospace; background: #121212; 
+            color: #00ff41; padding: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box;
+        }
+        .app-preview { background: #3d3d3d; padding: 15px; border-radius: 8px; font-size: 0.85rem; }
+        .app-item { 
+            display: flex; align-items: center; gap: 10px; padding: 8px; 
+            border-bottom: 1px solid #555; background: #444; margin-bottom: 4px; border-radius: 4px;
+        }
+        .app-index { color: #007aff; font-weight: bold; width: 20px; }
+        .btns { margin-top: 20px; display: flex; gap: 12px; }
+        button { padding: 12px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; }
+        .load-btn { background: #007aff; color: white; }
+        .save-btn { background: #34c759; color: white; }
+        .status { margin-top: 15px; padding: 10px; border-radius: 6px; display: none; }
+        .success { color: #34c759; background: rgba(52, 199, 89, 0.1); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🛠️ AIOS Layout & Data Debugger</h2>
+        <p>Modify the order of <b>installedApps</b> in the JSON to change their position on the Home Screen. The first item in the list appears first.</p>
+        
+        <div class="grid-container">
+            <div>
+                <textarea id="jsonEditor" spellcheck="false" placeholder="Click 'Fetch' to see the code..."></textarea>
+            </div>
+            <div class="app-preview">
+                <strong style="display:block; margin-bottom:10px;">Current Order Preview:</strong>
+                <div id="appList"></div>
+            </div>
+        </div>
+        
+        <div class="btns">
+            <button class="load-btn" onclick="loadData()">📥 Fetch Data & Preview</button>
+            <button class="save-btn" onclick="saveData()">💾 Commit Changes & Layout</button>
+        </div>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('jsonEditor');
+        const appListEl = document.getElementById('appList');
+        const statusEl = document.getElementById('status');
+
+        function loadData() {
+            const data = localStorage.getItem('installedApps');
+            if (data) {
+                const apps = JSON.parse(data);
+                editor.value = JSON.stringify(apps, null, 4);
+                updatePreview(apps);
+                showStatus("Data synced. Top of the list = Top-left of Home Screen.");
+            }
+        }
+
+        function updatePreview(apps) {
+            appListEl.innerHTML = "";
+            apps.forEach((app, index) => {
+                const item = document.createElement('div');
+                item.className = 'app-item';
+                item.innerHTML = `<span class="app-index">${index + 1}</span> <span>${app.name}</span>`;
+                appListEl.appendChild(item);
+            });
+        }
+
+        function saveData() {
+            try {
+                const newData = editor.value;
+                const parsed = JSON.parse(newData);
+                localStorage.setItem('installedApps', newData);
+                updatePreview(parsed);
+                showStatus("✅ Success! App order and data updated.");
+            } catch (e) {
+                alert("JSON format error!");
+            }
+        }
+
+        function showStatus(msg) {
+            statusEl.innerText = msg;
+            statusEl.className = "status success";
+            statusEl.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
