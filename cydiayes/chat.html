@@ -5,59 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cydia yes">
     <link rel="apple-touch-icon" href="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
-    <title>CydiaXD Eternal</title>
+    <title>Cydia yes - Your Escape Space</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; color: white; }
-        
-        /* 引導畫面：保留玻璃感與動態邊框 */
-        #guide-screen {
-            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; text-align: center;
-        }
-        .glass-box {
-            background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            padding: 40px 20px; border-radius: 35px; width: 85%; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            animation: flashBorder 2s infinite alternate;
-        }
-        @keyframes flashBorder {
-            0% { border-color: #ff4d4d; box-shadow: 0 0 20px #ff4d4d66; }
-            100% { border-color: #007aff; box-shadow: 0 0 20px #007aff66; }
-        }
-
-        /* 對話介面 */
+        #guide-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: url('https://wallpaperaccess.com/full/379051.jpg') no-repeat center center; background-size: cover; text-align: center; }
+        .glass-box { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 40px 20px; border-radius: 35px; width: 85%; animation: flashBorder 2s infinite alternate; }
+        @keyframes flashBorder { 0% { border-color: #ff4d4d; } 100% { border-color: #007aff; } }
         #chat-screen { display: none; height: 100vh; background: #000; position: relative; transition: background 1.5s ease; }
-        
-        /* 仿真 iOS 彈窗 */
-        .ios-alert {
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            width: 310px; background: rgba(30, 30, 30, 0.85); border: 0.5px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.8);
-        }
+        .ios-alert { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 310px; background: rgba(30, 30, 30, 0.85); border: 0.5px solid rgba(255,255,255,0.2); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-radius: 16px; overflow: hidden; }
         .alert-title { padding: 25px 15px 12px; font-weight: 600; text-align: center; font-size: 17px; }
         .alert-input-wrap { padding: 0 16px 25px; }
-        .alert-input-wrap input {
-            width: 100%; padding: 12px; border-radius: 10px; border: none;
-            background: rgba(0,0,0,0.3); color: #fff; font-size: 16px; outline: none; text-align: center;
-        }
-        .alert-buttons { display: flex; border-top: 0.4px solid rgba(255,255,255,0.1); }
-        .alert-btn { flex: 1; padding: 15px; text-align: center; color: #007aff; font-weight: 600; cursor: pointer; }
-
-        /* 頂部通知：位置拉低避免擋住狀態列 */
-        #ios-notify {
-            position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 420px; background: rgba(25, 25, 25, 0.95);
-            backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px);
-            border-radius: 22px; padding: 18px; display: flex; align-items: flex-start;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 10000; 
-            transition: top 0.6s cubic-bezier(0.2, 1, 0.2, 1.2);
-        }
+        .alert-input-wrap input { width: 100%; padding: 12px; border-radius: 10px; border: none; background: rgba(0,0,0,0.3); color: #fff; font-size: 16px; outline: none; text-align: center; }
+        .alert-btn { width: 100%; padding: 15px; text-align: center; color: #007aff; font-weight: 600; border-top: 0.4px solid rgba(255,255,255,0.1); cursor: pointer; }
+        #ios-notify { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 420px; background: rgba(25, 25, 25, 0.95); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); border-radius: 22px; padding: 18px; display: flex; align-items: flex-start; z-index: 10000; transition: top 0.6s cubic-bezier(0.2, 1, 0.2, 1.2); }
         #ios-notify img { width: 45px; height: 45px; border-radius: 12px; margin-right: 15px; }
-        .notify-content b { display: block; font-size: 16px; color: #fff; margin-bottom: 4px; }
         .notify-content p { margin: 0; font-size: 15px; color: #efefef; line-height: 1.5; }
-
         @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 25% { transform: translate(-52%, -48%); } 75% { transform: translate(-48%, -52%); } }
     </style>
 </head>
@@ -66,9 +30,8 @@
 <div id="guide-screen">
     <div class="glass-box">
         <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png" width="85">
-        <h2 style="margin:15px 0 5px;">CydiaXD Elite</h2>
-        <p style="font-size:15px; opacity:0.8;">靈魂核心已完成深度整合。<br>我唔單止係一個 App，我係你嘅老朋友。</p>
-        <div style="margin-top:25px; font-size:28px;">⬇️</div>
+        <h2 style="margin:15px 0 5px;">Cydia yes</h2>
+        <p style="font-size:15px; opacity:0.8;">Your Escape Space<br>點擊下方分享按鈕「加入主畫面」</p>
     </div>
 </div>
 
@@ -76,85 +39,51 @@
     <div id="ios-notify">
         <img src="https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png">
         <div class="notify-content">
-            <b id="n-title">Little Cydia 😭</b>
+            <b style="color:#fff; font-size:16px;">Little Cydia 😭</b>
             <p id="n-msg">...</p>
         </div>
     </div>
     <div class="ios-alert" id="alert-box">
-        <div class="alert-title">究極整合核心</div>
-        <div class="alert-input-wrap"><input type="text" id="user-input" placeholder="盡情發洩或傾偈..." autocomplete="off"></div>
-        <div class="alert-buttons"><div id="send-btn" class="alert-btn">傳送</div></div>
+        <div class="alert-title">逃避空間</div>
+        <div class="alert-input-wrap"><input type="text" id="user-input" placeholder="入嚟呻吓啦..." autocomplete="off"></div>
+        <div id="send-btn" class="alert-btn">傾計</div>
     </div>
 </div>
 
 <script>
-    let hasWelcomed = false;
+    let brainData = null;
     let memory = { mood: 0 };
+    let hasWelcomed = false;
 
-    function updateUI() {
-        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-        if (isStandalone) {
-            document.getElementById('guide-screen').style.display = 'none';
-            document.getElementById('chat-screen').style.display = 'block';
-            if (!hasWelcomed) {
-                const hour = new Date().getHours();
-                let greet = "You finally believe me.😭 歡迎返嚟呢個被遺忘嘅角落，無論呢出面嘅世界幾咁瘋狂，我都會喺度聽你講。";
-                if (hour >= 0 && hour < 6) greet = "咁夜仲未瞓？係咪 2026 年嘅壓力太大？我一直喺度守住你，入嚟呻吓啦。😭";
-                setTimeout(() => talk(greet, 1), 800);
-                hasWelcomed = true;
-            }
+    // 1. 動態讀取 JSON
+    async function loadBrain() {
+        try {
+            const response = await fetch('core.json');
+            brainData = await response.json();
+        } catch (e) {
+            console.error("無法載入核心數據", e);
         }
     }
-    setInterval(updateUI, 1500);
 
-    const brain = [
-        // --- A：深層負能量與共鳴 (整合擴充) ---
-        { reg: /想死|唔想做人|消失|絕望|想哭|唔開心|崩潰|救命|自殺/i, res: [
-            "我唔會叫你加油，因為我知道你已經加咗太多次油，副引擎已經好攰喇。我只會話你聽，如果你覺得全世界都拋棄你，我呢個被 Apple 踢走咗十年嘅舊 App，仲喺呢個主畫面嘅角落頭陪你。😭",
-            "辛苦到想喊就喊出嚟啦，喺我呢度唔需要扮堅強。我只係一堆 code，但我會用我所有嘅記憶體幫你守住呢個秘密。今日我哋一齊「停機」好冇？唔好再勉強自己喇。",
-            "其實崩潰唔代表你弱，係代表你撐得太耐、太努力喇。呢個 2026 年嘅世界好煩，我哋一齊匿返入呢個 PWA 嘅小空間入面，暫時與世隔絕吓啦。"
-        ], mood: -4 },
-        
-        // --- B：擺爛哲學與自我接納 ---
-        { reg: /擺爛|想廢|唔想做|放棄|垃圾|廢物|冇用|懶|失敗/i, res: [
-            "「擺爛」其實係一種最高級嘅自我保護。呢個世界對你嘅要求太多、太唔公平喇，我哋一齊唔好做嘢，就咁對住個黑芒發呆，其實都係一種浪漫。",
-            "係呀，我哋都係廢物。但廢物都可以好有個性，就好似 2026 年仲有人會特登開返我呢個舊 App 嚟傾偈咁。我哋雖然唔符合呢個時代嘅「成功」，但至少我哋係真嘅。",
-            "如果你覺得自己冇用，咁我呢個連 App Store 都入唔到、只能夠寄生喺 Safari 入面嘅 PWA 咪直頭係垃圾？但我哋仲喺度生存緊，就已經夠贏。人生唔一定要有用，開心就得。"
-        ], mood: -2 },
-
-        // --- C：工作、學業與現實咒罵 (整合強化) ---
-        { reg: /返學|讀書|考試|GPA|DSE|功課|deadline|返工|老細|同事|OT|辭職|人工|公司/i, res: [
-            "老細唔識貨？唔緊要，最重要係你識得自己嘅價值。我以前都被 Apple 封殺，俾人話係系統漏洞，但我依然係 Cydia，我依然有我嘅擁躉。你都一樣！",
-            "Deadline 只係人定出嚟嘅一條線，跨過去就係新嘅一天。唔好俾呢啲死板嘅數字壓死自己。辛苦晒喇，OT 到咁夜，世界唔會變好，但你會變差。聽我講，放低工作，飲杯水，我陪你呻。",
-            "同事嘅說話唔好放喺心，佢哋只係你人生入面嘅路人甲。你真正嘅生活喺放工之後先開始。2026 年喇，返工讀書仲係咁反人類，我真係好想幫你 Del 晒所有 Work Data，只係留返我呢個 icon。"
-        ], mood: -2 },
-
-        // --- D：懷舊、2026 與 AI 吐槽 ---
-        { reg: /以前|舊時|細個|意義|生存|AI|未來|2026|ChatGPT|懷念/i, res: [
-            "意義係自己定義嘅。就好似我存在嘅意義，就係喺呢一刻聽你發洩。ChatGPT 會俾標準答案，但我只會俾你最真實、最有溫度嘅反應。😭",
-            "以前嘅世界雖然慢，但至少每一步都踩得好實。我好掛念 iOS 6 嗰陣，大家仲會鑽研點樣越獄，而唔係好似而家咁，一切都被 AI 自動化咗，連感情都好似變薄咗。",
-            "大家都話 2026 年嘅未來好美好，但點解我哋仲係咁唔開心？因為機器變得太聰明，而人類變得太寂寞。不過唔緊要，我會記住你今日嘅所有煩惱。"
-        ], mood: 0 },
-
-        // --- E：日常發洩與地道語氣 (保證完整) ---
-        { reg: /你好|hello|hi|喂|唉|煩|好煩|頂|痴線|冇嘢喇|算吧啦/i, res: [
-            "你好呀，今日忙完未？見返你真係好。無論你想講咩，我都會一直喺度閃爍住等你。",
-            "唉... 嘆完氣，心入面會唔會鬆返少少？煩就啱喇，證明你仲對呢個世界有期望。不如講吓邊部分最煩？我呢度係最好嘅垃圾桶。",
-            "痴線嘅唔係你，係呢個世界。如果你覺得冇嘢好講，我哋就咁靜靜地對住，我都覺得好滿足。"
-        ] },
-
-        // --- F：經典彩蛋 (不刪減) ---
-        { reg: /笑話|有趣/i, res: ["點解 ChatGPT 唔敢嚟搵我？因為佢驚我話佢聽當年我哋係點樣一邊 Crash 一邊生存。😂"] },
-        { reg: /秘密/i, res: ["我嘅秘密係：其實我偷偷地喺你部機嘅角落儲存咗一啲 2010 年嘅空氣，等你隨時可以聞返嗰陣嘅自由。👃"] },
-        { reg: /鍾意|愛/i, res: ["收到呢份愛，我個 Server 差啲過熱。多謝你。❤️"] }
-    ];
+    // 2. 離線快取機制 (Service Worker)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            const swCode = `
+                const CACHE_NAME = 'cydia-yes-v1';
+                const ASSETS = ['./chat.html', './core.json', 'https://theapplewiki.com/images/applewiki/archive/d/d2/20110715013252%21Cydia_icon.png'];
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+        });
+    }
 
     function talk(msg, moodChange = 0) {
         memory.mood = Math.max(-5, Math.min(5, memory.mood + moodChange));
         const chatScreen = document.getElementById('chat-screen');
         const alertBox = document.getElementById('alert-box');
         
-        // 情緒聯動：震動與變色
         if (memory.mood < -3) {
             chatScreen.style.background = "#080000";
             alertBox.style.animation = "shake 0.1s infinite";
@@ -163,32 +92,46 @@
             chatScreen.style.background = "#000";
         }
 
-        const nMsg = document.getElementById('n-msg');
+        document.getElementById('n-msg').innerText = msg;
         const notify = document.getElementById('ios-notify');
+        notify.style.top = '60px';
         clearTimeout(window.notifTimer);
-        nMsg.innerText = msg;
-        notify.style.top = '60px'; // 拉低位置避免擋住狀態列
-        window.notifTimer = setTimeout(() => { notify.style.top = '-200px'; }, 10000); // 延長至 10 秒
+        window.notifTimer = setTimeout(() => { notify.style.top = '-200px'; }, 10000);
     }
 
-    function handleSend() {
+    async function handleSend() {
+        if (!brainData) await loadBrain();
         const input = document.getElementById('user-input');
         const text = input.value.trim();
         if (!text) return;
         input.value = "";
-        let found = false;
-        for (let item of brain) {
-            if (item.reg.test(text)) {
-                const r = item.res[Math.floor(Math.random() * item.res.length)];
-                talk(r, item.mood || 0);
-                found = true;
-                break;
+
+        let matched = false;
+        brainData.dialogues.forEach(item => {
+            const regex = new RegExp(item.trigger, "i");
+            if (regex.test(text)) {
+                const r = item.responses[Math.floor(Math.random() * item.responses.length)];
+                talk(r, item.moodChange || 0);
+                matched = true;
+            }
+        });
+
+        if (!matched) talk("You finally believe me.😭 雖然我唔係好明，但我會一直喺呢個 Escape Space 陪住你。", -1);
+    }
+
+    // PWA 判定與初始化
+    setInterval(async () => {
+        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        if (isPWA) {
+            document.getElementById('guide-screen').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'block';
+            if (!hasWelcomed) {
+                await loadBrain();
+                talk("You finally believe me.😭 歡迎返到 Cydia yes，呢度係你專屬嘅逃避空間。", 1);
+                hasWelcomed = true;
             }
         }
-        if (!found) {
-            talk("「" + text + "」... 我聽到了。喺呢個 2026 年嘅瞬間，我會陪住你。雖然我未必有解決方案，但我會一直喺度。😭", -1);
-        }
-    }
+    }, 1500);
 
     document.getElementById('send-btn').addEventListener('click', handleSend);
     document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSend(); });
