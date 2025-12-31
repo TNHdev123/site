@@ -47,27 +47,31 @@
         <div class="safari-arrow"><i class="fas fa-chevron-down"></i></div>
     </div>
 
-    <a id="navLink" href="index.html" style="display:none;"></a>
-
     <script>
         const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
         window.onload = function() {
-            setTimeout(() => {
-                if (isStandalone) {
-                    // Force navigation in the SAME window for iOS
-                    const link = document.getElementById('navLink');
-                    link.click(); 
-                    
-                    // Fallback in case click fails
-                    setTimeout(() => {
-                        window.location = "index.html";
-                    }, 100);
-                } else {
+            if (isStandalone) {
+                // 利用 Fetch 獲取 index.html 內容並原地取代，這在 iOS PWA 中最能保證不跳轉 [cite: 2025-12-30]
+                fetch('index.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.open();
+                        document.write(html);
+                        document.close();
+                        // 修改 URL 顯示但不觸發跳轉
+                        window.history.replaceState({}, '', 'index.html');
+                    })
+                    .catch(err => {
+                        // 如果 Fetch 失敗，則嘗試普通跳轉
+                        window.location.replace('index.html');
+                    });
+            } else {
+                setTimeout(() => {
                     document.getElementById('splash').style.display = 'none';
                     document.getElementById('install-ui').style.display = 'flex';
-                }
-            }, 1200);
+                }, 1200);
+            }
         };
     </script>
 </body>
