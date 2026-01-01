@@ -1,4 +1,4 @@
-/* --- 基礎設定 --- */
+/* --- 核心重設 --- */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
 body { background: #000; color: white; overflow: hidden; height: 100vh; width: 100vw; }
 
@@ -8,74 +8,78 @@ body { background: #000; color: white; overflow: hidden; height: 100vh; width: 1
 }
 .background-overlay::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
 
-/* --- 視圖控制 --- */
-.p-view { display: flex; flex-direction: column; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 30px 20px; }
-.l-view { display: none; }
-
-@media (orientation: landscape) {
-    .p-view { display: none; }
-    .l-view { display: block; width: 100%; height: 100%; position: relative; overflow: hidden; }
+/* --- 直向 (Portrait) 滑動支援 --- */
+.p-view { 
+    display: flex; flex-direction: column; height: 100vh; 
+    overflow-y: scroll; /* 強制開啟垂直滑動 */
+    -webkit-overflow-scrolling: touch; 
 }
+.p-scroll-content { padding: 40px 30px; min-height: 101%; } /* 確保可以觸發滑動 */
 
-/* --- 直向排版強化 (可捲動) --- */
-.p-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; flex-shrink: 0; }
+.p-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
 .p-avatar-wrap { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
-.p-avatar { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; }
-.p-gloss { position: absolute; top: 0; width: 100%; height: 50%; background: linear-gradient(rgba(255,255,255,0.4), transparent); border-radius: 20px; }
-.p-title h1 { font-size: 3rem; line-height: 1; }
+.p-avatar { width: 100%; height: 100%; border-radius: 22px; object-fit: cover; }
+.p-gloss { position: absolute; top: 0; width: 100%; height: 50%; background: linear-gradient(rgba(255,255,255,0.4), transparent); border-radius: 22px 22px 50% 50% / 22px 22px 15% 15%; }
+.p-title h1 { font-size: 3.2rem; line-height: 0.9; }
 
-.p-box { margin-bottom: 25px; }
-.p-works-box { margin: 20px 0; height: 240px; position: relative; }
-.p-flow-engine { position: relative; height: 200px; perspective: 1000px; display: flex; align-items: center; justify-content: center; }
+.p-works-box { margin: 25px 0; height: 220px; }
+.p-coverflow-engine { position: relative; height: 180px; perspective: 1000px; display: flex; align-items: center; justify-content: center; }
 .p-item {
     position: absolute; width: 170px; height: 170px; border-radius: 30px;
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
     backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
+    transition: all 0.4s ease; opacity: 0;
 }
 .p-item.active { opacity: 1; transform: translateZ(100px); z-index: 10; }
-.p-item.prev { opacity: 0.5; transform: translateX(-120px) rotateY(35deg) scale(0.8); z-index: 5; }
-.p-item.next { opacity: 0.5; transform: translateX(120px) rotateY(-35deg) scale(0.8); z-index: 5; }
+.p-item.prev { opacity: 0.5; transform: translateX(-120px) rotateY(30deg) scale(0.8); }
+.p-item.next { opacity: 0.5; transform: translateX(120px) rotateY(-30deg) scale(0.8); }
 
-.p-footer { padding-bottom: 40px; }
-.p-social-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-.p-social-row img { width: 55px; height: 55px; border-radius: 12px; }
+.p-footer { padding-bottom: 50px; }
+.p-social-bar img { width: 55px; height: 55px; border-radius: 14px; margin-right: 10px; }
 
-/* --- 橫向 Front Row (左後方視覺) --- */
-.l-panel { position: absolute; inset: 0; display: none; padding: 30px 40px; }
+/* --- 橫向 (Landscape) 佈局優化 --- */
+.l-view { display: none; }
+@media (orientation: landscape) {
+    .p-view { display: none; }
+    .l-view { display: block; width: 100%; height: 100%; position: relative; }
+}
+
+.l-panel { position: absolute; inset: 0; display: none; padding: 30px 60px; }
 .l-panel.active { display: flex; }
 
-.l-home-left, .l-home-right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-.l-home-right { text-align: right; }
-.l-avatar { width: 90px; height: 90px; border-radius: 18px; }
-.l-btn-action { width: 180px; padding: 15px; font-size: 1.3rem; font-weight: bold; background: linear-gradient(#444, #000); border: 1px solid #666; border-radius: 15px; color: white; cursor: pointer; }
+/* 橫向主頁細化 */
+.l-home-left { flex: 1.2; display: flex; flex-direction: column; justify-content: space-between; }
+.l-group h3 { font-size: 1.4rem; color: #aaa; }
+.l-btn-action { width: 180px; padding: 12px; font-size: 1.3rem; font-weight: bold; background: linear-gradient(#444, #000); border: 1px solid #666; border-radius: 15px; color: white; cursor: pointer; }
 
-/* Front Row 結構 */
-.l-fr-engine { display: flex; width: 100%; height: 100%; gap: 20px; align-items: center; }
-.l-fr-display { flex: 1.8; display: flex; flex-direction: column; height: 100%; position: relative; }
+.l-home-right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
+.l-avatar { width: 90px; height: 90px; border-radius: 20px; }
+.l-icon-row img { width: 40px; margin-left: 8px; border-radius: 8px; }
+
+/* Front Row 左後方透視修正 */
+.l-fr-engine { display: flex; width: 100%; height: 100%; gap: 40px; align-items: center; }
+.l-fr-display { flex: 1.5; display: flex; flex-direction: column; height: 100%; }
 .fr-stage-box { flex: 1; position: relative; perspective: 1200px; }
 
 .fr-main-card {
-    position: absolute; width: 250px; height: 250px; 
-    right: 15%; top: 50%; transform: translateY(-50%); /* 靠右一點，騰出左邊空間 */
-    background: rgba(255,255,255,0.12); border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
-    display: flex; align-items: center; justify-content: center; font-size: 1.6rem; z-index: 10;
-    transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); backdrop-filter: blur(10px);
+    position: absolute; width: 240px; height: 240px; 
+    right: 5%; top: 50%; transform: translateY(-50%); /* 靠右顯示，騰出左邊空間 */
+    background: rgba(255,255,255,0.15); border-radius: 30px; border: 1px solid rgba(255,255,255,0.25);
+    z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    backdrop-filter: blur(15px); transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* 改為左後方 (Next) */
 .fr-back-card-left {
-    position: absolute; width: 170px; height: 170px; 
-    left: 10%; top: 45%; transform: translateY(-50%) rotateY(30deg) translateZ(-150px);
-    background: rgba(255,255,255,0.05); border-radius: 20px; opacity: 0.4; z-index: 5;
-    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.5s ease;
+    position: absolute; width: 160px; height: 160px; 
+    left: 10%; top: 45%; transform: translateY(-50%) rotateY(35deg) translateZ(-150px); /* 移到左後方 */
+    background: rgba(255,255,255,0.05); border-radius: 25px; opacity: 0.4;
+    z-index: 5; display: flex; align-items: center; justify-content: center; transition: 0.5s ease;
 }
 
-.l-fr-sidebar { width: 240px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; height: 90%; }
-.fr-menu-scroll { flex: 1; overflow-y: auto; height: calc(100% - 40px); }
-.fr-menu-scroll ul li { padding: 10px; font-size: 1.1rem; opacity: 0.4; cursor: pointer; transition: 0.3s; list-style: none; }
+.l-fr-sidebar { width: 240px; background: rgba(255,255,255,0.08); border-radius: 25px; padding: 15px; height: 80%; }
+.fr-menu-scroll ul li { padding: 10px; font-size: 1.1rem; opacity: 0.4; cursor: pointer; list-style: none; transition: 0.3s; }
 .fr-menu-scroll ul li.active { opacity: 1; color: #5ac8fa; font-weight: bold; transform: translateX(5px); }
 
-.l-fr-btns { display: flex; gap: 10px; margin-top: 15px; }
+.l-fr-btns { display: flex; gap: 12px; margin-top: 15px; }
 .fr-btn { flex: 1; height: 50px; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: bold; color: white; cursor: pointer; }
 .gray { background: linear-gradient(#555, #111); }
 .blue { background: linear-gradient(#5ac8fa, #007aff); }
