@@ -1,57 +1,85 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 直向 Cover Flow 邏輯
-    const cvItems = Array.from(document.querySelectorAll('.cover-item'));
-    let cvIndex = 0;
-    
-    function updateCV() {
-        cvItems.forEach((item, i) => {
+    // 元素選取
+    const items = Array.from(document.querySelectorAll('.cover-item')); // 直向卡片
+    const container = document.getElementById('coverFlow');
+    const frOverlay = document.getElementById('front-row-overlay');
+    const btnBrowse = document.getElementById('btn-browse-works');
+    const btnClose = document.getElementById('btn-close');
+    const btnGo = document.getElementById('btn-go');
+    const frList = document.getElementById('fr-list');
+    const frPreview = document.getElementById('fr-current-preview');
+    const frListItems = Array.from(frList.querySelectorAll('li'));
+
+    let currentIndex = 0; // 全局索引，同步直向與橫向
+
+    // ============ 核心同步函數 ============
+    function updateState() {
+        // 1. 更新直向 Cover Flow
+        items.forEach((item, i) => {
             item.className = 'cover-item';
-            if (i === cvIndex) item.classList.add('active');
-            else if (i === cvIndex - 1) item.classList.add('prev');
-            else if (i === cvIndex + 1) item.classList.add('next');
+            if (i === currentIndex) item.classList.add('active');
+            else if (i === currentIndex - 1) item.classList.add('prev');
+            else if (i === currentIndex + 1) item.classList.add('next');
             else item.classList.add('hidden');
+        });
+
+        // 2. 更新橫向 Front Row 選單與預覽
+        frListItems.forEach((li, i) => {
+            if (i === currentIndex) {
+                li.classList.add('active');
+                // 更新預覽區文字 (實際專案可換成對應圖片)
+                frPreview.textContent = items[i].textContent;
+            } else {
+                li.classList.remove('active');
+            }
         });
     }
 
-    // 橫向介面邏輯
-    const openBtn = document.getElementById('openWorksBtn');
-    const closeBtn = document.getElementById('closeWorksBtn');
-    const mainView = document.getElementById('frontRowMain');
-    const worksView = document.getElementById('frontRowWorks');
-    const listItems = document.querySelectorAll('.fr-list-item');
-    const previewBox = document.getElementById('fr-preview');
-
-    openBtn.addEventListener('click', () => {
-        mainView.classList.add('hidden');
-        worksView.classList.remove('hidden');
-    });
-
-    closeBtn.addEventListener('click', () => {
-        worksView.classList.add('hidden');
-        mainView.classList.remove('hidden');
-    });
-
-    listItems.forEach(item => {
+    // ============ 直向 Cover Flow 互動 ============
+    items.forEach((item, i) => {
         item.addEventListener('click', () => {
-            listItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            previewBox.innerText = `作品${item.dataset.id}`;
+            currentIndex = i;
+            updateState();
         });
     });
 
-    // 初始化直向
-    updateCV();
-    
-    // 直向滑動切換
-    const cvContainer = document.getElementById('coverFlow');
     let startX = 0;
-    cvContainer.addEventListener('touchstart', (e) => startX = e.touches[0].clientX);
-    cvContainer.addEventListener('touchend', (e) => {
+    container.addEventListener('touchstart', (e) => startX = e.touches[0].clientX, { passive: true });
+    container.addEventListener('touchend', (e) => {
         let diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0 && cvIndex < cvItems.length - 1) cvIndex++;
-            else if (diff < 0 && cvIndex > 0) cvIndex--;
-            updateCV();
+        if (Math.abs(diff) > 30) {
+            if (diff > 0 && currentIndex < items.length - 1) currentIndex++;
+            else if (diff < 0 && currentIndex > 0) currentIndex--;
+            updateState();
         }
     });
+
+    // ============ 橫向 Front Row 互動 ============
+    
+    // 開啟作品集
+    btnBrowse.addEventListener('click', () => {
+        frOverlay.classList.add('show');
+    });
+
+    // 關閉作品集
+    btnClose.addEventListener('click', () => {
+        frOverlay.classList.remove('show');
+    });
+
+    // 點擊選單項目
+    frListItems.forEach((li) => {
+        li.addEventListener('click', function() {
+            currentIndex = parseInt(this.getAttribute('data-index'));
+            updateState();
+        });
+    });
+
+    // "前往" 按鈕邏輯 (示範)
+    btnGo.addEventListener('click', () => {
+        alert(`正在前往：作品 ${currentIndex + 1}`);
+        // 實際使用可改為 window.location.href = links[currentIndex];
+    });
+
+    // 初始化
+    updateState();
 });
