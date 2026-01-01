@@ -1,30 +1,31 @@
+function switchPanel(panelId) {
+    document.querySelectorAll('.landscape-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(panelId).classList.add('active');
+}
+
+function selWork(idx) {
+    // 更新列表狀態
+    const list = document.querySelectorAll('.l-list li');
+    list.forEach((li, i) => li.className = (i === idx ? 'active' : ''));
+    
+    // 更新預覽圖 (簡化邏輯)
+    const previews = document.querySelectorAll('.l-preview-box');
+    previews.forEach((box, i) => box.classList.toggle('active', i === idx % previews.length));
+}
+
+// 處理直向 Cover Flow
 document.addEventListener('DOMContentLoaded', () => {
-    // 切換板面邏輯
-    const landMain = document.getElementById('landMain');
-    const landWorks = document.getElementById('landWorks');
-    const btnBrowse = document.getElementById('btnBrowse');
-    const btnBack = document.getElementById('btnBack');
-
-    btnBrowse.onclick = () => {
-        landMain.classList.remove('active');
-        landWorks.classList.add('active');
-    };
-    btnBack.onclick = () => {
-        landWorks.classList.remove('active');
-        landMain.classList.add('active');
-    };
-
-    // 作品清單切換
-    const listItems = document.querySelectorAll('#lList li');
-    const previewBox = document.getElementById('lPreview');
-
-    listItems.forEach((li, index) => {
-        li.onclick = () => {
-            listItems.forEach(item => item.classList.remove('active'));
-            li.classList.add('active');
-            previewBox.innerText = `作品 ${index + 1}`;
-        };
-    });
-
-    // 直向 Cover Flow 邏輯 (略，維持之前 currentIndex 0 嘅 update 邏輯即可)
+    const pItems = document.querySelectorAll('.cover-item');
+    let pIdx = 0;
+    function updateP() {
+        pItems.forEach((item, i) => {
+            item.className = 'cover-item';
+            if (i === pIdx) item.classList.add('active');
+            else if (i === pIdx-1) item.classList.add('prev');
+            else if (i === pIdx+1) item.classList.add('next');
+            else item.classList.add('hidden');
+        });
+    }
+    updateP();
+    // (可在此加入 Touch 滑動邏輯...)
 });
