@@ -1,31 +1,49 @@
-function switchPanel(panelId) {
-    document.querySelectorAll('.landscape-view').forEach(p => p.classList.remove('active'));
-    document.getElementById(panelId).classList.add('active');
+// --- 橫向切換邏輯 ---
+function openWorks() {
+    document.getElementById('lHome').classList.remove('active');
+    document.getElementById('lWorks').classList.add('active');
 }
 
-function selWork(idx) {
-    // 更新列表狀態
-    const list = document.querySelectorAll('.l-list li');
-    list.forEach((li, i) => li.className = (i === idx ? 'active' : ''));
+function closeWorks() {
+    document.getElementById('lWorks').classList.remove('active');
+    document.getElementById('lHome').classList.add('active');
+}
+
+function selLWork(idx) {
+    const list = document.querySelectorAll('.l-works-list li');
+    const previews = document.querySelectorAll('.l-work-preview');
     
-    // 更新預覽圖 (簡化邏輯)
-    const previews = document.querySelectorAll('.l-preview-box');
-    previews.forEach((box, i) => box.classList.toggle('active', i === idx % previews.length));
+    list.forEach((li, i) => li.classList.toggle('active', i === idx));
+    previews.forEach((p, i) => p.classList.toggle('active', i === idx));
 }
 
-// 處理直向 Cover Flow
+// --- 直向 Cover Flow 邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
-    const pItems = document.querySelectorAll('.cover-item');
-    let pIdx = 0;
-    function updateP() {
-        pItems.forEach((item, i) => {
-            item.className = 'cover-item';
-            if (i === pIdx) item.classList.add('active');
-            else if (i === pIdx-1) item.classList.add('prev');
-            else if (i === pIdx+1) item.classList.add('next');
+    const items = document.querySelectorAll('.p-item');
+    const container = document.getElementById('pFlowContainer');
+    let currentIndex = 0;
+
+    function updatePFlow() {
+        items.forEach((item, i) => {
+            item.className = 'p-item';
+            if (i === currentIndex) item.classList.add('active');
+            else if (i === currentIndex - 1) item.classList.add('prev');
+            else if (i === currentIndex + 1) item.classList.add('next');
             else item.classList.add('hidden');
         });
     }
-    updateP();
-    // (可在此加入 Touch 滑動邏輯...)
+
+    // 觸控滑動
+    let startX = 0;
+    container.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    container.addEventListener('touchend', e => {
+        let diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0 && currentIndex < items.length - 1) currentIndex++;
+            else if (diff < 0 && currentIndex > 0) currentIndex--;
+            updatePFlow();
+        }
+    });
+
+    updatePFlow();
 });
