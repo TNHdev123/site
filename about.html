@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="background-overlay"></div>
-
+    
     <div class="container portrait-view">
         <header class="profile-header">
             <div class="icon-container">
@@ -31,7 +31,7 @@
         <section class="works-section">
             <h3>作品</h3>
             <div class="cover-flow-wrap">
-                <div class="cover-flow-container" id="pCoverFlow">
+                <div class="cover-flow-container" id="pFlow">
                     <div class="cover-item">作品 1</div>
                     <div class="cover-item">作品 2</div>
                     <div class="cover-item">作品 3</div>
@@ -52,59 +52,58 @@
         </section>
     </div>
 
-    <div class="landscape-container landscape-view">
-        <div id="landMain" class="land-panel active">
-            <div class="land-top">
-                <div class="land-left">
-                    <h3>一個</h3>
-                    <p>創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
-                    <h3 style="margin-top:20px">興趣</h3>
-                    <p>Minecraft、創作、懷舊設計、軟件修改</p>
-                </div>
-                <div class="land-center">
-                    <div class="icon-container large-icon">
-                        <img src="image/icon.jpeg" class="avatar">
-                        <div class="gloss"></div>
+    <div class="landscape-view l-home-panel active" id="lHome">
+        <div class="l-content">
+            <div class="l-left">
+                <div class="l-profile-row">
+                    <img src="image/icon.jpeg" class="avatar-l">
+                    <div class="l-text">
+                        <h1>Hello</h1>
+                        <h2>我係TNH</h2>
                     </div>
                 </div>
-                <div class="land-right">
-                    <h1 class="big-hello">Hello</h1>
-                    <h2 class="big-name">我係TNH</h2>
-                    <h3 class="follow-text">關注我</h3>
+                <div class="l-info">
+                    <p><strong>一個</strong> 創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
+                    <p><strong>興趣</strong> Minecraft、創作、懷舊設計、軟件修改</p>
                 </div>
             </div>
-            <div class="land-bottom">
-                <button class="btn-browse" id="btnBrowse">瀏覽作品</button>
-                <div class="social-row land-social">
-                    <a href="#"><img src="image/ig.png"></a>
-                    <a href="#"><img src="image/th.png"></a>
-                    <a href="#"><img src="image/yt.png"></a>
-                    <a href="#"><img src="image/rd.png"></a>
-                    <a href="#"><img src="image/tw.png"></a>
+            <div class="l-right">
+                <div class="l-social-box">
+                    <h3>關注我</h3>
+                    <div class="l-social-row">
+                        <img src="image/ig.png">
+                        <img src="image/th.png">
+                        <img src="image/yt.png">
+                        <img src="image/rd.png">
+                        <img src="image/tw.png">
+                    </div>
                 </div>
+                <button class="btn-browse" onclick="switchPanel('lWorks')">瀏覽作品</button>
             </div>
         </div>
+    </div>
 
-        <div id="landWorks" class="land-panel">
-            <div class="land-works-main">
-                <div class="land-display">
-                    <div class="land-preview-box" id="lPreview">作品 1</div>
-                </div>
-                <div class="land-list-side">
-                    <h3>我的作品</h3>
-                    <ul class="works-list" id="lList">
-                        <li class="active">作品 1</li>
-                        <li>作品 2</li>
-                        <li>作品 3</li>
-                        <li>作品 4</li>
-                        <li>作品 5</li>
-                    </ul>
-                </div>
+    <div class="landscape-view l-works-panel" id="lWorks">
+        <div class="l-works-main">
+            <div class="l-works-display">
+                <div class="l-preview-box active" id="lPrev1">作品1</div>
+                <div class="l-preview-box" id="lPrev2">作品2</div>
+                <div class="l-preview-box" id="lPrev3">作品3</div>
             </div>
-            <div class="land-works-footer">
-                <button class="btn-itv btn-gray" id="btnBack">關閉</button>
-                <button class="btn-itv btn-blue">前往</button>
+            <div class="l-works-sidebar">
+                <h3>我的作品</h3>
+                <ul class="l-list">
+                    <li class="active" onclick="selWork(0)">作品1</li>
+                    <li onclick="selWork(1)">作品2</li>
+                    <li onclick="selWork(2)">作品3</li>
+                    <li onclick="selWork(3)">作品4</li>
+                    <li onclick="selWork(4)">作品5</li>
+                </ul>
             </div>
+        </div>
+        <div class="l-works-footer">
+            <button class="btn-l btn-gray" onclick="switchPanel('lHome')">關閉</button>
+            <button class="btn-l btn-blue">前往</button>
         </div>
     </div>
 
