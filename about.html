@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hello 我係TNH</title>
+    <title>TNH Personal Home</title>
     <link rel="stylesheet" href="about.css">
 </head>
 <body>
     <div class="background-overlay"></div>
     
-    <div class="container">
+    <div class="container portrait-only">
         <header class="profile-header">
             <div class="icon-container">
                 <img src="image/icon.jpeg" alt="TNH Icon" class="avatar">
@@ -49,13 +49,62 @@
         <section class="social-section">
             <h3>關注我</h3>
             <div class="social-row">
-                <a href="#"><img src="image/ig.png" alt="Instagram"></a>
-                <a href="#"><img src="image/th.png" alt="Threads"></a>
-                <a href="#"><img src="image/yt.png" alt="YouTube"></a>
-                <a href="#"><img src="image/rd.png" alt="Reddit"></a>
-                <a href="#"><img src="image/tw.png" alt="Twitter"></a>
+                <a href="#"><img src="image/ig.png" alt="IG"></a>
+                <a href="#"><img src="image/th.png" alt="TH"></a>
+                <a href="#"><img src="image/yt.png" alt="YT"></a>
+                <a href="#"><img src="image/rd.png" alt="RD"></a>
+                <a href="#"><img src="image/tw.png" alt="TW"></a>
             </div>
         </section>
+    </div>
+
+    <div class="landscape-only" id="frontRowMain">
+        <div class="front-row-left">
+            <button class="fr-btn" id="openWorksBtn">瀏覽作品</button>
+            <div class="fr-social">
+                <p>關注我</p>
+                <div class="social-row">
+                    <a href="#"><img src="image/ig.png" alt="IG"></a>
+                    <a href="#"><img src="image/th.png" alt="TH"></a>
+                    <a href="#"><img src="image/yt.png" alt="YT"></a>
+                    <a href="#"><img src="image/rd.png" alt="RD"></a>
+                    <a href="#"><img src="image/tw.png" alt="TW"></a>
+                </div>
+            </div>
+        </div>
+        <div class="front-row-right">
+            <div class="fr-profile">
+                <img src="image/icon.jpeg" alt="TNH Icon" class="avatar fr-avatar">
+                <div class="fr-text">
+                    <h1>Hello</h1>
+                    <h2>我係TNH</h2>
+                </div>
+            </div>
+            <div class="fr-info">
+                <p>一個：創作者、HongKonger、Minecrafter...</p>
+                <p>興趣：Minecraft、創作、懷舊設計...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="landscape-works-view hidden" id="frontRowWorks">
+        <div class="works-preview-area">
+            <div class="fr-work-box active" id="fr-preview">作品1</div>
+        </div>
+        <div class="works-list-area">
+            <h3>我的作品</h3>
+            <div class="fr-list-container">
+                <div class="fr-list-item active" data-id="1">作品1</div>
+                <div class="fr-list-item" data-id="2">作品2</div>
+                <div class="fr-list-item" data-id="3">作品3</div>
+                <div class="fr-list-item" data-id="4">作品4</div>
+                <div class="fr-list-item" data-id="5">作品5</div>
+            </div>
+        </div>
+        <div class="fr-footer-btns">
+            <button class="fr-btn fr-close" id="closeWorksBtn">關閉</button>
+            <button class="fr-btn fr-go">前往</button>
+        </div>
     </div>
 
     <script src="about.js"></script>
