@@ -1,39 +1,72 @@
-/* 基本重設 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 body {
     background-color: #000;
     color: white;
     overflow-x: hidden;
-    min-height: 100vh;
 }
 
-/* iOS 6 水滴背景 + 暗層 */
+/* 背景圖設定 */
 .background-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('https://wallpaperaccess.com/full/1555543.jpg'); /* 經典水滴牆紙 */
+    background-image: url('image/background.jpg');
     background-size: cover;
     background-position: center;
-    filter: brightness(0.6); /* 加暗層 */
     z-index: -1;
 }
 
+/* 加強暗層，令白字清楚 */
+.background-overlay::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+}
+
 .container {
-    padding: 40px 25px;
-    max-width: 500px;
+    padding: 50px 30px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
-/* Header 部分 */
+/* Icon 亮面與圓角 */
+.icon-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+    display: block;
+}
+
+.gloss {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+    border-radius: 20px 20px 50% 50% / 20px 20px 15% 15%;
+    pointer-events: none;
+}
+
 .profile-header {
     display: flex;
     align-items: center;
@@ -41,96 +74,66 @@ body {
     margin-bottom: 40px;
 }
 
-.avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 22px; /* 經典 iOS Icon 圓角 */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.2);
+.greeting-text h1 { font-size: 3.5rem; line-height: 1; }
+.greeting-text h2 { font-size: 2.2rem; }
+
+.info-section { margin-bottom: 30px; }
+.info-section h3 { font-size: 1.8rem; margin-bottom: 5px; }
+.info-section p { font-size: 1.1rem; opacity: 0.9; }
+
+/* Cover Flow 玻璃感與 3D */
+.works-section {
+    position: relative;
+    padding-top: 20px;
 }
 
-.greeting-text h1 {
-    font-size: 3.5rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.greeting-text h2 {
-    font-size: 2.2rem;
-    font-weight: 600;
-}
-
-/* 文字章節 */
-.info-section {
-    margin-bottom: 30px;
-}
-
-.info-section h3 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-}
-
-.info-section p {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.6;
-}
-
-/* Cover Flow 核心樣式 */
-.works-section h3 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+.cover-flow-wrap {
+    perspective: 1200px;
+    overflow: hidden;
+    height: 350px;
+    display: flex;
+    align-items: center;
 }
 
 .cover-flow-container {
     display: flex;
-    align-items: center;
+    width: 100%;
     justify-content: center;
-    height: 300px;
-    perspective: 1000px; /* 3D 透視 */
-    overflow: hidden;
     position: relative;
+    transform-style: preserve-3d;
 }
 
 .cover-item {
-    width: 200px;
-    height: 250px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    width: 180px;
+    height: 240px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    position: absolute;
+    transition: transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.45s;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+/* 底部玻璃感區塊 (你提過的元素) */
+.glass-bottom {
     position: absolute;
-    transition: all 0.4s ease-out;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    bottom: 0;
+    width: 120%;
+    left: -10%;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    mask-image: linear-gradient(to top, black, transparent);
+    -webkit-mask-image: linear-gradient(to top, black, transparent);
+    z-index: 1;
 }
 
-/* Cover Flow 狀態變換 */
-.cover-item.active {
-    transform: translateZ(100px);
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.cover-item.prev {
-    transform: translateX(-150px) rotateY(45deg) scale(0.8);
-    z-index: 5;
-    opacity: 0.6;
-}
-
-.cover-item.next {
-    transform: translateX(150px) rotateY(-45deg) scale(0.8);
-    z-index: 5;
-    opacity: 0.6;
-}
-
-.cover-item.hidden {
-    opacity: 0;
-    transform: scale(0.5);
-    pointer-events: none;
-}
+/* Cover Flow 狀態 */
+.cover-item.active { transform: translateZ(150px); z-index: 10; opacity: 1; }
+.cover-item.prev { transform: translateX(-160px) rotateY(40deg) scale(0.85); z-index: 5; opacity: 0.7; }
+.cover-item.next { transform: translateX(160px) rotateY(-40deg) scale(0.85); z-index: 5; opacity: 0.7; }
+.cover-item.hidden { opacity: 0; transform: scale(0.5); }
