@@ -9,7 +9,7 @@
 <body>
     <div class="background-overlay"></div>
     
-    <div class="container">
+    <div class="container portrait-view">
         <header class="profile-header">
             <div class="icon-container">
                 <img src="image/icon.jpeg" alt="TNH Icon" class="avatar">
@@ -21,65 +21,87 @@
             </div>
         </header>
 
-        <div class="desktop-layout-row">
-            <div class="info-group">
-                <section class="info-section">
-                    <h3>一個</h3>
-                    <p>創作者、HongKonger、Minecrafter</p>
-                    <p>測試者、設計者、開發者</p>
-                </section>
-                <section class="info-section">
-                    <h3>興趣</h3>
-                    <p>Minecraft、創作、懷舊設計、軟件修改</p>
-                </section>
-                <button id="browseBtn" class="classic-btn landscape-only">瀏覽作品</button>
+        <section class="info-section">
+            <h3>一個</h3>
+            <p>創作者、玩家、HongKonger、Minecrafter</p>
+            <p>測試者、設計者、開發者</p>
+        </section>
+
+        <section class="info-section">
+            <h3>興趣</h3>
+            <p>Minecraft、創作、懷舊設計、軟件修改</p>
+        </section>
+
+        <section class="works-section">
+            <h3>作品</h3>
+            <div class="cover-flow-wrap">
+                <div class="cover-flow-container" id="coverFlowPortrait">
+                    <div class="cover-item">作品 1</div>
+                    <div class="cover-item">作品 2</div>
+                    <div class="cover-item">作品 3</div>
+                    <div class="cover-item">作品 4</div>
+                    <div class="cover-item">作品 5</div>
+                </div>
             </div>
+            <div class="glass-bottom"></div>
+        </section>
 
-            <section class="works-section portrait-only">
-                <h3>作品</h3>
-                <div class="cover-flow-wrap">
-                    <div class="cover-flow-container" id="coverFlow">
-                        <div class="cover-item">作品 1</div>
-                        <div class="cover-item">作品 2</div>
-                        <div class="cover-item">作品 3</div>
-                        <div class="cover-item">作品 4</div>
-                        <div class="cover-item">作品 5</div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="social-section">
-                <h3>關注我</h3>
-                <div class="social-row">
-                    <a href="#"><img src="image/ig.png" alt="IG"></a>
-                    <a href="#"><img src="image/th.png" alt="TH"></a>
-                    <a href="#"><img src="image/yt.png" alt="YT"></a>
-                    <a href="#"><img src="image/rd.png" alt="RD"></a>
-                    <a href="#"><img src="image/tw.png" alt="TW"></a>
-                </div>
-            </section>
-        </div>
+        <section class="social-section">
+            <h3>關注我</h3>
+            <div class="social-row">
+                <a href="#"><img src="image/ig.png" alt="IG"></a>
+                <a href="#"><img src="image/th.png" alt="TH"></a>
+                <a href="#"><img src="image/yt.png" alt="YT"></a>
+                <a href="#"><img src="image/rd.png" alt="RD"></a>
+                <a href="#"><img src="image/tw.png" alt="TW"></a>
+            </div>
+        </section>
     </div>
 
-    <div id="frontRowModal" class="front-row-overlay">
-        <div class="front-row-content">
-            <div class="fr-preview">
-                <div class="fr-cover-box" id="frPreviewBox">作品 1</div>
-            </div>
-            <div class="fr-menu">
-                <h2>我的作品</h2>
-                <ul id="frMenuList">
-                    <li class="active" data-index="0">作品 1</li>
-                    <li data-index="1">作品 2</li>
-                    <li data-index="2">作品 3</li>
-                    <li data-index="3">作品 4</li>
-                    <li data-index="4">作品 5</li>
-                </ul>
-                <div class="fr-controls">
-                    <button id="closeFrBtn" class="classic-btn btn-dark">關閉</button>
-                    <button class="classic-btn btn-blue">前往</button>
+    <div class="container landscape-view">
+        <div class="landscape-main">
+            <div class="landscape-display">
+                <div class="landscape-cover-flow" id="coverFlowLandscape">
+                    <div class="cover-item-l">作品 1</div>
+                    <div class="cover-item-l">作品 2</div>
+                    <div class="cover-item-l">作品 3</div>
+                    <div class="cover-item-l">作品 4</div>
+                    <div class="cover-item-l">作品 5</div>
                 </div>
             </div>
+
+            <div class="landscape-sidebar">
+                <div class="profile-mini">
+                    <img src="image/icon.jpeg" class="avatar-s">
+                    <div class="mini-text">
+                        <h1>Hello 我係TNH</h1>
+                    </div>
+                </div>
+                
+                <div class="works-list-container">
+                    <h3>我的作品</h3>
+                    <ul class="works-list" id="worksList">
+                        <li class="active">作品 1</li>
+                        <li>作品 2</li>
+                        <li>作品 3</li>
+                        <li>作品 4</li>
+                        <li>作品 5</li>
+                    </ul>
+                </div>
+
+                <div class="social-row landscape-social">
+                    <a href="#"><img src="image/ig.png"></a>
+                    <a href="#"><img src="image/th.png"></a>
+                    <a href="#"><img src="image/yt.png"></a>
+                    <a href="#"><img src="image/rd.png"></a>
+                    <a href="#"><img src="image/tw.png"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="landscape-footer">
+            <button class="btn btn-black">關閉</button>
+            <button class="btn btn-blue">前往</button>
         </div>
     </div>
 
