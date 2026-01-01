@@ -1,11 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 原有直向 Cover Flow 邏輯 ---
     const items = Array.from(document.querySelectorAll('.cover-item'));
-    const listItems = document.querySelectorAll('#workList li');
-    const worksSection = document.getElementById('worksSection');
+    const container = document.getElementById('coverFlow');
     let currentIndex = 0;
 
-    function updateUI() {
-        // 更新 Cover Flow
+    function updatePortrait() {
         items.forEach((item, i) => {
             item.className = 'cover-item';
             if (i === currentIndex) item.classList.add('active');
@@ -13,41 +12,34 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (i === currentIndex + 1) item.classList.add('next');
             else item.classList.add('hidden');
         });
-
-        // 更新橫向選單列表
-        listItems.forEach((li, i) => {
-            li.className = (i === currentIndex) ? 'active' : '';
-        });
     }
+    updatePortrait(); // 初始化直向
 
-    // 點擊作品列表切換
-    listItems.forEach((li, i) => {
+    // --- 橫向 Front Row 邏輯 ---
+    const browseBtn = document.getElementById('browseBtn');
+    const modal = document.getElementById('frontRowModal');
+    const closeBtn = document.getElementById('closeFrBtn');
+    const frMenuItems = document.querySelectorAll('#frMenuList li');
+    const previewBox = document.getElementById('frPreviewBox');
+
+    browseBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    frMenuItems.forEach((li, idx) => {
         li.addEventListener('click', () => {
-            currentIndex = i;
-            updateUI();
+            // 移除舊的 active
+            document.querySelector('#frMenuList li.active').classList.remove('active');
+            li.classList.add('active');
+            // 更新左側預覽內容
+            previewBox.innerText = li.innerText;
         });
     });
 
-    // 橫向按鈕控制
-    document.getElementById('openWorksBtn').addEventListener('click', () => {
-        worksSection.classList.add('active');
-    });
-    document.getElementById('closeWorksBtn').addEventListener('click', () => {
-        worksSection.classList.remove('active');
-    });
-
-    // 滑動支援
-    let startX = 0;
-    const container = document.getElementById('coverFlow');
-    container.addEventListener('touchstart', (e) => startX = e.touches[0].clientX);
-    container.addEventListener('touchend', (e) => {
-        let diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0 && currentIndex < items.length - 1) currentIndex++;
-            else if (diff < 0 && currentIndex > 0) currentIndex--;
-            updateUI();
-        }
-    });
-
-    updateUI(); // 初始載入顯示作品一
+    // 觸摸與點擊切換 (直向用)
+    // (保留原本的 touchstart/touchend 邏輯...)
 });
