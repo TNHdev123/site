@@ -1,45 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 原有直向 Cover Flow 邏輯 ---
-    const items = Array.from(document.querySelectorAll('.cover-item'));
-    const container = document.getElementById('coverFlow');
+    const pItems = Array.from(document.querySelectorAll('.cover-item'));
+    const lItems = Array.from(document.querySelectorAll('.cover-item-l'));
+    const listItems = Array.from(document.querySelectorAll('.works-list li'));
+    
     let currentIndex = 0;
 
-    function updatePortrait() {
-        items.forEach((item, i) => {
+    function updateUI() {
+        // 直向更新
+        pItems.forEach((item, i) => {
             item.className = 'cover-item';
             if (i === currentIndex) item.classList.add('active');
             else if (i === currentIndex - 1) item.classList.add('prev');
             else if (i === currentIndex + 1) item.classList.add('next');
             else item.classList.add('hidden');
         });
+
+        // 橫向更新
+        lItems.forEach((item, i) => {
+            item.className = 'cover-item-l';
+            if (i === currentIndex) item.classList.add('active');
+            else if (i === currentIndex - 1) item.classList.add('prev-l');
+            else item.classList.add('hidden');
+        });
+
+        listItems.forEach((item, i) => {
+            item.className = (i === currentIndex) ? 'active' : '';
+        });
     }
-    updatePortrait(); // 初始化直向
 
-    // --- 橫向 Front Row 邏輯 ---
-    const browseBtn = document.getElementById('browseBtn');
-    const modal = document.getElementById('frontRowModal');
-    const closeBtn = document.getElementById('closeFrBtn');
-    const frMenuItems = document.querySelectorAll('#frMenuList li');
-    const previewBox = document.getElementById('frPreviewBox');
-
-    browseBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-    });
-
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    frMenuItems.forEach((li, idx) => {
-        li.addEventListener('click', () => {
-            // 移除舊的 active
-            document.querySelector('#frMenuList li.active').classList.remove('active');
-            li.classList.add('active');
-            // 更新左側預覽內容
-            previewBox.innerText = li.innerText;
+    // 事件綁定
+    [...pItems, ...lItems, ...listItems].forEach((el, i) => {
+        el.addEventListener('click', () => {
+            currentIndex = (i % pItems.length);
+            updateUI();
         });
     });
 
-    // 觸摸與點擊切換 (直向用)
-    // (保留原本的 touchstart/touchend 邏輯...)
+    // 滑動支援 (直向)
+    let startX = 0;
+    document.getElementById('coverFlowPortrait').addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    document.getElementById('coverFlowPortrait').addEventListener('touchend', e => {
+        let diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0 && currentIndex < pItems.length - 1) currentIndex++;
+            else if (diff < 0 && currentIndex > 0) currentIndex--;
+            updateUI();
+        }
+    });
+
+    updateUI();
 });
