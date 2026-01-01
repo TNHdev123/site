@@ -1,45 +1,43 @@
-// 板面導覽
+// 切換板面
 function navTo(id) {
     document.querySelectorAll('.l-panel').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 }
 
-// Front Row 作品選取邏輯
+// Front Row 作品切換動畫
+let works = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
+
 function selFR(idx) {
     const list = document.querySelectorAll('.l-menu-list li');
-    const items = document.querySelectorAll('.fr-item');
+    const curCard = document.getElementById('frCurrent');
+    const nextCard = document.getElementById('frNext');
 
-    // 更新右側選單
+    // 更新列表樣式
     list.forEach((li, i) => li.classList.toggle('active', i === idx));
 
-    // 更新左側 Front Row 動態
-    items.forEach((item, i) => {
-        item.className = 'fr-item';
-        if (i === idx) {
-            item.classList.add('active');
-        } else if (i === idx + 1) {
-            item.classList.add('next');
-        } else {
-            item.classList.add('hidden');
-        }
-    });
+    // 觸發切換動畫
+    curCard.style.transform = "translateX(-100px) scale(0.8) opacity(0)";
+    
+    setTimeout(() => {
+        curCard.innerText = works[idx];
+        nextCard.innerText = works[(idx + 1) % works.length];
+        curCard.style.transform = "translateZ(0)";
+    }, 300);
 }
 
-// 初始啟動
+// 直向控制 (維持原本邏輯)
 document.addEventListener('DOMContentLoaded', () => {
-    // 預設選取第一個橫向作品
-    selFR(0);
-    
-    // 直向 Cover Flow 簡易邏輯
-    const pCards = document.querySelectorAll('.p-card');
-    let pIdx = 0;
-    const updateP = () => {
-        pCards.forEach((c, i) => {
+    const cards = document.querySelectorAll('.p-card');
+    let cur = 0;
+    function updateP() {
+        cards.forEach((c, i) => {
             c.className = 'p-card';
-            if(i === pIdx) c.classList.add('active');
-            else if(i === pIdx + 1) c.classList.add('next');
+            if (i === cur) c.classList.add('active');
+            else if (i === cur + 1) c.classList.add('next');
             else c.classList.add('hidden');
         });
-    };
+    }
+    // 簡單點擊切換測試
+    document.getElementById('pFlow').onclick = () => { cur = (cur + 1) % cards.length; updateP(); };
     updateP();
 });
