@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const items = Array.from(document.querySelectorAll('.cover-item'));
     const container = document.getElementById('coverFlow');
-    let currentIndex = 0; // 預設由第一個開始
+    
+    // 預設由第一個作品開始
+    let currentIndex = 0; 
 
     function update() {
         items.forEach((item, i) => {
@@ -26,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 滑動支援
+    // 滑動偵測
     let startX = 0;
     container.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
@@ -46,5 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 初始載入顯示第一個
     update();
 });
