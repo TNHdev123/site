@@ -1,17 +1,18 @@
-// 橫向板面切換
-function switchL(viewId) {
-    document.querySelectorAll('.l-view').forEach(v => v.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
+// 板面導覽
+function navTo(id) {
+    document.querySelectorAll('.l-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
 }
 
-// Front Row 選取邏輯
+// Front Row 作品選取邏輯
 function selFR(idx) {
-    // 更新選單狀態
-    const menuItems = document.querySelectorAll('.l-fr-list li');
-    menuItems.forEach((li, i) => li.classList.toggle('active', i === idx));
-
-    // 更新 Front Row 階梯顯示
+    const list = document.querySelectorAll('.l-menu-list li');
     const items = document.querySelectorAll('.fr-item');
+
+    // 更新右側選單
+    list.forEach((li, i) => li.classList.toggle('active', i === idx));
+
+    // 更新左側 Front Row 動態
     items.forEach((item, i) => {
         item.className = 'fr-item';
         if (i === idx) {
@@ -23,3 +24,22 @@ function selFR(idx) {
         }
     });
 }
+
+// 初始啟動
+document.addEventListener('DOMContentLoaded', () => {
+    // 預設選取第一個橫向作品
+    selFR(0);
+    
+    // 直向 Cover Flow 簡易邏輯
+    const pCards = document.querySelectorAll('.p-card');
+    let pIdx = 0;
+    const updateP = () => {
+        pCards.forEach((c, i) => {
+            c.className = 'p-card';
+            if(i === pIdx) c.classList.add('active');
+            else if(i === pIdx + 1) c.classList.add('next');
+            else c.classList.add('hidden');
+        });
+    };
+    updateP();
+});
