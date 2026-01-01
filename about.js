@@ -1,49 +1,44 @@
-// --- 橫向切換邏輯 ---
-function openWorks() {
-    document.getElementById('lHome').classList.remove('active');
-    document.getElementById('lWorks').classList.add('active');
+// 橫向板面跳轉動畫
+function navTo(id) {
+    document.querySelectorAll('.l-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
 }
 
-function closeWorks() {
-    document.getElementById('lWorks').classList.remove('active');
-    document.getElementById('lHome').classList.add('active');
-}
-
-function selLWork(idx) {
-    const list = document.querySelectorAll('.l-works-list li');
-    const previews = document.querySelectorAll('.l-work-preview');
-    
+// 橫向作品選取
+function selL(idx) {
+    const list = document.querySelectorAll('.l-list li');
+    const previews = document.querySelectorAll('.l-preview-box');
     list.forEach((li, i) => li.classList.toggle('active', i === idx));
-    previews.forEach((p, i) => p.classList.toggle('active', i === idx));
+    previews.forEach((box, i) => box.classList.toggle('active', i === idx));
 }
 
-// --- 直向 Cover Flow 邏輯 ---
+// 直向 Cover Flow 邏輯
 document.addEventListener('DOMContentLoaded', () => {
-    const items = document.querySelectorAll('.p-item');
-    const container = document.getElementById('pFlowContainer');
-    let currentIndex = 0;
+    const cards = document.querySelectorAll('.p-card');
+    let cur = 0;
 
-    function updatePFlow() {
-        items.forEach((item, i) => {
-            item.className = 'p-item';
-            if (i === currentIndex) item.classList.add('active');
-            else if (i === currentIndex - 1) item.classList.add('prev');
-            else if (i === currentIndex + 1) item.classList.add('next');
-            else item.classList.add('hidden');
+    function update() {
+        cards.forEach((c, i) => {
+            c.className = 'p-card';
+            if (i === cur) c.classList.add('active');
+            else if (i === cur - 1) c.classList.add('prev');
+            else if (i === cur + 1) c.classList.add('next');
+            else c.classList.add('hidden');
         });
     }
 
-    // 觸控滑動
+    // 滑動支援
     let startX = 0;
-    container.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-    container.addEventListener('touchend', e => {
+    const flow = document.getElementById('pFlow');
+    flow.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    flow.addEventListener('touchend', e => {
         let diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0 && currentIndex < items.length - 1) currentIndex++;
-            else if (diff < 0 && currentIndex > 0) currentIndex--;
-            updatePFlow();
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && cur < cards.length - 1) cur++;
+            else if (diff < 0 && cur > 0) cur--;
+            update();
         }
     });
 
-    updatePFlow();
+    update();
 });
