@@ -9,40 +9,42 @@
 <body>
     <div class="background-overlay"></div>
     
-    <div class="container portrait-view">
-        <header class="profile-header">
-            <div class="icon-container">
-                <img src="image/icon.jpeg" class="avatar">
-                <div class="gloss"></div>
+    <div class="p-container">
+        <header class="p-header">
+            <div class="p-icon-box">
+                <img src="image/icon.jpeg" class="p-avatar">
+                <div class="p-gloss"></div>
             </div>
-            <div class="greeting-text">
+            <div class="p-title">
                 <h1>Hello</h1>
                 <h2>我係TNH</h2>
             </div>
         </header>
-        <section class="info-section">
+
+        <section class="p-info">
             <h3>一個</h3>
-            <p>創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
+            <p>創作者、玩家、HongKonger、Minecrafter、測試者、設計者、開發者</p>
         </section>
-        <section class="info-section">
+
+        <section class="p-info">
             <h3>興趣</h3>
             <p>Minecraft、創作、懷舊設計、軟件修改</p>
         </section>
-        <section class="works-section">
+
+        <section class="p-works">
             <h3>作品</h3>
-            <div class="cover-flow-wrap">
-                <div class="cover-flow-container" id="pFlow">
-                    <div class="cover-item">作品 1</div>
-                    <div class="cover-item">作品 2</div>
-                    <div class="cover-item">作品 3</div>
-                    <div class="cover-item">作品 4</div>
-                    <div class="cover-item">作品 5</div>
-                </div>
+            <div class="p-flow-wrap" id="pFlowContainer">
+                <div class="p-item active">作品 1</div>
+                <div class="p-item next">作品 2</div>
+                <div class="p-item hidden">作品 3</div>
+                <div class="p-item hidden">作品 4</div>
+                <div class="p-item hidden">作品 5</div>
             </div>
         </section>
-        <section class="social-section">
+
+        <section class="p-social">
             <h3>關注我</h3>
-            <div class="social-row">
+            <div class="p-social-row">
                 <a href="#"><img src="image/ig.png"></a>
                 <a href="#"><img src="image/th.png"></a>
                 <a href="#"><img src="image/yt.png"></a>
@@ -52,22 +54,22 @@
         </section>
     </div>
 
-    <div class="landscape-view l-home-panel active" id="lHome">
-        <div class="l-content">
-            <div class="l-left">
-                <div class="l-profile-row">
-                    <img src="image/icon.jpeg" class="avatar-l">
-                    <div class="l-text">
+    <div class="l-panel active" id="lHome">
+        <div class="l-home-main">
+            <div class="l-home-left">
+                <div class="l-header-row">
+                    <img src="image/icon.jpeg" class="l-avatar">
+                    <div class="l-title">
                         <h1>Hello</h1>
                         <h2>我係TNH</h2>
                     </div>
                 </div>
-                <div class="l-info">
+                <div class="l-desc">
                     <p><strong>一個</strong> 創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
                     <p><strong>興趣</strong> Minecraft、創作、懷舊設計、軟件修改</p>
                 </div>
             </div>
-            <div class="l-right">
+            <div class="l-home-right">
                 <div class="l-social-box">
                     <h3>關注我</h3>
                     <div class="l-social-row">
@@ -78,32 +80,34 @@
                         <img src="image/tw.png">
                     </div>
                 </div>
-                <button class="btn-browse" onclick="switchPanel('lWorks')">瀏覽作品</button>
+                <button class="l-btn-main" onclick="openWorks()">瀏覽作品</button>
             </div>
         </div>
     </div>
 
-    <div class="landscape-view l-works-panel" id="lWorks">
-        <div class="l-works-main">
-            <div class="l-works-display">
-                <div class="l-preview-box active" id="lPrev1">作品1</div>
-                <div class="l-preview-box" id="lPrev2">作品2</div>
-                <div class="l-preview-box" id="lPrev3">作品3</div>
+    <div class="l-panel" id="lWorks">
+        <div class="l-works-body">
+            <div class="l-works-view">
+                <div class="l-work-preview active" id="lPrev0">作品 1</div>
+                <div class="l-work-preview" id="lPrev1">作品 2</div>
+                <div class="l-work-preview" id="lPrev2">作品 3</div>
+                <div class="l-work-preview" id="lPrev3">作品 4</div>
+                <div class="l-work-preview" id="lPrev4">作品 5</div>
             </div>
-            <div class="l-works-sidebar">
+            <div class="l-works-list">
                 <h3>我的作品</h3>
-                <ul class="l-list">
-                    <li class="active" onclick="selWork(0)">作品1</li>
-                    <li onclick="selWork(1)">作品2</li>
-                    <li onclick="selWork(2)">作品3</li>
-                    <li onclick="selWork(3)">作品4</li>
-                    <li onclick="selWork(4)">作品5</li>
+                <ul>
+                    <li class="active" onclick="selLWork(0)">作品 1</li>
+                    <li onclick="selLWork(1)">作品 2</li>
+                    <li onclick="selLWork(2)">作品 3</li>
+                    <li onclick="selLWork(3)">作品 4</li>
+                    <li onclick="selLWork(4)">作品 5</li>
                 </ul>
             </div>
         </div>
         <div class="l-works-footer">
-            <button class="btn-l btn-gray" onclick="switchPanel('lHome')">關閉</button>
-            <button class="btn-l btn-blue">前往</button>
+            <button class="l-footer-btn gray" onclick="closeWorks()">關閉</button>
+            <button class="l-footer-btn blue">前往</button>
         </div>
     </div>
 
