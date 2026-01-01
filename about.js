@@ -1,4 +1,4 @@
-// --- 橫向介面跳轉 ---
+// --- 導航控制 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 獨立邏輯 (左後方透視) ---
+// --- Front Row 邏輯 ---
 const frData = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 function selFRItem(idx) {
     const listItems = document.querySelectorAll('#frList li');
@@ -17,25 +17,24 @@ function selFRItem(idx) {
 
     listItems.forEach((li, i) => li.classList.toggle('active', i === idx));
 
-    // 觸發縮放切換動畫
     mainCard.style.opacity = "0.7";
     mainCard.style.transform = "translateY(-50%) scale(0.95)";
 
     setTimeout(() => {
         mainCard.innerText = frData[idx];
-        backCard.innerText = frData[(idx + 1) % frData.length]; // 顯示下一個
+        backCard.innerText = frData[(idx + 1) % frData.length];
         mainCard.style.opacity = "1";
         mainCard.style.transform = "translateY(-50%) scale(1)";
     }, 250);
 }
 
-// --- 直向 Cover Flow 獨立邏輯 ---
+// --- 直向 Cover Flow 邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
     let pIdx = 0;
 
-    function drawP() {
+    function refreshP() {
         pItems.forEach((item, i) => {
             item.className = 'p-item';
             if (i === pIdx) item.classList.add('active');
@@ -44,8 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 點擊與滑動偵測
-    pItems.forEach((item, i) => item.addEventListener('click', () => { pIdx = i; drawP(); }));
+    pItems.forEach((item, i) => item.addEventListener('click', () => { pIdx = i; refreshP(); }));
     
     let startX = 0;
     pEngine.addEventListener('touchstart', e => startX = e.touches[0].clientX);
@@ -53,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let diff = startX - e.changedTouches[0].clientX;
         if (diff > 50 && pIdx < pItems.length - 1) pIdx++;
         else if (diff < -50 && pIdx > 0) pIdx--;
-        drawP();
+        refreshP();
     });
 
-    drawP();
+    refreshP();
 });
