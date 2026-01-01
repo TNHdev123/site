@@ -1,107 +1,77 @@
-/* --- 基礎設定與原有直向樣式 --- */
-/* (保留你之前的 about.css 內容，以下為新增或修改部分) */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+body { background: #000; color: white; overflow: hidden; width: 100vw; height: 100vh; }
 
-.landscape-only { display: none; }
-.portrait-only { display: block; }
+.background-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('image/background.jpg');
+    background-size: cover; background-position: center; z-index: -1;
+}
+.background-overlay::after {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
 
-/* 橫向模式觸發 */
+/* 顯示切換控制 */
+.portrait-view { display: block; }
+.landscape-view { display: none; }
+
 @media (orientation: landscape) {
-    .landscape-only { display: block; }
-    .portrait-only { display: none; }
-
-    .container {
-        max-width: 900px;
-        padding-top: 20px;
-    }
-
-    .profile-header {
-        justify-content: flex-start;
-        flex-direction: row-reverse; /* 跟隨草圖：Icon 在右，Hello 在左 */
-    }
-
-    .desktop-layout-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-    }
-
-    /* 經典高光按鈕 (瀏覽作品 / 關閉 / 前往) */
-    .classic-btn {
-        background: linear-gradient(to bottom, #4c4c4c 0%, #111111 100%);
-        border: 1px solid #000;
-        border-radius: 12px;
-        color: white;
-        padding: 15px 30px;
-        font-size: 1.5rem;
-        cursor: pointer;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 5px 15px rgba(0,0,0,0.5);
-    }
-    
-    .btn-blue { background: linear-gradient(to bottom, #6d8ba6 0%, #3e566d 100%); }
+    .portrait-view { display: none; }
+    .landscape-view { display: flex; flex-direction: column; height: 100vh; padding: 20px 40px; }
 }
 
-/* Front Row 彈出層樣式 */
-.front-row-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    backdrop-filter: blur(20px);
-    display: none; /* 預設隱藏 */
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
+/* 直向樣式 (保持之前不變) */
+.container { max-width: 500px; margin: 0 auto; padding: 20px; }
+.profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.icon-container { position: relative; width: 80px; height: 80px; }
+.avatar { width: 100%; height: 100%; border-radius: 18px; }
+.gloss {
+    position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+    border-radius: 18px 18px 50% 50% / 18px 18px 15% 15%;
 }
+.greeting-text h1 { font-size: 2.5rem; }
+.info-section { margin-bottom: 20px; }
+.social-row { display: flex; gap: 10px; flex-wrap: nowrap; }
+.social-row a { flex: 1; max-width: 60px; aspect-ratio: 1/1; }
+.social-row img { width: 100%; border-radius: 12px; }
 
-.front-row-content {
-    display: flex;
-    width: 80%;
-    height: 70%;
-    gap: 50px;
+/* Cover Flow 核心 (直向) */
+.works-section { position: relative; height: 250px; }
+.cover-flow-wrap { perspective: 1000px; height: 100%; overflow: hidden; }
+.cover-flow-container { position: relative; height: 100%; transform-style: preserve-3d; }
+.cover-item {
+    width: 160px; height: 160px; background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 25px; position: absolute; left: calc(50% - 80px); top: 20px;
+    transition: all 0.4s ease; display: flex; align-items: center; justify-content: center;
 }
+.cover-item.active { transform: translateZ(100px); opacity: 1; z-index: 10; }
+.cover-item.prev { transform: translateX(-120px) rotateY(30deg) scale(0.8); opacity: 0.6; }
+.cover-item.next { transform: translateX(120px) rotateY(-30deg) scale(0.8); opacity: 0.6; }
+.cover-item.hidden { opacity: 0; pointer-events: none; }
 
-.fr-preview {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* 橫向樣式 (Front Row 風格) */
+.landscape-main { display: flex; flex: 1; gap: 40px; align-items: center; overflow: hidden; }
+.landscape-display { flex: 1.5; position: relative; height: 100%; perspective: 1000px; }
+.landscape-sidebar { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+.cover-item-l {
+    width: 250px; height: 250px; background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px); border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    transition: all 0.5s ease; opacity: 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
 }
+.cover-item-l.active { opacity: 1; transform: translate(-50%, -50%) translateZ(50px); }
+.cover-item-l.prev-l { opacity: 0.4; transform: translate(-110%, -50%) rotateY(40deg) scale(0.7); }
 
-.fr-cover-box {
-    width: 250px;
-    height: 250px;
-    background: white;
-    color: black;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    box-shadow: 0 0 50px rgba(255,255,255,0.1);
-}
+.works-list-container { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; backdrop-filter: blur(10px); }
+.works-list { list-style: none; }
+.works-list li { padding: 10px; font-size: 1.2rem; opacity: 0.6; transition: 0.3s; cursor: pointer; }
+.works-list li.active { opacity: 1; color: #5ac8fa; font-weight: bold; transform: translateX(10px); }
 
-.fr-menu {
-    flex: 1;
-    color: white;
-}
-
-.fr-menu h2 { font-size: 2.5rem; margin-bottom: 20px; }
-
-.fr-menu ul { list-style: none; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 10px; }
-
-.fr-menu li {
-    padding: 10px 20px;
-    font-size: 1.8rem;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-.fr-menu li.active {
-    background: linear-gradient(to bottom, #5d7ba7, #2a4570);
-    color: white;
-}
-
-.fr-controls {
-    margin-top: 30px;
-    display: flex;
-    gap: 20px;
-}
+.landscape-footer { display: flex; gap: 20px; padding: 20px 0; }
+.btn { flex: 1; padding: 15px; border-radius: 15px; border: none; font-size: 1.2rem; font-weight: bold; color: white; cursor: pointer; }
+.btn-black { background: linear-gradient(#444, #000); border: 1px solid #555; }
+.btn-blue { background: linear-gradient(#5ac8fa, #007aff); }
+.avatar-s { width: 50px; height: 50px; border-radius: 10px; }
