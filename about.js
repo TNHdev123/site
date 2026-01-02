@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 橢圓轉場邏輯 ---
+// --- Front Row 橢圓轉場 (修正方向邏輯) ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -24,14 +24,17 @@ function selFRItem(targetIdx) {
     const isForward = targetIdx > currentFrIdx;
     const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
 
-    // 1. 卡片弧線繞出
-    mainCard.classList.add('exit-forward');
+    // 橢圓方向切換
+    if (isForward) {
+        mainCard.classList.add('exit-forward'); // 向右前方繞出
+    } else {
+        mainCard.classList.add('exit-backward'); // 向左前方繞出
+    }
     
-    // 2. 後方卡片「滑入」軌道補位
-    backCard.classList.add('entering');
+    backCard.classList.add('entering'); // 由後方繞進補位
 
     setTimeout(() => {
-        // 更新數據
+        // 更新內容
         currentFrIdx = nextStepIdx;
         mainCard.innerText = frDataArr[currentFrIdx];
         
@@ -40,28 +43,26 @@ function selFRItem(targetIdx) {
         if (nextBackIdx >= frDataArr.length) nextBackIdx = frDataArr.length - 1;
         backCard.innerText = frDataArr[nextBackIdx];
 
-        // 重置動畫 Class
-        mainCard.classList.remove('exit-forward');
+        // 清除動畫狀態
+        mainCard.classList.remove('exit-forward', 'exit-backward');
         backCard.classList.remove('entering');
 
-        // 更新選單
         listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
 
         isAnimating = false;
 
-        // 遞歸連續轉場
+        // 遞歸處理跨作品跳轉
         if (currentFrIdx !== targetIdx) {
-            setTimeout(() => selFRItem(targetIdx), 50); 
+            setTimeout(() => selFRItem(targetIdx), 50);
         }
-    }, 600); 
+    }, 600);
 }
 
-// --- 直向邏輯維持 ---
+// --- 直向 Cover Flow ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
     let pIdx = 0;
-
     function updateP() {
         pItems.forEach((item, i) => {
             item.className = 'p-item';
@@ -70,9 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (i === pIdx + 1) item.classList.add('next');
         });
     }
-
     pItems.forEach((item, i) => item.addEventListener('click', () => { pIdx = i; updateP(); }));
-    
     let startX = 0;
     pEngine.addEventListener('touchstart', e => startX = e.touches[0].clientX);
     pEngine.addEventListener('touchend', e => {
