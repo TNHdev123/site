@@ -10,60 +10,52 @@
     <div class="background-overlay"></div>
     
     <div class="p-view">
-        <div class="p-scroll-content">
-            <header class="p-header">
-                <div class="p-avatar-wrap">
-                    <img src="image/icon.jpeg" class="p-avatar">
-                    <div class="p-gloss"></div>
-                </div>
-                <div class="p-title">
-                    <h1>Hello</h1>
-                    <h2>我係TNH</h2>
-                </div>
-            </header>
+        <header class="p-header">
+            <div class="p-avatar-wrap">
+                <img src="image/icon.jpeg" class="p-avatar">
+                <div class="p-gloss"></div>
+            </div>
+            <div class="p-title">
+                <h1>Hello</h1>
+                <h2>我係TNH</h2>
+            </div>
+        </header>
 
-            <section class="p-sections">
-                <div class="p-box">
-                    <h3>一個</h3>
-                    <p>創作者、玩家、HongKonger、Minecrafter、測試者、設計者、開發者</p>
+        <section class="p-sections">
+            <div class="p-box">
+                <h3>一個</h3>
+                <p>創作者、玩家、HongKonger、Minecrafter、測試者、設計者、開發者</p>
+            </div>
+            <div class="p-box">
+                <h3>興趣</h3>
+                <p>Minecraft、創作、懷舊設計、軟件修改</p>
+            </div>
+            <div class="p-works-box">
+                <h3>作品</h3>
+                <div class="p-coverflow-engine" id="pEngine">
+                    <div class="p-item">作品 1</div>
+                    <div class="p-item">作品 2</div>
+                    <div class="p-item">作品 3</div>
+                    <div class="p-item">作品 4</div>
+                    <div class="p-item">作品 5</div>
                 </div>
-                <div class="p-box">
-                    <h3>興趣</h3>
-                    <p>Minecraft、創作、懷舊設計、軟件修改</p>
-                </div>
-                <div class="p-works-box">
-                    <h3>作品</h3>
-                    <div class="p-coverflow-engine" id="pEngine">
-                        <div class="p-item">作品 1</div>
-                        <div class="p-item">作品 2</div>
-                        <div class="p-item">作品 3</div>
-                        <div class="p-item">作品 4</div>
-                        <div class="p-item">作品 5</div>
-                    </div>
-                </div>
-            </section>
+            </div>
+        </section>
 
-            <footer class="p-footer">
-                <h3>關注我</h3>
-                <div class="p-social-bar">
-                    <img src="image/ig.png"><img src="image/th.png"><img src="image/yt.png"><img src="image/rd.png"><img src="image/tw.png">
-                </div>
-            </footer>
-        </div>
+        <footer class="p-footer">
+            <h3>關注我</h3>
+            <div class="p-social-bar">
+                <img src="image/ig.png"><img src="image/th.png"><img src="image/yt.png"><img src="image/rd.png"><img src="image/tw.png">
+            </div>
+        </footer>
     </div>
 
     <div class="l-view">
         <div class="l-panel active" id="lHome">
             <div class="l-home-left">
                 <div class="l-info-stack">
-                    <div class="l-group">
-                        <h3>一個</h3>
-                        <p>創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
-                    </div>
-                    <div class="l-group">
-                        <h3>興趣</h3>
-                        <p>Minecraft、創作、懷舊設計、軟件修改</p>
-                    </div>
+                    <div class="l-group"><h3>一個</h3><p>創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p></div>
+                    <div class="l-group"><h3>興趣</h3><p>Minecraft、創作、懷舊設計、軟件修改</p></div>
                 </div>
                 <button class="l-btn-action" onclick="goWorks()">瀏覽作品</button>
             </div>
@@ -93,18 +85,17 @@
                         <button class="fr-btn blue">前往</button>
                     </div>
                 </div>
-                <div class="l-fr-sidebar">
-                    <div class="fr-menu-container">
-                        <h3>我的作品</h3>
-                        <div class="fr-menu-scroll">
-                            <ul id="frList">
-                                <li class="active" onclick="selFRItem(0)">作品 1</li>
-                                <li onclick="selFRItem(1)">作品 2</li>
-                                <li onclick="selFRItem(2)">作品 3</li>
-                                <li onclick="selFRItem(3)">作品 4</li>
-                                <li onclick="selFRItem(4)">作品 5</li>
-                            </ul>
-                        </div>
+                
+                <div class="l-fr-sidebar-wrap">
+                    <h3 class="fr-sidebar-title">我的作品</h3>
+                    <div class="l-fr-list-box">
+                        <ul id="frList">
+                            <li class="active" onclick="selFRItem(0)">作品 1</li>
+                            <li onclick="selFRItem(1)">作品 2</li>
+                            <li onclick="selFRItem(2)">作品 3</li>
+                            <li onclick="selFRItem(3)">作品 4</li>
+                            <li onclick="selFRItem(4)">作品 5</li>
+                        </ul>
                     </div>
                 </div>
             </div>
