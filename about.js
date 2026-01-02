@@ -1,4 +1,4 @@
-// 切換介面
+// --- 橫向介面控制 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,8 +8,8 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// Front Row 作品選取 (獨立邏輯)
-const frData = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
+// --- Front Row 邏輯 ---
+const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 function selFRItem(idx) {
     const listItems = document.querySelectorAll('#frList li');
     const mainCard = document.getElementById('frCurrent');
@@ -17,17 +17,24 @@ function selFRItem(idx) {
 
     listItems.forEach((li, i) => li.classList.toggle('active', i === idx));
 
-    mainCard.innerText = frData[idx];
-    backCard.innerText = frData[(idx + 1) % frData.length];
+    mainCard.style.opacity = "0.6";
+    mainCard.style.transform = "translateY(-50%) scale(0.9)";
+
+    setTimeout(() => {
+        mainCard.innerText = frDataArr[idx];
+        backCard.innerText = frDataArr[(idx + 1) % frDataArr.length];
+        mainCard.style.opacity = "1";
+        mainCard.style.transform = "translateY(-50%) scale(1)";
+    }, 200);
 }
 
-// 直向 Cover Flow 引擎
+// --- 直向 Cover Flow 邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
     let pIdx = 0;
 
-    function drawP() {
+    function updateP() {
         pItems.forEach((item, i) => {
             item.className = 'p-item';
             if (i === pIdx) item.classList.add('active');
@@ -36,15 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    pItems.forEach((item, i) => item.addEventListener('click', () => { pIdx = i; updateP(); }));
+    
     let startX = 0;
     pEngine.addEventListener('touchstart', e => startX = e.touches[0].clientX);
     pEngine.addEventListener('touchend', e => {
         let diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) {
-            if (diff > 0 && pIdx < pItems.length - 1) pIdx++;
-            else if (diff < 0 && pIdx > 0) pIdx--;
-            drawP();
-        }
+        if (diff > 50 && pIdx < pItems.length - 1) pIdx++;
+        else if (diff < -50 && pIdx > 0) pIdx--;
+        updateP();
     });
-    drawP();
+
+    updateP();
 });
