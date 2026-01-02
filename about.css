@@ -1,15 +1,10 @@
-/* --- 基礎核心 (不變) --- */
+/* --- 基礎設定與直向 (保持不變) --- */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
 body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hidden; }
-
-.background-overlay {
-    position: fixed; inset: 0; z-index: -1;
-    background: url('image/background.jpg') center/cover;
-}
+.background-overlay { position: fixed; inset: 0; z-index: -1; background: url('image/background.jpg') center/cover; }
 .background-overlay::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
 
-/* --- 直向介面 (不變) --- */
-.p-view { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.p-view { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow-y: auto; overflow-x: hidden; }
 .p-scroll-content { padding: 50px 30px; width: 100%; display: flex; flex-direction: column; }
 .p-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
 .p-avatar-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
@@ -29,7 +24,7 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .p-social-bar { display: flex; gap: 12px; }
 .p-social-bar img { width: 60px; height: 60px; border-radius: 14px; }
 
-/* --- 橫向介面 (Landscape) --- */
+/* --- 橫向介面與 FR 橢圓軌道核心 --- */
 .l-view { display: none; }
 @media (orientation: landscape) {
     .p-view { display: none; }
@@ -50,49 +45,47 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .l-icon-row { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
 .l-icon-row img { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
 
-/* --- FR 正確軌道動畫核心 --- */
-.fr-stage-box { flex: 1; position: relative; perspective: 3000px; }
+/* --- FR 軌道動畫定義 --- */
+.l-fr-engine { display: flex; width: 100%; height: 100%; gap: 40px; align-items: center; }
+.l-fr-display { flex: 1.5; height: 400px; display: flex; flex-direction: column; }
+.fr-stage-box { flex: 1; position: relative; perspective: 2500px; }
 
-/* 通用卡片樣式 */
 .fr-card { 
-    position: absolute; border-radius: 40px; 
-    display: flex; align-items: center; justify-content: center; 
-    font-size: 2rem; color: #000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s; 
+    position: absolute; border-radius: 40px; display: flex; 
+    align-items: center; justify-content: center; font-size: 2rem; 
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
     backface-visibility: hidden;
 }
 
-/* 主卡片：中心 */
-.fr-card.main { 
+/* 位置 1: 中間主角 */
+.fr-main-pos { 
     width: 270px; height: 270px; right: 5%; top: 50%; 
-    transform: translateY(-50%) translateZ(0); 
-    background: #fff; z-index: 20; opacity: 1;
+    transform: translateY(-50%) translateZ(0) rotateY(0deg); 
+    background: #fff; color: #000; z-index: 20; opacity: 1;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
-/* 後方備用卡片：左上深處 */
-.fr-card.back { 
+/* 位置 2: 左後等待 */
+.fr-back-pos { 
     width: 190px; height: 190px; left: 5%; top: 40%; 
-    transform: translateY(-50%) rotateY(35deg) translateZ(-400px); 
-    background: rgba(255,255,255,0.9); z-index: 5; opacity: 0; /* 初始隱藏，動態顯現 */
+    transform: translateY(-50%) rotateY(35deg) translateZ(-300px); 
+    background: rgba(255,255,255,0.9); color: #000; z-index: 5; opacity: 0.3;
 }
 
-/* --- 動畫狀態 --- */
-
-/* 1. 向左前推場消失 (橢圓前半弧) */
-.fr-card.main.exit-pushed {
-    transform: translateY(-50%) translateX(-150%) translateZ(600px) rotateY(-50deg);
-    opacity: 0;
+/* 位置 3: 右側隱藏 (等待切入左後) */
+.fr-hidden-right {
+    width: 150px; height: 150px; right: -20%; top: 40%;
+    transform: translateY(-50%) translateZ(-500px);
+    background: rgba(255,255,255,0.5); opacity: 0; z-index: 1;
 }
 
-/* 2. 由左後推上中心 (橢圓後半弧) */
-.fr-card.back.enter-pushed {
-    transform: translateY(-50%) translateX(110%) translateZ(400px) rotateY(0deg);
-    width: 270px; height: 270px; /* 變回大卡片 */
-    opacity: 1;
-    z-index: 30;
+/* 動作: 主角向左前離場 */
+.fr-exit-left {
+    transform: translateY(-50%) translateX(-150%) translateZ(600px) rotateY(-45deg) !important;
+    opacity: 0 !important;
 }
 
-/* 選單與按鈕 (不變) */
+/* 選單與按鈕 */
 .l-fr-sidebar-wrap { width: 280px; flex-shrink: 0; }
 .fr-sidebar-title { font-size: 2.2rem; margin-bottom: 15px; }
 .l-fr-sidebar-box { background: rgba(45, 45, 45, 0.85); backdrop-filter: blur(20px); border-radius: 25px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
