@@ -1,4 +1,4 @@
-// --- 基礎跳轉 ---
+// --- 導航 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 迴轉動畫核心 ---
+// --- Front Row 圓周迴轉邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -21,46 +21,42 @@ function selFRItem(targetIdx) {
     const backCard = document.getElementById('frNext');
     const listItems = document.querySelectorAll('#frList li');
 
-    // 判斷方向：前進還是後退
     const isForward = targetIdx > currentFrIdx;
     const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
 
-    // 1. 啟動第一階段動畫 (迴轉半圈)
-    mainCard.classList.add(isForward ? 'exit-next' : 'exit-prev');
-    
-    // 將 BackCard 預熱 (拉向中心)
-    backCard.style.transform = "translateY(-50%) translateX(50%) translateZ(50px) rotateY(0deg)";
-    backCard.style.opacity = "1";
+    // 1. 開始旋轉退出
+    mainCard.classList.add(isForward ? 'rotate-exit-next' : 'rotate-exit-prev');
+    // 2. 後方作品繞入中心預備
+    backCard.classList.add('rotate-enter');
 
     setTimeout(() => {
-        // 2. 更新內容
+        // 3. 切換內容
         currentFrIdx = nextStepIdx;
         mainCard.innerText = frDataArr[currentFrIdx];
         
-        // 預測下一個 BackCard
+        // 預計下一個後方作品內容
         let nextBackIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
         if (nextBackIdx < 0) nextBackIdx = 0;
         if (nextBackIdx >= frDataArr.length) nextBackIdx = frDataArr.length - 1;
         backCard.innerText = frDataArr[nextBackIdx];
 
-        // 3. 恢復初始狀態
-        mainCard.classList.remove('exit-next', 'exit-prev');
-        backCard.style.transform = ""; // 恢復 CSS 定義的後方位置
-        backCard.style.opacity = "";
+        // 4. 重設動畫 Class
+        mainCard.classList.remove('rotate-exit-next', 'rotate-exit-prev');
+        backCard.classList.remove('rotate-enter');
 
-        // 更新選單亮起
+        // 選單同步
         listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
 
         isAnimating = false;
 
-        // 4. 遞歸檢查：如果未到目標，繼續行下一步
+        // 5. 遞歸：實現跨作品連續迴轉
         if (currentFrIdx !== targetIdx) {
             selFRItem(targetIdx);
         }
-    }, 500); // 對應 CSS 的 transition 時間
+    }, 600); // 稍微加長轉場時間令迴轉更明顯
 }
 
-// --- 直向 Cover Flow (維持原狀) ---
+// --- 直向 Cover Flow ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
