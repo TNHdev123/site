@@ -1,4 +1,4 @@
-// --- 跳轉 ---
+// --- 跳轉控制 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- FR 真正的單向軌道引擎 ---
+// --- Front Row 輸送帶軌道邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -17,52 +17,64 @@ function selFRItem(targetIdx) {
     if (isAnimating || targetIdx === currentFrIdx) return;
     isAnimating = true;
 
-    const stage = document.getElementById('frStage');
-    const oldMain = document.querySelector('.fr-card.main');
-    const oldBack = document.querySelector('.fr-card.back');
+    const mainCard = document.getElementById('frMain');
+    const backCard = document.getElementById('frBack');
+    const nextNextCard = document.getElementById('frNextNext');
     const listItems = document.querySelectorAll('#frList li');
 
     const isForward = targetIdx > currentFrIdx;
-    const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
+    const nextStepIdx = isForward ? (currentFrIdx + 1) % frDataArr.length : (currentFrIdx - 1 + frDataArr.length) % frDataArr.length;
 
-    // 1. 啟動推場動畫
-    oldMain.classList.add('exit-pushed'); 
-    oldBack.style.opacity = "1"; // 讓原本在後面的顯示
-    oldBack.classList.add('enter-pushed');
-
-    // 2. 準備第三塊卡片 (由暗處準備進入)
-    let futureIdx = isForward ? nextStepIdx + 1 : nextStepIdx - 1;
-    if (futureIdx < 0) futureIdx = 0;
-    if (futureIdx >= frDataArr.length) futureIdx = frDataArr.length - 1;
-
-    const futureCard = document.createElement('div');
-    futureCard.className = 'fr-card back';
-    futureCard.innerText = frDataArr[futureIdx];
-    stage.appendChild(futureCard);
+    // 1. 啟動離場與進場
+    mainCard.classList.add('fr-exit-left'); // 中間主角 -> 左前消失
+    
+    backCard.className = 'fr-card fr-main-pos'; // 左後等待 -> 中間主角
+    
+    nextNextCard.className = 'fr-card fr-back-pos'; // 右側隱藏 -> 左後等待
 
     setTimeout(() => {
-        // 3. 動畫結束後的清理與身份轉換
-        oldMain.remove(); // 舊的徹底消失，唔會返轉頭
-
-        // 將剛登場的作品轉為正式的 main
-        oldBack.classList.remove('back', 'enter-pushed');
-        oldBack.classList.add('main');
-        oldBack.id = "frCurrent";
-
-        // 更新當前索引
+        // 2. 動畫中途更新索引
         currentFrIdx = nextStepIdx;
-        listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
 
+        // 3. 瞬間重置所有卡片位置與內容 (唔要 transition)
+        // 重新設定內容，確保視覺連續
+        mainCard.style.transition = 'none';
+        backCard.style.transition = 'none';
+        nextNextCard.style.transition = 'none';
+
+        // 更新文字
+        mainCard.innerText = frDataArr[currentFrIdx];
+        
+        let backIdx = (currentFrIdx + 1) % frDataArr.length;
+        backCard.innerText = frDataArr[backIdx];
+        
+        let nextNextIdx = (backIdx + 1) % frDataArr.length;
+        nextNextCard.innerText = frDataArr[nextNextIdx];
+
+        // 歸位
+        mainCard.className = 'fr-card fr-main-pos';
+        backCard.className = 'fr-card fr-back-pos';
+        nextNextCard.className = 'fr-card fr-hidden-right';
+
+        // 強制重繪
+        mainCard.offsetHeight; 
+
+        // 恢復 transition
+        mainCard.style.transition = '';
+        backCard.style.transition = '';
+        nextNextCard.style.transition = '';
+
+        listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
         isAnimating = false;
 
-        // 4. 連續動畫處理
+        // 遞歸連續播放
         if (currentFrIdx !== targetIdx) {
             setTimeout(() => selFRItem(targetIdx), 50);
         }
-    }, 700); // 對應 CSS 0.7s
+    }, 600);
 }
 
-// --- 直向 Cover Flow ---
+// --- 直向維持 ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
