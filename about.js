@@ -1,4 +1,4 @@
-// --- 導航 ---
+// --- 跳轉控制 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 圓周迴轉邏輯 ---
+// --- Front Row 橢圓轉場邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -24,39 +24,39 @@ function selFRItem(targetIdx) {
     const isForward = targetIdx > currentFrIdx;
     const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
 
-    // 1. 開始旋轉退出
-    mainCard.classList.add(isForward ? 'rotate-exit-next' : 'rotate-exit-prev');
-    // 2. 後方作品繞入中心預備
-    backCard.classList.add('rotate-enter');
+    // 1. 卡片弧線繞出
+    mainCard.classList.add('exit-forward');
+    
+    // 2. 後方卡片「滑入」軌道補位
+    backCard.classList.add('entering');
 
     setTimeout(() => {
-        // 3. 切換內容
+        // 更新數據
         currentFrIdx = nextStepIdx;
         mainCard.innerText = frDataArr[currentFrIdx];
         
-        // 預計下一個後方作品內容
         let nextBackIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
         if (nextBackIdx < 0) nextBackIdx = 0;
         if (nextBackIdx >= frDataArr.length) nextBackIdx = frDataArr.length - 1;
         backCard.innerText = frDataArr[nextBackIdx];
 
-        // 4. 重設動畫 Class
-        mainCard.classList.remove('rotate-exit-next', 'rotate-exit-prev');
-        backCard.classList.remove('rotate-enter');
+        // 重置動畫 Class
+        mainCard.classList.remove('exit-forward');
+        backCard.classList.remove('entering');
 
-        // 選單同步
+        // 更新選單
         listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
 
         isAnimating = false;
 
-        // 5. 遞歸：實現跨作品連續迴轉
+        // 遞歸連續轉場
         if (currentFrIdx !== targetIdx) {
-            selFRItem(targetIdx);
+            setTimeout(() => selFRItem(targetIdx), 50); 
         }
-    }, 600); // 稍微加長轉場時間令迴轉更明顯
+    }, 600); 
 }
 
-// --- 直向 Cover Flow ---
+// --- 直向邏輯維持 ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
