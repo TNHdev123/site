@@ -1,4 +1,3 @@
-// --- 橫向介面控制 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +7,6 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 function selFRItem(idx) {
     const listItems = document.querySelectorAll('#frList li');
@@ -16,7 +14,6 @@ function selFRItem(idx) {
     const backCard = document.getElementById('frNext');
 
     listItems.forEach((li, i) => li.classList.toggle('active', i === idx));
-
     mainCard.style.opacity = "0.6";
     mainCard.style.transform = "translateY(-50%) scale(0.9)";
 
@@ -28,7 +25,6 @@ function selFRItem(idx) {
     }, 200);
 }
 
-// --- 直向 Cover Flow 邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
@@ -53,6 +49,5 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (diff < -50 && pIdx > 0) pIdx--;
         updateP();
     });
-
     updateP();
 });
