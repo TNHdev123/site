@@ -8,7 +8,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 橢圓轉場 (修正方向邏輯) ---
+// --- Front Row 傳送帶橢圓邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -24,38 +24,35 @@ function selFRItem(targetIdx) {
     const isForward = targetIdx > currentFrIdx;
     const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
 
-    // 橢圓方向切換
-    if (isForward) {
-        mainCard.classList.add('exit-forward'); // 向右前方繞出
-    } else {
-        mainCard.classList.add('exit-backward'); // 向左前方繞出
-    }
-    
-    backCard.classList.add('entering'); // 由後方繞進補位
+    // 1. 執行單向推場動畫
+    mainCard.classList.add('push-exit'); // 中間 -> 左前消失
+    backCard.classList.add('push-enter'); // 左後 -> 中間登場
 
     setTimeout(() => {
-        // 更新內容
+        // 2. 動畫完成，更新數據
         currentFrIdx = nextStepIdx;
         mainCard.innerText = frDataArr[currentFrIdx];
         
+        // 預備下一個登場的作品 (依然擺喺橢圓左後方)
         let nextBackIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
         if (nextBackIdx < 0) nextBackIdx = 0;
         if (nextBackIdx >= frDataArr.length) nextBackIdx = frDataArr.length - 1;
         backCard.innerText = frDataArr[nextBackIdx];
 
-        // 清除動畫狀態
-        mainCard.classList.remove('exit-forward', 'exit-backward');
-        backCard.classList.remove('entering');
+        // 3. 瞬間重置狀態 (唔可以用 transition)
+        mainCard.classList.remove('push-exit');
+        backCard.classList.remove('push-enter');
 
+        // 更新選單
         listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrIdx));
 
         isAnimating = false;
 
-        // 遞歸處理跨作品跳轉
+        // 遞歸處理連續跳轉
         if (currentFrIdx !== targetIdx) {
             setTimeout(() => selFRItem(targetIdx), 50);
         }
-    }, 600);
+    }, 600); // 同 CSS transition 時間一致
 }
 
 // --- 直向 Cover Flow ---
