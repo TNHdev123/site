@@ -50,46 +50,43 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .l-icon-row { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
 .l-icon-row img { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
 
-/* --- FR 橢圓動畫 (修正方向) --- */
+/* --- FR 橢圓單向傳送帶動畫 --- */
 .l-fr-engine { display: flex; width: 100%; height: 100%; gap: 40px; align-items: center; }
 .l-fr-display { flex: 1.5; height: 400px; display: flex; flex-direction: column; }
-.fr-stage-box { flex: 1; position: relative; perspective: 2000px; }
+.fr-stage-box { flex: 1; position: relative; perspective: 2500px; }
 
+/* 當前作品：處於橢圓前方中心 */
 .fr-main-card { 
     position: absolute; width: 270px; height: 270px; right: 5%; top: 50%; 
     transform: translateY(-50%) translateZ(0) rotateY(0deg); 
-    background: #fff; border-radius: 40px; z-index: 10; 
+    background: #fff; border-radius: 40px; z-index: 20; 
     display: flex; align-items: center; justify-content: center; 
     font-size: 2rem; color: #000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; 
-    backface-visibility: hidden;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s; 
 }
 
-/* 修正：向右前方繞出消失 (橢圓右半部) */
-.fr-main-card.exit-forward {
-    transform: translateY(-50%) translateX(100%) translateZ(400px) rotateY(40deg);
+/* 推場動畫：由中間向左前方劃弧並放大消失 (橢圓前半部) */
+.fr-main-card.push-exit {
+    transform: translateY(-50%) translateX(-120%) translateZ(500px) rotateY(-45deg);
     opacity: 0;
+    pointer-events: none;
 }
 
-/* 修正：向左前方繞出消失 (反向切換用) */
-.fr-main-card.exit-backward {
-    transform: translateY(-50%) translateX(-150%) translateZ(400px) rotateY(-40deg);
-    opacity: 0;
-}
-
+/* 登場卡片：預設處於橢圓後方左上 */
 .fr-back-card-left { 
-    position: absolute; width: 190px; height: 190px; left: 5%; top: 45%; 
-    transform: translateY(-50%) rotateY(35deg) translateZ(-250px); 
-    background: rgba(255,255,255,0.9); border-radius: 30px; opacity: 0.4; 
+    position: absolute; width: 190px; height: 190px; left: 5%; top: 40%; 
+    transform: translateY(-50%) rotateY(35deg) translateZ(-300px); 
+    background: rgba(255,255,255,0.9); border-radius: 30px; opacity: 0.3; 
     z-index: 5; display: flex; align-items: center; justify-content: center; 
-    color: #000; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s; 
+    color: #000; transition: none; /* 登場前先歸位，唔要過渡 */
 }
 
-/* 修正：由左後方順時針繞向中心 (橢圓左半部) */
-.fr-back-card-left.entering {
-    transform: translateY(-50%) translateX(50%) translateZ(100px) rotateY(0deg);
+/* 登場動畫：由左後方繞橢圓後半部推向中心前方 */
+.fr-back-card-left.push-enter {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s;
+    transform: translateY(-50%) translateX(100%) translateZ(100px) rotateY(0deg);
     opacity: 1;
-    z-index: 12;
+    z-index: 25;
 }
 
 /* 選單與按鈕 */
