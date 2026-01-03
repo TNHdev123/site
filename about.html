@@ -82,29 +82,31 @@
         </div>
 
         <div class="l-panel" id="lWorks">
-            <div class="l-fr-engine">
-                <div class="l-fr-display">
-                    <div class="fr-stage-box" id="frStage">
-                        <div class="fr-card fr-pos-left-out" id="frPrev">作品 5</div>
-                        <div class="fr-card fr-pos-right-out" id="frNext">作品 3</div>
-                        <div class="fr-card fr-pos-back" id="frBack">作品 2</div>
-                        <div class="fr-card fr-pos-main" id="frMain">作品 1</div>
+            <div class="l-fr-container-limit">
+                <div class="l-fr-engine">
+                    <div class="l-fr-display">
+                        <div class="fr-stage-box" id="frStage">
+                            <div class="fr-card fr-pos-left-out" id="frPrev">作品 5</div>
+                            <div class="fr-card fr-pos-right-out" id="frNext">作品 3</div>
+                            <div class="fr-card fr-pos-back" id="frBack">作品 2</div>
+                            <div class="fr-card fr-pos-main" id="frMain">作品 1</div>
+                        </div>
+                        <div class="l-fr-btns">
+                            <button class="fr-btn gray" onclick="goHome()">關閉</button>
+                            <button class="fr-btn blue">前往</button>
+                        </div>
                     </div>
-                    <div class="l-fr-btns">
-                        <button class="fr-btn gray" onclick="goHome()">關閉</button>
-                        <button class="fr-btn blue">前往</button>
-                    </div>
-                </div>
-                <div class="l-fr-sidebar-wrap">
-                    <h3 class="fr-sidebar-title">我的作品</h3>
-                    <div class="l-fr-sidebar-box">
-                        <ul id="frList">
-                            <li class="active" onclick="selFRItem(0)">作品 1</li>
-                            <li onclick="selFRItem(1)">作品 2</li>
-                            <li onclick="selFRItem(2)">作品 3</li>
-                            <li onclick="selFRItem(3)">作品 4</li>
-                            <li onclick="selFRItem(4)">作品 5</li>
-                        </ul>
+                    <div class="l-fr-sidebar-wrap">
+                        <h3 class="fr-sidebar-title">我的作品</h3>
+                        <div class="l-fr-sidebar-box">
+                            <ul id="frList">
+                                <li class="active" onclick="selFRItem(0)">作品 1</li>
+                                <li onclick="selFRItem(1)">作品 2</li>
+                                <li onclick="selFRItem(2)">作品 3</li>
+                                <li onclick="selFRItem(3)">作品 4</li>
+                                <li onclick="selFRItem(4)">作品 5</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
