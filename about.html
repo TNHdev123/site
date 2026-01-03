@@ -21,7 +21,6 @@
                     <h2>我係TNH</h2>
                 </div>
             </header>
-
             <section class="p-sections">
                 <div class="p-box">
                     <h3>一個</h3>
@@ -42,7 +41,6 @@
                     </div>
                 </div>
             </section>
-
             <footer class="p-footer">
                 <h3>關注我</h3>
                 <div class="p-social-bar">
@@ -56,14 +54,8 @@
         <div class="l-panel active" id="lHome">
             <div class="l-home-left">
                 <div class="l-info-stack">
-                    <div class="l-group">
-                        <h3>一個</h3>
-                        <p>創作者、HongKonger、Minecrafter、測試者、設計者、開發者</p>
-                    </div>
-                    <div class="l-group">
-                        <h3>興趣</h3>
-                        <p>Minecraft、創作、懷舊設計、軟件修改</p>
-                    </div>
+                    <div class="l-group"><h3>一個</h3><p>創作者、HongKonger、Minecrafter...</p></div>
+                    <div class="l-group"><h3>興趣</h3><p>Minecraft、創作、懷舊設計...</p></div>
                 </div>
                 <button class="l-btn-action" onclick="goWorks()">瀏覽作品</button>
             </div>
@@ -75,21 +67,20 @@
                 <div class="l-social-bottom">
                     <h3>關注我</h3>
                     <div class="l-icon-row">
-                        <img src="image/ig.png"><img src="image/th.png"><img src="image/yt.png"><img src="image/rd.png"><img src="image/tw.png">
+                        <img src="image/ig.png"><img src="image/th.png"><img src="image/yt.png">
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="l-panel" id="lWorks">
             <div class="l-fr-container-limit">
                 <div class="l-fr-engine">
                     <div class="l-fr-display">
-                        <div class="fr-stage-box" id="frStage">
-                            <div class="fr-card fr-pos-left-out" id="frPrev">作品 5</div>
-                            <div class="fr-card fr-pos-right-out" id="frNext">作品 3</div>
-                            <div class="fr-card fr-pos-back" id="frBack">作品 2</div>
-                            <div class="fr-card fr-pos-main" id="frMain">作品 1</div>
+                        <div class="fr-stage-box">
+                            <div class="fr-card fr-pos-left-out" id="lFrPrev">作品 5</div>
+                            <div class="fr-card fr-pos-right-out" id="lFrNext">作品 3</div>
+                            <div class="fr-card fr-pos-back" id="lFrBack">作品 2</div>
+                            <div class="fr-card fr-pos-main" id="lFrMain">作品 1</div>
                         </div>
                         <div class="l-fr-btns">
                             <button class="fr-btn gray" onclick="goHome()">關閉</button>
@@ -99,7 +90,7 @@
                     <div class="l-fr-sidebar-wrap">
                         <h3 class="fr-sidebar-title">我的作品</h3>
                         <div class="l-fr-sidebar-box">
-                            <ul id="frList">
+                            <ul id="lFrList">
                                 <li class="active" onclick="selFRItem(0)">作品 1</li>
                                 <li onclick="selFRItem(1)">作品 2</li>
                                 <li onclick="selFRItem(2)">作品 3</li>
@@ -110,6 +101,49 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="d-view">
+        <div class="d-container">
+            <aside class="d-left-col">
+                <header class="d-header">
+                    <img src="image/icon.jpeg" class="d-avatar">
+                    <div class="d-name-info"><h1>Hello</h1><h2>我係TNH</h2></div>
+                </header>
+                <div class="d-info-stack">
+                    <div class="d-group"><h3>一個</h3><p>創作者、玩家、HongKonger、Minecrafter、測試者、設計者、開發者</p></div>
+                    <div class="d-group"><h3>興趣</h3><p>Minecraft、創作、懷舊設計、軟件修改</p></div>
+                </div>
+                <footer class="d-footer">
+                    <h3>關於我</h3>
+                    <div class="d-social-row">
+                        <img src="image/ig.png"><img src="image/th.png"><img src="image/yt.png"><img src="image/rd.png"><img src="image/tw.png">
+                    </div>
+                </footer>
+            </aside>
+            <main class="d-right-area">
+                <div class="d-stage-wrapper" id="dStageWrap">
+                    <div class="fr-stage-box">
+                        <div class="fr-card fr-pos-left-out" id="dFrPrev">作品 5</div>
+                        <div class="fr-card fr-pos-right-out" id="dFrNext">作品 3</div>
+                        <div class="fr-card fr-pos-back" id="dFrBack">作品 2</div>
+                        <div class="fr-card fr-pos-main" id="dFrMain">作品 1</div>
+                    </div>
+                </div>
+                <div class="d-menu-wrap">
+                    <h3 class="d-menu-title">我的作品</h3>
+                    <div class="d-menu-box" id="dMenuBox">
+                        <ul id="dFrList">
+                            <li onmouseenter="pcHoverItem(0)">作品 1</li>
+                            <li onmouseenter="pcHoverItem(1)">作品 2</li>
+                            <li onmouseenter="pcHoverItem(2)">作品 3</li>
+                            <li onmouseenter="pcHoverItem(3)">作品 4</li>
+                            <li onmouseenter="pcHoverItem(4)">作品 5</li>
+                        </ul>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
