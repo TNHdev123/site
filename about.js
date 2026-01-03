@@ -1,4 +1,3 @@
-// --- 基礎跳轉 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,7 +7,7 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 雙向輸送帶邏輯 ---
+// --- Front Row 雙向加速軌道邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let currentFrIdx = 0;
 let isAnimating = false;
@@ -16,78 +15,81 @@ let isAnimating = false;
 function selFRItem(targetIdx) {
     if (isAnimating || targetIdx === currentFrIdx) return;
     
-    // --- 藍色選單：立即定位 ---
+    // 規則：藍色高亮即時跳到目標作品
     const listItems = document.querySelectorAll('#frList li');
     listItems.forEach((li, i) => li.classList.toggle('active', i === targetIdx));
 
-    executeTransition(targetIdx);
+    executeAnimation(targetIdx);
 }
 
-function executeTransition(targetIdx) {
+function executeAnimation(targetIdx) {
     if (currentFrIdx === targetIdx) {
         isAnimating = false;
         return;
     }
+    
     isAnimating = true;
+    const isForward = targetIdx > currentFrIdx;
+    const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
+    
+    // 判斷是否需要加速（跨數切換）
+    const isFast = Math.abs(targetIdx - currentFrIdx) > 1;
+    const aniDuration = isFast ? 300 : 600;
 
     const mainCard = document.getElementById('frMain');
     const backCard = document.getElementById('frBack');
-    const nextCard = document.getElementById('frNext');
+    const nextNextCard = document.getElementById('frNextNext');
 
-    const isForward = targetIdx > currentFrIdx;
-    const stepDuration = 250; // 加速切換速度 (原本 600ms)
-
-    // 設定動畫過渡時間
-    [mainCard, backCard, nextCard].forEach(c => c.style.transition = `transform ${stepDuration}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${stepDuration}ms`);
+    // 應用加速 Class
+    if (isFast) {
+        [mainCard, backCard, nextNextCard].forEach(c => c.classList.add('fr-fast-ani'));
+    }
 
     if (isForward) {
         // --- 正向動畫 (1 -> 2) ---
-        mainCard.className = 'fr-card fr-exit-pos'; // 中間去左前
-        backCard.className = 'fr-card fr-main-pos'; // 左後去中間
-        nextCard.className = 'fr-card fr-back-pos'; // 隱藏去左後
-        currentFrIdx++;
+        mainCard.classList.add('fr-exit-forward');
+        backCard.className = 'fr-card fr-main-pos' + (isFast ? ' fr-fast-ani' : '');
+        nextNextCard.className = 'fr-card fr-back-pos' + (isFast ? ' fr-fast-ani' : '');
     } else {
         // --- 反向動畫 (2 -> 1) ---
-        // 想像一下：原本消失左去左前方嘅卡片，「吸」返黎中間
-        mainCard.className = 'fr-card fr-back-pos'; // 中間去左後
-        backCard.className = 'fr-card fr-hidden-pos'; // 左後去隱藏
-        
-        // 隱藏卡片(左前)「吸」回主角
-        nextCard.className = 'fr-card fr-main-pos'; 
-        currentFrIdx--;
+        // 主角縮回右後方
+        mainCard.classList.add('fr-exit-backward');
+        // 本來在右後方的卡片「反彈」回左後方
+        nextNextCard.className = 'fr-card fr-back-pos' + (isFast ? ' fr-fast-ani' : '');
+        // 本來在左後方的卡片由「背景」劃弧線衝回「主角位置」
+        backCard.className = 'fr-card fr-main-pos' + (isFast ? ' fr-fast-ani' : '');
     }
 
     setTimeout(() => {
-        // 瞬間重置內容，準備下一幀
-        [mainCard, backCard, nextCard].forEach(c => c.style.transition = 'none');
+        currentFrIdx = nextStepIdx;
+
+        // 重置並準備下一幀
+        [mainCard, backCard, nextNextCard].forEach(c => {
+            c.style.transition = 'none';
+            c.classList.remove('fr-fast-ani', 'fr-exit-forward', 'fr-exit-backward');
+        });
 
         // 更新文字內容
         mainCard.innerText = frDataArr[currentFrIdx];
-        
-        let backIdx = (currentFrIdx + 1) % frDataArr.length;
-        backCard.innerText = frDataArr[backIdx];
-        
-        let nextIdx = (currentFrIdx + 2) % frDataArr.length;
-        nextCard.innerText = frDataArr[nextIdx];
+        let bIdx = (currentFrIdx + 1) % frDataArr.length;
+        backCard.innerText = frDataArr[bIdx];
+        let nIdx = (bIdx + 1) % frDataArr.length;
+        nextNextCard.innerText = frDataArr[nIdx];
 
-        // 瞬間歸位
+        // 歸位
         mainCard.className = 'fr-card fr-main-pos';
         backCard.className = 'fr-card fr-back-pos';
-        nextCard.className = 'fr-card fr-hidden-pos';
+        nextNextCard.className = 'fr-card fr-hidden-right';
 
-        // 強制瀏覽器重繪
-        mainCard.offsetHeight; 
+        mainCard.offsetHeight; // Trigger reflow
+        [mainCard, backCard, nextNextCard].forEach(c => c.style.transition = '');
 
-        // 遞歸直到抵達目標
-        if (currentFrIdx !== targetIdx) {
-            executeTransition(targetIdx);
-        } else {
-            isAnimating = false;
-        }
-    }, stepDuration);
+        // 繼續下一步直到 targetIdx
+        executeAnimation(targetIdx);
+    }, aniDuration);
 }
 
-// --- 直向 Cover Flow (不變) ---
+// --- 直向 Cover Flow (保持不變) ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
