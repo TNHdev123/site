@@ -1,4 +1,4 @@
-// --- 跳轉控制 (保持不變) ---
+// --- 基礎跳轉 ---
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -8,92 +8,126 @@ function goHome() {
     document.getElementById('lHome').classList.add('active');
 }
 
-// --- Front Row 輸送帶軌道邏輯 ---
+// --- Front Row 進階雙向動畫邏輯 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
-let currentFrIdx = 0;
+
+// 這裡有兩個索引：
+// 1. currentFrMenuIdx: 代表選單藍色亮起的位置 (即刻更新)
+// 2. currentFrVisualIdx: 代表動畫當前顯示到邊張卡 (逐步追趕)
+let currentFrMenuIdx = 0; 
+let currentFrVisualIdx = 0;
 let isAnimating = false;
 
 function selFRItem(targetIdx) {
-    if (isAnimating || targetIdx === currentFrIdx) return;
+    if (isAnimating || targetIdx === currentFrMenuIdx) return;
     
-    // 選單即時反應：直接將目標設為 active，唔等動畫
+    // 1. 立即更新選單顯示 (直接跳轉)
+    currentFrMenuIdx = targetIdx;
     const listItems = document.querySelectorAll('#frList li');
-    listItems.forEach((li, i) => li.classList.toggle('active', i === targetIdx));
-    
-    // 開始執行（或加速執行）動畫
-    runFRAnimation(targetIdx);
+    listItems.forEach((li, i) => li.classList.toggle('active', i === currentFrMenuIdx));
+
+    // 啟動追趕動畫
+    runAnimationSequence(targetIdx);
 }
 
-function runFRAnimation(targetIdx) {
-    if (currentFrIdx === targetIdx) {
+function runAnimationSequence(targetIdx) {
+    // 遞歸終止條件：視覺索引追上了目標索引
+    if (currentFrVisualIdx === targetIdx) {
         isAnimating = false;
         return;
     }
-    
+
     isAnimating = true;
-    const mainCard = document.getElementById('frMain');
-    const backCard = document.getElementById('frBack');
-    const nextNextCard = document.getElementById('frNextNext');
 
-    const isForward = targetIdx > currentFrIdx;
-    const nextStepIdx = isForward ? currentFrIdx + 1 : currentFrIdx - 1;
+    // 判斷方向
+    const isForward = targetIdx > currentFrVisualIdx;
+    
+    // 計算剩餘步數，用來決定速度
+    const remainingSteps = Math.abs(targetIdx - currentFrVisualIdx);
+    
+    // 如果剩餘步數大於1，就加速 (0.2s)，否則用正常速度 (0.6s)
+    const speedMs = remainingSteps > 1 ? 200 : 600;
 
-    // 動畫加速機制：如果跨度大，縮短 transition 時間
-    const distance = Math.abs(targetIdx - currentFrIdx);
-    const animSpeed = distance > 1 ? 250 : 450; // 跨多個時加速到 250ms
-    mainCard.style.transition = `transform ${animSpeed}ms, opacity ${animSpeed}ms`;
-    backCard.style.transition = `transform ${animSpeed}ms, opacity ${animSpeed}ms`;
-    nextNextCard.style.transition = `transform ${animSpeed}ms, opacity ${animSpeed}ms`;
+    // 獲取 DOM 元素
+    const mainCard = document.getElementById('frMain');    // 中間
+    const backCard = document.getElementById('frBack');    // 左後
+    const nextCard = document.getElementById('frNext');    // 右後外 (Feeder)
+    const prevCard = document.getElementById('frPrev');    // 左前外 (Leaver)
+
+    // 設定動畫速度
+    const allCards = [mainCard, backCard, nextCard, prevCard];
+    allCards.forEach(card => {
+        // 使用 CSS transition 屬性動態調整時間
+        card.style.transition = `transform ${speedMs}ms ease, opacity ${speedMs}ms ease`;
+    });
 
     if (isForward) {
-        // --- 正向動畫：1 -> 2 ---
-        mainCard.classList.add('fr-exit-forward');
-        backCard.className = 'fr-card fr-main-pos';
-        nextNextCard.className = 'fr-card fr-back-pos';
+        // === 正向播放 (Forward: 1 -> 2) ===
+        // 動作：Main 離場去 Left-Out，Back 上前做 Main，Next 進入做 Back
+        
+        mainCard.className = 'fr-card fr-pos-left-out'; // 離場
+        backCard.className = 'fr-card fr-pos-main';     // 上位
+        nextCard.className = 'fr-card fr-pos-back';     // 補位
+        
+        // PrevCard 保持在 Left-Out 狀態不動 (或者它本身就在那裡)
+
     } else {
-        // --- 反向動畫：2 -> 1 ---
-        // 主角退回右後方
-        mainCard.classList.add('fr-exit-backward');
-        // 左後方張卡片劃弧線進場變成主角
-        backCard.className = 'fr-card fr-main-pos fr-enter-from-left';
-        // 隱藏卡片補位到左後
-        nextNextCard.className = 'fr-card fr-back-pos';
+        // === 反向播放 (Reverse: 2 -> 1) ===
+        // 動作：Main 退後做 Back，Back 退後做 Next，Prev (Left-Out) 回歸做 Main
+        
+        mainCard.className = 'fr-card fr-pos-back';      // 退後
+        backCard.className = 'fr-card fr-pos-right-out'; // 消失
+        prevCard.className = 'fr-card fr-pos-main';      // 回歸
     }
 
+    // 等待動畫完成後重置 DOM
     setTimeout(() => {
-        // 更新當前索引
-        currentFrIdx = nextStepIdx;
+        // 更新視覺索引
+        currentFrVisualIdx = isForward ? currentFrVisualIdx + 1 : currentFrVisualIdx - 1;
 
-        // 瞬間重置卡片狀態與內容
-        mainCard.style.transition = 'none';
-        backCard.style.transition = 'none';
-        nextNextCard.style.transition = 'none';
+        // 瞬間移除過渡效果以進行無縫交換
+        allCards.forEach(c => c.style.transition = 'none');
 
-        // 重新填入內容
-        mainCard.innerText = frDataArr[currentFrIdx];
-        let bIdx = (currentFrIdx + 1) % frDataArr.length;
-        backCard.innerText = frDataArr[bIdx];
-        let nnIdx = (bIdx + 1) % frDataArr.length;
-        nextNextCard.innerText = frDataArr[nnIdx];
+        // 計算新的內容索引
+        // Helper: 處理負數取模
+        const getIdx = (i) => (i + frDataArr.length) % frDataArr.length;
+        
+        // 根據新的 visualIdx 重新分配文字內容
+        // 在這個邏輯裡，我們假設:
+        // Main 顯示 visualIdx
+        // Back 顯示 visualIdx + 1
+        // Next 顯示 visualIdx + 2
+        // Prev 顯示 visualIdx - 1
+        
+        const idxMain = getIdx(currentFrVisualIdx);
+        const idxBack = getIdx(currentFrVisualIdx + 1);
+        const idxNext = getIdx(currentFrVisualIdx + 2); // 預備下一張
+        const idxPrev = getIdx(currentFrVisualIdx - 1); // 預備上一張
 
-        // 恢復原始位置 Class
-        mainCard.className = 'fr-card fr-main-pos';
-        backCard.className = 'fr-card fr-back-pos';
-        nextNextCard.className = 'fr-card fr-hidden-right';
+        // 重新指派 ID 給對應位置的卡片 (這步是關鍵：將 DOM 角色歸位)
+        // 為了簡單起見，我們不交換 ID，而是交換內容並重置 Class
+        
+        mainCard.innerText = frDataArr[idxMain];
+        backCard.innerText = frDataArr[idxBack];
+        nextCard.innerText = frDataArr[idxNext];
+        prevCard.innerText = frDataArr[idxPrev];
 
-        // 強制重繪
-        mainCard.offsetHeight;
+        // 所有人回到初始 Class 位置
+        mainCard.className = 'fr-card fr-pos-main';
+        backCard.className = 'fr-card fr-pos-back';
+        nextCard.className = 'fr-card fr-pos-right-out'; // 歸位去右邊等待
+        prevCard.className = 'fr-card fr-pos-left-out';  // 歸位去左邊等待
 
-        // 繼續檢查是否到達目標
-        if (currentFrIdx !== targetIdx) {
-            runFRAnimation(targetIdx);
-        } else {
-            isAnimating = false;
-        }
-    }, animSpeed);
+        // 強制重繪 (Reflow) 確保 Class 變更有被瀏覽器消化
+        mainCard.offsetHeight; 
+
+        // 繼續下一步動畫
+        runAnimationSequence(targetIdx);
+
+    }, speedMs);
 }
 
-// --- 直向 Cover Flow (保持隔離) ---
+// --- 直向 Cover Flow (保持不變) ---
 document.addEventListener('DOMContentLoaded', () => {
     const pItems = document.querySelectorAll('.p-item');
     const pEngine = document.getElementById('pEngine');
