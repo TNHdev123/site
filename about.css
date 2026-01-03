@@ -1,4 +1,4 @@
-/* --- 基礎設定與直向 (保持不變) --- */
+/* --- 基礎設定與直向 (保持穩定) --- */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
 body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hidden; }
 .background-overlay { position: fixed; inset: 0; z-index: -1; background: url('image/background.jpg') center/cover; }
@@ -24,40 +24,29 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .p-social-bar { display: flex; gap: 12px; }
 .p-social-bar img { width: 60px; height: 60px; border-radius: 14px; }
 
-/* --- 橫向介面與 FR 橢圓軌道核心 --- */
+/* --- 橫向 FR 雙向軌道核心 --- */
 .l-view { display: none; }
 @media (orientation: landscape) {
-    .p-view { display: none; }
-    .l-view { display: block; width: 100%; height: 100%; overflow-y: auto; }
+    .p-view { display: none; .l-view { display: block; width: 100%; height: 100%; } }
 }
 
 .l-panel { min-height: 100vh; padding: 40px 60px; display: none; align-items: center; }
 .l-panel.active { display: flex; }
 .l-home-left { flex: 1.2; display: flex; flex-direction: column; justify-content: center; }
-.l-group { margin-bottom: 35px; }
-.l-group h3 { font-size: 2rem; color: #fff; margin-bottom: 5px; }
-.l-group p { font-size: 1.3rem; color: #ccc; }
 .l-btn-action { width: 210px; padding: 16px; font-size: 1.5rem; font-weight: bold; background: linear-gradient(#444, #000); border: 1px solid #666; border-radius: 18px; color: white; cursor: pointer; }
 .l-home-right { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: right; }
-.l-profile-top { margin-bottom: 40px; }
 .l-avatar { width: 110px; height: 110px; border-radius: 22px; }
-.l-social-bottom h3 { font-size: 1.7rem; margin-bottom: 12px; }
-.l-icon-row { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
-.l-icon-row img { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
 
-/* --- FR 軌道動畫定義 --- */
-.l-fr-engine { display: flex; width: 100%; height: 100%; gap: 40px; align-items: center; }
-.l-fr-display { flex: 1.5; height: 400px; display: flex; flex-direction: column; }
+/* FR 軌道動畫 */
 .fr-stage-box { flex: 1; position: relative; perspective: 2500px; }
-
 .fr-card { 
     position: absolute; border-radius: 40px; display: flex; 
     align-items: center; justify-content: center; font-size: 2rem; 
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
     backface-visibility: hidden;
 }
 
-/* 位置 1: 中間主角 */
+/* 狀態 A: 中間主位 */
 .fr-main-pos { 
     width: 270px; height: 270px; right: 5%; top: 50%; 
     transform: translateY(-50%) translateZ(0) rotateY(0deg); 
@@ -65,33 +54,36 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
-/* 位置 2: 左後等待 */
+/* 狀態 B: 左後預備位 (前進時的起點，後退時的終點) */
 .fr-back-pos { 
     width: 190px; height: 190px; left: 5%; top: 40%; 
-    transform: translateY(-50%) rotateY(35deg) translateZ(-300px); 
+    transform: translateY(-50%) rotateY(35deg) translateZ(-350px); 
     background: rgba(255,255,255,0.9); color: #000; z-index: 5; opacity: 0.3;
 }
 
-/* 位置 3: 右側隱藏 (等待切入左後) */
-.fr-hidden-right {
-    width: 150px; height: 150px; right: -20%; top: 40%;
-    transform: translateY(-50%) translateZ(-500px);
-    background: rgba(255,255,255,0.5); opacity: 0; z-index: 1;
-}
-
-/* 動作: 主角向左前離場 */
+/* 狀態 C: 左前離場位 (前進時消失嘅位) */
 .fr-exit-left {
     transform: translateY(-50%) translateX(-150%) translateZ(600px) rotateY(-45deg) !important;
     opacity: 0 !important;
 }
 
-/* 選單與按鈕 */
-.l-fr-sidebar-wrap { width: 280px; flex-shrink: 0; }
-.fr-sidebar-title { font-size: 2.2rem; margin-bottom: 15px; }
-.l-fr-sidebar-box { background: rgba(45, 45, 45, 0.85); backdrop-filter: blur(20px); border-radius: 25px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
-#frList { list-style: none; }
-#frList li { padding: 15px 20px; font-size: 1.5rem; color: #fff; opacity: 0.5; cursor: pointer; transition: 0.3s; }
+/* 狀態 D: 右後預備位 (後退時消失嘅位) */
+.fr-exit-right {
+    transform: translateY(-50%) translateX(100%) translateZ(-500px) rotateY(45deg) !important;
+    opacity: 0 !important;
+}
+
+/* 狀態 E: 隱藏等待位 */
+.fr-hidden-pos {
+    width: 150px; height: 150px; right: -20%; top: 40%;
+    transform: translateY(-50%) translateZ(-800px);
+    opacity: 0;
+}
+
+/* 選單藍色 */
+#frList li { padding: 15px 20px; font-size: 1.5rem; color: #fff; opacity: 0.5; cursor: pointer; transition: 0.2s; }
 #frList li.active { opacity: 1; color: #5ac8fa; font-weight: bold; }
+
 .l-fr-btns { display: flex; gap: 15px; margin-top: 25px; }
 .fr-btn { flex: 1; height: 60px; border-radius: 18px; border: none; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; }
 .gray { background: linear-gradient(#555, #111); }
