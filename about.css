@@ -1,62 +1,84 @@
-/* --- 基礎核心、直向、橫向保持不變 (略過以節省空間，請沿用上一版) --- */
+/* --- 全局基礎 --- */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hidden; }
+.background-overlay { position: fixed; inset: 0; z-index: -1; background: url('image/background.jpg') center/cover; }
+.background-overlay::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
 
-/* === 電腦版專屬介面 (1025px+) === */
+/* --- 1. 直向與 2. 橫向手機介面 (省略重複部分，請保留之前版本) --- */
+.p-view { /* ... */ }
+@media (orientation: landscape) and (max-width: 1024px) { /* ... */ }
+
+/* =========================================
+   3. 電腦版介面 (Desktop) - 精細排布
+========================================== */
 @media (min-width: 1025px) {
     .p-view, .l-view { display: none !important; }
-    .d-view { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; position: relative; }
+    .d-view { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; }
 
-    /* 中間「一個」「興趣」資訊 */
+    .d-layout {
+        width: 100%; height: 90vh; display: flex; padding: 0 60px; position: relative;
+    }
+
+    /* 左側側邊欄：打直社交媒體 */
+    .d-sidebar-left {
+        width: 320px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .d-header-top { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+    .d-avatar { width: 70px; height: 70px; border-radius: 16px; }
+    .d-title-block h1 { font-size: 2.2rem; line-height: 1; }
+    .d-title-block h2 { font-size: 1.1rem; color: #888; }
+    
+    .d-about-me h3 { font-size: 1.2rem; color: #5ac8fa; margin-bottom: 8px; }
+    .d-about-me p { font-size: 1rem; color: #bbb; line-height: 1.5; }
+
+    .d-social-vertical { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; }
+    .d-social-item { display: flex; align-items: center; gap: 12px; transition: 0.3s; cursor: pointer; }
+    .d-social-item img { width: 32px; height: 32px; border-radius: 8px; }
+    .d-social-item span { font-size: 0.95rem; color: #888; }
+    .d-social-item:hover { transform: translateX(5px); }
+    .d-social-item:hover span { color: #fff; }
+
+    /* 中間核心資訊 (可隱藏) */
     .d-center-info {
-        position: absolute;
-        left: 50%; top: 50%;
-        transform: translate(-50%, -50%);
-        display: flex; gap: 80px;
-        text-align: center;
-        transition: opacity 0.4s ease, transform 0.4s ease;
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        display: flex; flex-direction: column; gap: 60px; text-align: center;
+        transition: 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         z-index: 5;
     }
-    .d-center-info.hide { opacity: 0; transform: translate(-50%, -45%); pointer-events: none; }
-    .d-info-item h3 { font-size: 1.8rem; color: #888; margin-bottom: 15px; }
-    .d-info-item p { font-size: 1.3rem; color: #fff; max-width: 300px; line-height: 1.6; }
+    .d-center-info.hidden { opacity: 0; transform: translate(-50%, -40%) scale(0.9); pointer-events: none; }
+    .d-info-card h3 { font-size: 2rem; color: #888; margin-bottom: 15px; text-transform: uppercase; }
+    .d-info-card p { font-size: 1.5rem; color: #eee; max-width: 600px; }
 
-    .d-layout { width: 100%; max-width: 1600px; height: 85vh; display: flex; padding: 0 50px; z-index: 10; }
-
-    /* 左側側邊欄 */
-    .d-sidebar-left { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; padding-top: 20px; }
-    .d-profile-header { margin-bottom: 50px; }
-    .d-avatar { width: 100px; height: 100px; border-radius: 22px; margin-bottom: 20px; }
-    .d-title-block h1 { font-size: 3.5rem; line-height: 1; }
-    .d-title-block h2 { font-size: 1.8rem; color: #aaa; margin: 5px 0; }
-    .d-about-text { font-size: 1.1rem; color: #666; margin-top: 10px; }
-
-    /* 社交媒體打直排版 */
-    .d-social-section { display: flex; flex-direction: column; gap: 15px; }
-    .d-social-item { display: flex; align-items: center; gap: 15px; opacity: 0.6; transition: 0.3s; cursor: pointer; }
-    .d-social-item:hover { opacity: 1; transform: translateX(5px); }
-    .d-social-item img { width: 35px; height: 35px; border-radius: 8px; }
-    .d-social-item span { font-size: 1.1rem; color: #ddd; font-weight: 500; }
-
-    /* 右側主內容區 */
-    .d-content-right { flex: 1; position: relative; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+    /* 右側選單與舞台 */
+    .d-content-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; position: relative; }
+    
     .d-stage-area {
-        position: absolute; left: 0; right: 350px; top: 0; bottom: 0;
+        position: absolute; left: 0; right: 300px; top: 0; bottom: 0;
         display: flex; align-items: center; justify-content: center;
         opacity: 0; transform: scale(0.95); transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         pointer-events: none;
     }
     .d-stage-area.active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-    .desktop-stage-size { width: 100%; height: 550px; perspective: 2500px; } /* 提高舞台高度 */
+    .desktop-stage-size { width: 100%; height: 550px; perspective: 2000px; }
 
-    .d-menu-wrapper { width: 320px; z-index: 100; }
-    .d-menu-header { font-size: 2.2rem; margin-bottom: 25px; padding-left: 10px; }
-    #dFrList li { padding: 15px 25px; font-size: 1.5rem; color: #777; transition: 0.3s; border-radius: 15px; margin-bottom: 8px; }
-    #dFrList li.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
+    .d-menu-wrapper { width: 280px; z-index: 100; margin-right: 20px; }
+    .d-menu-header { font-size: 1.8rem; margin-bottom: 20px; color: #5ac8fa; }
+    #dFrList li {
+        padding: 15px 20px; font-size: 1.3rem; color: #666; cursor: pointer; 
+        transition: 0.3s; border-radius: 12px; margin-bottom: 5px;
+    }
+    #dFrList li.active, #dFrList li:hover { color: #fff; background: rgba(255,255,255,0.1); }
 }
 
-/* --- FR 核心動畫樣式 (沿用上一版) --- */
-.fr-card { position: absolute; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s; backface-visibility: hidden; }
-.fr-pos-main { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; background: #fff; color: #000; z-index: 20; opacity: 1; box-shadow: 0 30px 70px rgba(0,0,0,0.6); }
-.fr-pos-back { width: 240px; height: 240px; left: 20%; top: 50%; margin-top: -120px; transform: translateZ(-250px) rotateY(25deg); background: rgba(255,255,255,0.9); z-index: 10; opacity: 0.4; }
-.fr-pos-left-out { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; transform: translateX(-90%) translateZ(400px) rotateY(-30deg); opacity: 0; pointer-events: none; }
+/* --- FR 卡片核心 (通用) --- */
+.fr-card { 
+    position: absolute; border-radius: 40px; display: flex; 
+    align-items: center; justify-content: center; font-size: 2.2rem; 
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
+    backface-visibility: hidden;
+}
+.fr-pos-main { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; background: #fff; color: #000; z-index: 20; opacity: 1; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+.fr-pos-back { width: 240px; height: 240px; left: 20%; top: 50%; margin-top: -120px; transform: translateZ(-250px) rotateY(30deg); background: rgba(255,255,255,0.9); z-index: 10; opacity: 0.4; }
+.fr-pos-left-out { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; transform: translateX(-100%) translateZ(400px) rotateY(-35deg); opacity: 0; }
 .fr-pos-right-out { width: 240px; height: 240px; left: 80%; top: 50%; margin-top: -120px; transform: translateZ(-400px) rotateY(-20deg); opacity: 0; }
