@@ -3,7 +3,6 @@ const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
 let mState = { menuIdx: 0, visualIdx: 0, isAnim: false };
 let dState = { menuIdx: 0, visualIdx: 0, isAnim: false, lastTriggerTime: 0 };
 
-// 電腦版交互
 const dMenuWrapper = document.getElementById('dMenuWrapper');
 const dStageArea = document.getElementById('dStageArea');
 const dCenterInfo = document.getElementById('dCenterInfo');
@@ -26,10 +25,10 @@ if (dMenuWrapper) {
 function desktopHoverItem(targetIdx) {
     if (window.innerWidth <= 1024) return;
     const now = Date.now();
-    // 1秒鎖定機制
+    // 1 秒防 Bug 鎖定
     if (dState.isAnim && (now - dState.lastTriggerTime < 1000)) return; 
-    if (targetIdx === dState.menuIdx) return;
 
+    if (targetIdx === dState.menuIdx) return;
     dState.lastTriggerTime = now;
     dState.menuIdx = targetIdx;
     const items = document.querySelectorAll('#dFrList li');
@@ -37,7 +36,6 @@ function desktopHoverItem(targetIdx) {
     runUniversalAnimation(targetIdx, dState, 'dFrMain', 'dFrBack', 'dFrNext', 'dFrPrev');
 }
 
-// 橫向手機切換
 function goWorks() {
     document.getElementById('lHome').classList.remove('active');
     document.getElementById('lWorks').classList.add('active');
@@ -46,6 +44,7 @@ function goHome() {
     document.getElementById('lWorks').classList.remove('active');
     document.getElementById('lHome').classList.add('active');
 }
+
 function selFRItem(idx) {
     if (mState.isAnim || idx === mState.menuIdx) return;
     mState.menuIdx = idx;
@@ -54,7 +53,6 @@ function selFRItem(idx) {
     runUniversalAnimation(idx, mState, 'frMain', 'frBack', 'frNext', 'frPrev');
 }
 
-// 3D 動畫引擎
 function runUniversalAnimation(targetIdx, stateObj, idMain, idBack, idNext, idPrev) {
     if (stateObj.visualIdx === targetIdx) {
         stateObj.isAnim = false;
@@ -71,8 +69,8 @@ function runUniversalAnimation(targetIdx, stateObj, idMain, idBack, idNext, idPr
         next: document.getElementById(idNext),
         prev: document.getElementById(idPrev)
     };
-
     if (!cards.main || !cards.back) return;
+
     const easing = "cubic-bezier(0.2, 0.8, 0.2, 1)";
     [cards.main, cards.back, cards.next, cards.prev].forEach(c => {
         if(c) c.style.transition = `transform ${speedMs}ms ${easing}, opacity ${speedMs}ms ease`;
@@ -126,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let diff = startX - e.changedTouches[0].clientX;
             if (Math.abs(diff) > 50) {
                 if (diff > 0 && pIdx < pItems.length - 1) pIdx++;
-                else if (diff < 0 && pIdx > 0) pIdx--;
+                else if (diff < -50 && pIdx > 0) pIdx--;
                 updatePortraitCoverflow();
             }
         }, {passive: true});
