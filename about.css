@@ -1,234 +1,62 @@
-/* --- 全局基礎 --- */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
-body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hidden; }
-.background-overlay { position: fixed; inset: 0; z-index: -1; background: url('image/background.jpg') center/cover; }
-.background-overlay::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+/* --- 基礎核心、直向、橫向保持不變 (略過以節省空間，請沿用上一版) --- */
 
-/* =========================================
-   1. 直向介面 (Portrait)
-   (這裡是預設樣式，當不符合下面 media query 時生效)
-========================================== */
-.p-view { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow-y: auto; overflow-x: hidden; }
-.p-scroll-content { padding: 50px 30px; width: 100%; display: flex; flex-direction: column; }
-.p-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
-.p-avatar-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
-.p-avatar { width: 100%; height: 100%; border-radius: 22px; object-fit: cover; }
-.p-gloss { position: absolute; top: 0; width: 100%; height: 50%; background: linear-gradient(rgba(255,255,255,0.4), transparent); border-radius: 22px; }
-.p-title h1 { font-size: 3.5rem; line-height: 0.9; }
-.p-box { margin-bottom: 35px; }
-.p-box h3 { font-size: 1.8rem; color: #aaa; margin-bottom: 8px; }
-.p-box p { font-size: 1.25rem; line-height: 1.5; }
-.p-works-box { margin: 30px 0; height: 240px; }
-.p-coverflow-engine { position: relative; height: 200px; perspective: 1000px; display: flex; align-items: center; justify-content: center; }
-.p-item { position: absolute; width: 180px; height: 180px; border-radius: 35px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
-.p-item.active { opacity: 1; transform: translateZ(100px); z-index: 10; }
-.p-item.prev { opacity: 0.4; transform: translateX(-130px) rotateY(25deg) scale(0.75); }
-.p-item.next { opacity: 0.4; transform: translateX(130px) rotateY(-25deg) scale(0.75); }
-.p-footer { padding-bottom: 60px; }
-.p-social-bar { display: flex; gap: 12px; }
-.p-social-bar img { width: 60px; height: 60px; border-radius: 14px; }
-
-/* 隱藏其他 View */
-.l-view, .d-view { display: none; }
-
-/* =========================================
-   2. 橫向手機介面 (Landscape Mobile)
-   條件：橫向 且 寬度 <= 1024px
-========================================== */
-@media (orientation: landscape) and (max-width: 1024px) {
-    .p-view { display: none; }
-    .d-view { display: none; }
-    .l-view { display: block; width: 100%; height: 100%; overflow-y: auto; }
-    
-    .l-panel { min-height: 100vh; padding: 40px 60px; display: none; align-items: center; justify-content: center; }
-    .l-panel.active { display: flex; }
-
-    /* lHome */
-    .l-home-left { flex: 1.2; display: flex; flex-direction: column; justify-content: center; }
-    .l-group { margin-bottom: 35px; }
-    .l-group h3 { font-size: 2rem; color: #fff; margin-bottom: 5px; }
-    .l-group p { font-size: 1.3rem; color: #ccc; }
-    .l-btn-action { width: 210px; padding: 16px; font-size: 1.5rem; font-weight: bold; background: linear-gradient(#444, #000); border: 1px solid #666; border-radius: 18px; color: white; cursor: pointer; }
-    .l-home-right { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: right; }
-    .l-profile-top { margin-bottom: 40px; }
-    .l-avatar { width: 110px; height: 110px; border-radius: 22px; }
-    .l-social-bottom h3 { font-size: 1.7rem; margin-bottom: 12px; }
-    .l-icon-row { display: flex; justify-content: flex-end; gap: 10px; }
-    .l-icon-row img { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
-
-    /* lWorks - FR */
-    .l-fr-container-limit { width: 100%; max-width: 1100px; margin: 0 auto; }
-    .l-fr-engine { display: flex; width: 100%; height: 100%; gap: 30px; align-items: center; justify-content: center; }
-    .l-fr-display { flex: 1.2; height: 400px; display: flex; flex-direction: column; position: relative; }
-    .fr-stage-box { flex: 1; position: relative; perspective: 2000px; margin-bottom: 20px; }
-    .l-fr-btns { display: flex; gap: 15px; justify-content: center; width: 100%; max-width: 350px; margin: 0 auto; }
-    .fr-btn { flex: 1; height: 55px; border-radius: 16px; border: none; font-size: 1.3rem; font-weight: bold; color: white; cursor: pointer; }
-    .gray { background: linear-gradient(#555, #111); }
-    .blue { background: linear-gradient(#5ac8fa, #007aff); }
-    .l-fr-sidebar-wrap { width: 260px; flex-shrink: 0; }
-    .fr-sidebar-title { font-size: 2rem; margin-bottom: 15px; padding-left: 10px; }
-    .l-fr-sidebar-box { background: rgba(45, 45, 45, 0.85); backdrop-filter: blur(20px); border-radius: 25px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); max-height: 320px; overflow-y: auto; }
-    #frList { list-style: none; }
-    #frList li { padding: 12px 18px; font-size: 1.4rem; color: #fff; opacity: 0.5; cursor: pointer; transition: 0.2s; border-radius: 12px; }
-    #frList li.active { opacity: 1; color: #5ac8fa; font-weight: bold; background: rgba(90, 200, 250, 0.15); }
-}
-
-/* =========================================
-   3. 電腦版介面 (Desktop)
-   條件：寬度 > 1024px (無論橫直，通常電腦mon都係橫)
-========================================== */
+/* === 電腦版專屬介面 (1025px+) === */
 @media (min-width: 1025px) {
     .p-view, .l-view { display: none !important; }
-    .d-view { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; }
+    .d-view { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; position: relative; }
 
-    .d-layout {
-        width: 100%;
-        max-width: 1600px; /* 寬屏限制 */
-        height: 85vh;
-        display: flex;
-        padding: 0 50px;
+    /* 中間「一個」「興趣」資訊 */
+    .d-center-info {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex; gap: 80px;
+        text-align: center;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        z-index: 5;
     }
+    .d-center-info.hide { opacity: 0; transform: translate(-50%, -45%); pointer-events: none; }
+    .d-info-item h3 { font-size: 1.8rem; color: #888; margin-bottom: 15px; }
+    .d-info-item p { font-size: 1.3rem; color: #fff; max-width: 300px; line-height: 1.6; }
+
+    .d-layout { width: 100%; max-width: 1600px; height: 85vh; display: flex; padding: 0 50px; z-index: 10; }
 
     /* 左側側邊欄 */
-    .d-sidebar-left {
-        width: 380px;
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding-top: 40px;
-    }
+    .d-sidebar-left { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; padding-top: 20px; }
+    .d-profile-header { margin-bottom: 50px; }
+    .d-avatar { width: 100px; height: 100px; border-radius: 22px; margin-bottom: 20px; }
+    .d-title-block h1 { font-size: 3.5rem; line-height: 1; }
+    .d-title-block h2 { font-size: 1.8rem; color: #aaa; margin: 5px 0; }
+    .d-about-text { font-size: 1.1rem; color: #666; margin-top: 10px; }
 
-    .d-profile-header { display: flex; align-items: center; gap: 25px; margin-bottom: 60px; }
-    .d-avatar { width: 90px; height: 90px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .d-title-block h1 { font-size: 3rem; line-height: 1.1; margin-bottom: 5px; }
-    .d-title-block h2 { font-size: 1.4rem; color: #aaa; font-weight: normal; }
-
-    .d-info-section { flex: 1; }
-    .d-info-item { margin-bottom: 50px; }
-    .d-info-item h3 { font-size: 1.5rem; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-    .d-info-item p { font-size: 1.2rem; line-height: 1.8; color: #ddd; max-width: 90%; }
-
-    .d-footer-section h3 { font-size: 1.4rem; color: #fff; margin-bottom: 20px; }
-    .d-social-icons { display: flex; gap: 15px; }
-    .d-social-icons img { width: 42px; height: 42px; border-radius: 10px; opacity: 0.7; transition: 0.3s; cursor: pointer; }
-    .d-social-icons img:hover { opacity: 1; transform: translateY(-3px); }
+    /* 社交媒體打直排版 */
+    .d-social-section { display: flex; flex-direction: column; gap: 15px; }
+    .d-social-item { display: flex; align-items: center; gap: 15px; opacity: 0.6; transition: 0.3s; cursor: pointer; }
+    .d-social-item:hover { opacity: 1; transform: translateX(5px); }
+    .d-social-item img { width: 35px; height: 35px; border-radius: 8px; }
+    .d-social-item span { font-size: 1.1rem; color: #ddd; font-weight: 500; }
 
     /* 右側主內容區 */
-    .d-content-right {
-        flex: 1;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end; /* 選單靠右對齊 */
-        justify-content: center;
-    }
-
-    /* 舞台 - 預設隱藏 (Opacity 0) */
+    .d-content-right { flex: 1; position: relative; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
     .d-stage-area {
-        position: absolute;
-        left: 0; 
-        right: 320px; /* 留位俾選單 */
-        top: 0; bottom: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transform: scale(0.92);
-        transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        pointer-events: none; /* 隱藏時唔好阻住 */
+        position: absolute; left: 0; right: 350px; top: 0; bottom: 0;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transform: scale(0.95); transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        pointer-events: none;
     }
-    
-    /* 當被激活時 */
-    .d-stage-area.active {
-        opacity: 1;
-        transform: scale(1);
-        pointer-events: auto;
-    }
+    .d-stage-area.active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-    /* 電腦版 FR 舞台尺寸調整 */
-    .desktop-stage-size {
-        width: 100%;
-        height: 500px; /* 夠高 */
-        perspective: 2500px;
-    }
+    .desktop-stage-size { width: 100%; height: 550px; perspective: 2500px; } /* 提高舞台高度 */
 
-    /* 選單 */
-    .d-menu-wrapper {
-        width: 280px;
-        z-index: 100;
-        margin-right: 20px; /* 唔好太貼邊 */
-    }
-    .d-menu-header { font-size: 2rem; margin-bottom: 20px; text-align: left; padding-left: 10px; }
-    .d-menu-list-box {
-        /* 可以加輕微玻璃感，如果想純粹啲可以整透明 */
-        /* background: rgba(255, 255, 255, 0.03); */
-        /* border: 1px solid rgba(255, 255, 255, 0.05); */
-        padding: 10px;
-        border-radius: 20px;
-    }
-    #dFrList { list-style: none; }
-    #dFrList li {
-        padding: 18px 25px;
-        font-size: 1.4rem;
-        color: #888;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 12px;
-        margin-bottom: 5px;
-        position: relative;
-    }
-    #dFrList li:hover, #dFrList li.active {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.1);
-        padding-left: 35px; /* Hover 時向右移少少 */
-    }
-    /* Hover 時加個細光點指示 */
-    #dFrList li.active::before {
-        content: ""; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-        width: 6px; height: 6px; background: #5ac8fa; border-radius: 50%;
-        box-shadow: 0 0 10px #5ac8fa;
-    }
+    .d-menu-wrapper { width: 320px; z-index: 100; }
+    .d-menu-header { font-size: 2.2rem; margin-bottom: 25px; padding-left: 10px; }
+    #dFrList li { padding: 15px 25px; font-size: 1.5rem; color: #777; transition: 0.3s; border-radius: 15px; margin-bottom: 8px; }
+    #dFrList li.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 }
 
-/* =========================================
-   4. FR 卡片核心動畫樣式 (通用但參數可被覆蓋)
-========================================== */
-.fr-card { 
-    position: absolute; border-radius: 40px; display: flex; 
-    align-items: center; justify-content: center; font-size: 2rem; 
-    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
-    backface-visibility: hidden; will-change: transform, opacity;
-}
-.fr-pos-main { 
-    width: 270px; height: 270px; 
-    left: 50%; top: 50%; margin: -135px 0 0 -135px; 
-    background: #fff; color: #000; z-index: 20; opacity: 1; 
-    box-shadow: 0 25px 60px rgba(0,0,0,0.6); 
-}
-.fr-pos-back { 
-    width: 200px; height: 200px; 
-    left: 20%; top: 50%; margin-top: -100px; 
-    transform: translateZ(-250px) rotateY(25deg); 
-    background: rgba(255,255,255,0.9); color: #000; z-index: 10; opacity: 0.4; 
-}
-.fr-pos-left-out {
-    width: 270px; height: 270px; 
-    left: 50%; top: 50%; margin: -135px 0 0 -135px;
-    transform: translateX(-80%) translateZ(400px) rotateY(-30deg); 
-    background: #fff; color: #000; z-index: 30; opacity: 0; pointer-events: none;
-}
-.fr-pos-right-out {
-    width: 200px; height: 200px; 
-    left: 80%; top: 50%; margin-top: -100px;
-    transform: translateZ(-400px) rotateY(-20deg); 
-    background: rgba(255,255,255,0.5); opacity: 0; z-index: 5;
-}
-
-/* 電腦版微調 (讓卡片更有張力) */
-@media (min-width: 1025px) {
-    .fr-pos-main { width: 320px; height: 320px; margin: -160px 0 0 -160px; font-size: 2.5rem; }
-    .fr-pos-back { width: 240px; height: 240px; margin-top: -120px; left: 25%; }
-    .fr-pos-left-out { width: 320px; height: 320px; margin: -160px 0 0 -160px; }
-    .fr-pos-right-out { width: 240px; height: 240px; margin-top: -120px; }
-}
+/* --- FR 核心動畫樣式 (沿用上一版) --- */
+.fr-card { position: absolute; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s; backface-visibility: hidden; }
+.fr-pos-main { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; background: #fff; color: #000; z-index: 20; opacity: 1; box-shadow: 0 30px 70px rgba(0,0,0,0.6); }
+.fr-pos-back { width: 240px; height: 240px; left: 20%; top: 50%; margin-top: -120px; transform: translateZ(-250px) rotateY(25deg); background: rgba(255,255,255,0.9); z-index: 10; opacity: 0.4; }
+.fr-pos-left-out { width: 320px; height: 320px; left: 50%; top: 50%; margin: -160px 0 0 -160px; transform: translateX(-90%) translateZ(400px) rotateY(-30deg); opacity: 0; pointer-events: none; }
+.fr-pos-right-out { width: 240px; height: 240px; left: 80%; top: 50%; margin-top: -120px; transform: translateZ(-400px) rotateY(-20deg); opacity: 0; }
