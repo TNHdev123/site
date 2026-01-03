@@ -1,7 +1,9 @@
-// --- 共用數據 ---
+// --- 數據 ---
 const frDataArr = ["作品 1", "作品 2", "作品 3", "作品 4", "作品 5"];
+
+// --- 狀態控制 ---
 let mState = { menuIdx: 0, visualIdx: 0, isAnim: false };
-let dState = { menuIdx: 0, visualIdx: 0, isAnim: false, lastAnimTime: 0 };
+let dState = { menuIdx: 0, visualIdx: 0, isAnim: false, lastTriggerTime: 0 };
 
 // --- 電腦版交互 ---
 const dMenuWrapper = document.getElementById('dMenuWrapper');
@@ -12,93 +14,105 @@ if (dMenuWrapper) {
     dMenuWrapper.addEventListener('mouseenter', () => {
         if (window.innerWidth > 1024) {
             dStageArea.classList.add('active');
-            dCenterInfo.classList.add('hide'); // 隱藏中間資訊
+            dCenterInfo.classList.add('hidden');
         }
     });
     dMenuWrapper.addEventListener('mouseleave', () => {
         if (window.innerWidth > 1024) {
             dStageArea.classList.remove('active');
-            dCenterInfo.classList.remove('hide'); // 顯示中間資訊
+            dCenterInfo.classList.remove('hidden');
         }
     });
 }
 
 function desktopHoverItem(targetIdx) {
     if (window.innerWidth <= 1024) return;
-    
+
+    // --- 核心防 Bug 機制：限制切換頻率 ---
     const now = Date.now();
-    // 如果距離上次動畫播放唔夠 200ms，而且重有好多步要行，就強制進入「快速切換」模式
-    const isSpamming = (now - dState.lastAnimTime < 200);
-    
+    // 如果距離上次觸發唔夠 1 秒且仲喺動畫中，就忽略今次觸發
+    if (dState.isAnim && (now - dState.lastTriggerTime < 1000)) {
+        return; 
+    }
+
+    if (targetIdx === dState.menuIdx) return;
+
+    dState.lastTriggerTime = now;
     dState.menuIdx = targetIdx;
+
+    // 更新選單 UI
     const items = document.querySelectorAll('#dFrList li');
     items.forEach((li, i) => li.classList.toggle('active', i === targetIdx));
 
-    if (targetIdx !== dState.visualIdx) {
-        dState.lastAnimTime = now;
-        runUniversalAnimation(targetIdx, dState, 'dFrMain', 'dFrBack', 'dFrNext', 'dFrPrev');
-    }
+    // 啟動動畫
+    runUniversalAnimation(targetIdx, dState, 'dFrMain', 'dFrBack', 'dFrNext', 'dFrPrev');
 }
 
-// --- 通用動畫引擎 (核心修正：Bug 防禦) ---
+// --- 通用動畫引擎 (具備鎖定功能) ---
 function runUniversalAnimation(targetIdx, stateObj, idMain, idBack, idNext, idPrev) {
-    // 1. 如果已經到達目標，停止
     if (stateObj.visualIdx === targetIdx) {
         stateObj.isAnim = false;
         return;
     }
 
-    // 2. 如果正在動畫中，等下一幀再檢查 (防止無限 Stack)
-    if (stateObj.isAnim) return;
-
     stateObj.isAnim = true;
     const isForward = targetIdx > stateObj.visualIdx;
-    const dist = Math.abs(targetIdx - stateObj.visualIdx);
     
-    // 3. 動畫速度調整
-    // 如果係電腦版且正在快速滑動，將速度極速化 (100ms) 以追上滑鼠
-    const speedMs = dist > 1 ? 120 : 450;
+    // 電腦版如果係快速跳轉，會稍微加速動畫到 300ms，單步則 600ms
+    const speedMs = Math.abs(targetIdx - stateObj.visualIdx) > 1 ? 300 : 600;
 
-    const mainCard = document.getElementById(idMain);
-    const backCard = document.getElementById(idBack);
-    const nextCard = document.getElementById(idNext);
-    const prevCard = document.getElementById(idPrev);
-    const all = [mainCard, backCard, nextCard, prevCard];
+    const cards = {
+        main: document.getElementById(idMain),
+        back: document.getElementById(idBack),
+        next: document.getElementById(idNext),
+        prev: document.getElementById(idPrev)
+    };
 
-    all.forEach(c => c.style.transition = `transform ${speedMs}ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity ${speedMs}ms ease`);
+    Object.values(cards).forEach(c => {
+        if(c) c.style.transition = `transform ${speedMs}ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity ${speedMs}ms ease`;
+    });
 
     if (isForward) {
-        mainCard.className = 'fr-card fr-pos-left-out';
-        backCard.className = 'fr-card fr-pos-main';
-        nextCard.className = 'fr-card fr-pos-back';
+        cards.main.className = 'fr-card fr-pos-left-out';
+        cards.back.className = 'fr-card fr-pos-main';
+        cards.next.className = 'fr-card fr-pos-back';
     } else {
-        mainCard.className = 'fr-card fr-pos-back';
-        backCard.className = 'fr-card fr-pos-right-out';
-        prevCard.className = 'fr-card fr-pos-main';
+        cards.main.className = 'fr-card fr-pos-back';
+        cards.back.className = 'fr-card fr-pos-right-out';
+        cards.prev.className = 'fr-card fr-pos-main';
     }
 
     setTimeout(() => {
         stateObj.visualIdx = isForward ? stateObj.visualIdx + 1 : stateObj.visualIdx - 1;
-        
-        all.forEach(c => c.style.transition = 'none');
-        
+
+        // 重置位置
+        Object.values(cards).forEach(c => { if(c) c.style.transition = 'none'; });
+
         const getIdx = (i) => (i + frDataArr.length) % frDataArr.length;
-        mainCard.innerText = frDataArr[getIdx(stateObj.visualIdx)];
-        backCard.innerText = frDataArr[getIdx(stateObj.visualIdx + 1)];
-        nextCard.innerText = frDataArr[getIdx(stateObj.visualIdx + 2)];
-        prevCard.innerText = frDataArr[getIdx(stateObj.visualIdx - 1)];
+        cards.main.innerText = frDataArr[getIdx(stateObj.visualIdx)];
+        cards.back.innerText = frDataArr[getIdx(stateObj.visualIdx + 1)];
+        cards.next.innerText = frDataArr[getIdx(stateObj.visualIdx + 2)];
+        cards.prev.innerText = frDataArr[getIdx(stateObj.visualIdx - 1)];
 
-        mainCard.className = 'fr-card fr-pos-main';
-        backCard.className = 'fr-card fr-pos-back';
-        nextCard.className = 'fr-card fr-pos-right-out';
-        prevCard.className = 'fr-card fr-pos-left-out';
+        cards.main.className = 'fr-card fr-pos-main';
+        cards.back.className = 'fr-card fr-pos-back';
+        cards.next.className = 'fr-card fr-pos-right-out';
+        cards.prev.className = 'fr-card fr-pos-left-out';
 
-        void mainCard.offsetWidth; // 強制重繪
-        stateObj.isAnim = false;
+        void cards.main.offsetWidth; // 強制重繪
 
-        // 遞歸調用，直到 visualIdx 等於 targetIdx
+        // 遞歸直到對齊 targetIdx
         runUniversalAnimation(targetIdx, stateObj, idMain, idBack, idNext, idPrev);
     }, speedMs);
 }
 
-// (保留 selFRItem 同 DOMContentLoaded 內容)
+// --- 手機/平板功能 (保持原樣) ---
+function selFRItem(idx) {
+    if (mState.isAnim || idx === mState.menuIdx) return;
+    mState.menuIdx = idx;
+    const items = document.querySelectorAll('#frList li');
+    items.forEach((li, i) => li.classList.toggle('active', i === idx));
+    runUniversalAnimation(idx, mState, 'frMain', 'frBack', 'frNext', 'frPrev');
+}
+
+// (直向 CoverFlow DOMContentLoaded 部分略，請保留之前版本)
