@@ -25,14 +25,17 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .p-social-bar { display: flex; gap: 12px; }
 .p-social-bar img { width: 60px; height: 60px; border-radius: 14px; }
 
-/* --- 橫向介面 (基本結構) --- */
+/* --- 橫向介面 (佈局優化) --- */
 .l-view { display: none; }
 @media (orientation: landscape) {
     .p-view { display: none; }
     .l-view { display: block; width: 100%; height: 100%; overflow-y: auto; }
 }
-.l-panel { min-height: 100vh; padding: 40px 60px; display: none; align-items: center; }
+
+.l-panel { min-height: 100vh; padding: 40px 60px; display: none; align-items: center; justify-content: center; }
 .l-panel.active { display: flex; }
+
+/* lHome 維持原狀 */
 .l-home-left { flex: 1.2; display: flex; flex-direction: column; justify-content: center; }
 .l-group { margin-bottom: 35px; }
 .l-group h3 { font-size: 2rem; color: #fff; margin-bottom: 5px; }
@@ -45,58 +48,133 @@ body { background: #000; color: white; height: 100vh; width: 100vw; overflow: hi
 .l-icon-row { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
 .l-icon-row img { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
 
-/* --- FR 橢圓軌道系統核心 --- */
-.l-fr-engine { display: flex; width: 100%; height: 100%; gap: 40px; align-items: center; }
-.l-fr-display { flex: 1.5; height: 400px; display: flex; flex-direction: column; }
-.fr-stage-box { flex: 1; position: relative; perspective: 2500px; }
+/* --- FR 介面重構 (緊湊化) --- */
+/* 新增：限制最大寬度容器，防止大螢幕過度拉伸 */
+.l-fr-container-limit {
+    width: 100%;
+    max-width: 1100px; /* 限制整體寬度 */
+    margin: 0 auto;
+}
 
-/* 通用卡片設定 */
+.l-fr-engine { 
+    display: flex; 
+    width: 100%; 
+    height: 100%; 
+    gap: 30px; /* 縮小間距 */
+    align-items: center; 
+    justify-content: center; /* 居中對齊 */
+}
+
+/* 左側動畫區：壓縮寬度佔比 */
+.l-fr-display { 
+    flex: 1.2; /* 由 1.5 減至 1.2 */
+    height: 400px; 
+    display: flex; 
+    flex-direction: column; 
+    position: relative;
+}
+
+.fr-stage-box { 
+    flex: 1; 
+    position: relative; 
+    perspective: 2000px; /* 稍微減低透視，令畫面更緊湊 */
+    margin-bottom: 20px;
+}
+
+/* 卡片通用：使用更順滑的貝茲曲線 */
 .fr-card { 
     position: absolute; border-radius: 40px; display: flex; 
     align-items: center; justify-content: center; font-size: 2rem; 
-    /* 預設速度，JS會動態修改這個值來實現加速 */
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease; /* iOS式順滑 */
     backface-visibility: hidden;
+    will-change: transform, opacity; /* 效能優化 */
 }
 
 /* 位置 1: 中間 (Main) */
 .fr-pos-main { 
-    width: 270px; height: 270px; right: 5%; top: 50%; 
-    transform: translateY(-50%) translateZ(0) rotateY(0deg); 
+    width: 270px; height: 270px; 
+    left: 50%; top: 50%; /* 改用中心定位 */
+    margin-left: -135px; margin-top: -135px; /* 居中修正 */
+    transform: translateZ(0) rotateY(0deg); 
     background: #fff; color: #000; z-index: 20; opacity: 1;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
 }
 
-/* 位置 2: 左後 (Back) - 等待上前 */
+/* 位置 2: 左後 (Back) - 貼近中間 */
 .fr-pos-back { 
-    width: 190px; height: 190px; left: 5%; top: 40%; 
-    transform: translateY(-50%) rotateY(35deg) translateZ(-300px); 
-    background: rgba(255,255,255,0.9); color: #000; z-index: 5; opacity: 0.3;
+    width: 200px; height: 200px; 
+    left: 20%; top: 50%; 
+    margin-top: -100px; /* 垂直居中 */
+    transform: translateZ(-200px) rotateY(25deg); 
+    background: rgba(255,255,255,0.9); color: #000; z-index: 10; opacity: 0.4;
 }
 
-/* 位置 3: 左前外 (Left Out) - 已離場 / 反向準備進場 */
+/* 位置 3: 左前外 (Left Out) - 減少飛行距離防止穿崩 */
 .fr-pos-left-out {
-    width: 270px; height: 270px; right: 5%; top: 50%; /* 座標起始點同 Main */
-    transform: translateY(-50%) translateX(-150%) translateZ(600px) rotateY(-45deg);
+    width: 270px; height: 270px; 
+    left: 50%; top: 50%;
+    margin-left: -135px; margin-top: -135px;
+    /* 縮短 translateX 距離，配合 fade out */
+    transform: translateX(-80%) translateZ(400px) rotateY(-30deg); 
     background: #fff; color: #000; z-index: 30; opacity: 0;
     pointer-events: none;
 }
 
-/* 位置 4: 右後外 (Right Out) - 準備進場 / 反向已離場 */
+/* 位置 4: 右後外 (Right Out) - 藏喺後面 */
 .fr-pos-right-out {
-    width: 190px; height: 190px; left: 5%; top: 40%;
-    transform: translateY(-50%) translateZ(-500px) translateX(50%); /* 藏在深處 */
-    background: rgba(255,255,255,0.5); opacity: 0; z-index: 1;
+    width: 200px; height: 200px; 
+    left: 80%; top: 50%; /* 由極右改為 80% */
+    margin-top: -100px;
+    transform: translateZ(-400px) rotateY(-20deg); 
+    background: rgba(255,255,255,0.5); opacity: 0; z-index: 5;
 }
 
-/* 選單與按鈕 */
-.l-fr-sidebar-wrap { width: 280px; flex-shrink: 0; }
-.fr-sidebar-title { font-size: 2.2rem; margin-bottom: 15px; }
-.l-fr-sidebar-box { background: rgba(45, 45, 45, 0.85); backdrop-filter: blur(20px); border-radius: 25px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
-#frList { list-style: none; }
-#frList li { padding: 15px 20px; font-size: 1.5rem; color: #fff; opacity: 0.5; cursor: pointer; transition: 0.3s; }
-#frList li.active { opacity: 1; color: #5ac8fa; font-weight: bold; }
-.l-fr-btns { display: flex; gap: 15px; margin-top: 25px; }
-.fr-btn { flex: 1; height: 60px; border-radius: 18px; border: none; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; }
+/* 按鈕區：壓縮寬度 */
+.l-fr-btns { 
+    display: flex; 
+    gap: 15px; 
+    justify-content: center; /* 按鈕居中 */
+    width: 100%;
+    max-width: 350px; /* 限制按鈕區最大寬度 */
+    margin: 0 auto; /* 居中 */
+}
+.fr-btn { 
+    flex: 1; 
+    height: 55px; /* 稍微縮矮 */
+    border-radius: 16px; 
+    border: none; 
+    font-size: 1.3rem; 
+    font-weight: bold; 
+    color: white; 
+    cursor: pointer; 
+}
 .gray { background: linear-gradient(#555, #111); }
 .blue { background: linear-gradient(#5ac8fa, #007aff); }
+
+/* 右側選單區：拉近與限制 */
+.l-fr-sidebar-wrap { 
+    width: 260px; /* 稍微縮窄 */
+    flex-shrink: 0; 
+}
+.fr-sidebar-title { font-size: 2rem; margin-bottom: 15px; padding-left: 10px; }
+.l-fr-sidebar-box { 
+    background: rgba(45, 45, 45, 0.85); 
+    backdrop-filter: blur(20px); 
+    border-radius: 25px; 
+    padding: 8px; /* 減少內距 */
+    border: 1px solid rgba(255,255,255,0.1); 
+    max-height: 320px;
+    overflow-y: auto;
+}
+#frList { list-style: none; }
+#frList li { 
+    padding: 12px 18px; 
+    font-size: 1.4rem; 
+    color: #fff; 
+    opacity: 0.5; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    border-radius: 12px;
+}
+#frList li:hover { background: rgba(255,255,255,0.1); opacity: 0.8; }
+#frList li.active { opacity: 1; color: #5ac8fa; font-weight: bold; background: rgba(90, 200, 250, 0.15); }
