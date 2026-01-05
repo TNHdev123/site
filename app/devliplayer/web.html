@@ -74,7 +74,7 @@
         </div>
         <label class="btn">
             SELECT MUSIC
-            <input type="file" id="f" accept="audio/*" style="display:none">
+            <input type="file" id="f" style="display:none">
         </label>
         <button class="cache-btn" style="margin-top: 15px;" onclick="clearAppCache()">CLEAR APP DATA</button>
     </div>
@@ -113,7 +113,7 @@
 
 <script>
     // PWA & Manifest
-    const swCode = `const C='dp-vfinal-2';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./icon.png']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+    const swCode = `const C='dp-vfinal-3';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./icon.png']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
     const blob = new Blob([swCode], {type: 'application/javascript'});
     if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(blob));
     const manifest = { name: "Devil Player", short_name: "Devil Player", start_url: "./", display: "standalone", background_color: "#000", theme_color: "#ff3e3e", icons: [{ src: "./icon.png", sizes: "512x512", type: "image/png" }] };
@@ -142,7 +142,7 @@
     document.getElementById('f').onchange = (e) => {
         const file = e.target.files[0]; if (!file) return;
         setLoading(true);
-        // 直接跳轉介面
+        // 上傳後立即跳轉介面
         switchPage('play', 0);
         player.src = URL.createObjectURL(file);
         document.getElementById('title').innerText = file.name;
