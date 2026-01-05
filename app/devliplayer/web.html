@@ -6,7 +6,6 @@
     <title>Devil Player</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Devil Player">
     <link rel="apple-touch-icon" href="./icon.png">
     <link rel="manifest" id="pwa-manifest">
 
@@ -17,43 +16,40 @@
         
         .page { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
         .page.active { display: flex; }
-        .card { background: rgba(0, 0, 0, 0.7); padding: 30px; border-radius: 35px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); width: 80%; max-width: 280px; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
         
-        /* 封面置中 */
-        #cover { width: 220px; height: 220px; border-radius: 20px; object-fit: cover; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; }
-
-        /* Settings */
-        .setting-content { width: 100%; text-align: center; }
-        .setting-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; color: white; }
-        #theme-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .color-dot.active { border-color: white; transform: scale(1.15); }
-        .auto-btn, .cache-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; width: 100%; margin-bottom: 8px; }
-        .auto-btn.active { background: var(--accent); border-color: var(--accent); }
-        .btn { display: block; background: var(--accent); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.85rem; color: white; text-transform: uppercase; }
-
-        /* 底部控制區域 */
-        .controls-wrapper { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; z-index: 100; }
+        /* Settings Card - Only in Settings */
+        .settings-card { background: rgba(0, 0, 0, 0.7); padding: 25px; border-radius: 35px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); width: 80%; max-width: 280px; text-align: center; pointer-events: auto; }
         
-        /* 標題放在 Tab 上方 */
-        #title { width: 100%; text-align: center; font-size: 0.8rem; font-weight: bold; color: white; opacity: 0.9; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        /* Play Page Visuals */
+        #cover { width: 65vw; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; display: none; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.8)); pointer-events: auto; z-index: 11; transition: transform 0.05s linear; }
+        
+        /* Title above Tabs */
+        #title { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; font-size: 0.9rem; font-weight: bold; color: white; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 100; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
 
-        .bottom-row { display: flex; align-items: center; gap: 10px; }
+        /* Controls */
+        .bottom-controls { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; display: flex; align-items: center; gap: 10px; z-index: 101; }
         .play-bar { flex: 1; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; height: 50px; display: flex; align-items: center; padding: 0 15px; pointer-events: auto; }
         .mini-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; margin-right: 10px; position: relative; }
         .mini-btn svg { width: 24px; height: 24px; fill: currentColor; }
         #seek-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; }
         #seek-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
-        /* Spinner */
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-left-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; position: absolute; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Tabs */
         .tab-bar { position: relative; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 5px; display: flex; gap: 5px; pointer-events: auto; }
         .tab-item { position: relative; width: 45px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; color: rgba(255,255,255,0.3); }
         .tab-item.active { color: var(--accent); }
         .tab-indicator { position: absolute; top: 5px; left: 5px; width: 45px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 20px; z-index: 1; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); }
+
+        /* Settings UI */
+        .setting-title { font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; color: white; opacity: 0.6; }
+        #theme-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+        .color-dot.active { border-color: white; transform: scale(1.1); }
+        .auto-btn, .cache-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; width: 100%; margin-bottom: 8px; }
+        .auto-btn.active { background: var(--accent); }
+        .btn { display: block; background: var(--accent); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.85rem; color: white; }
         
         audio { display: none; }
     </style>
@@ -62,83 +58,67 @@
 
 <canvas id="canvas"></canvas>
 
+<div id="title">NO TRACK SELECTED</div>
+
 <div id="page-settings" class="page active">
-    <div class="card">
-        <div class="setting-content">
-            <div class="setting-title">VISUAL SETTINGS</div>
-            <button id="auto-mode" class="auto-btn active" onclick="toggleAuto()">AUTO COVER COLOR</button>
-            <div id="theme-selector">
-                <div class="color-dot" data-color="#ff0000" style="background:#ff0000" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#ff8c00" style="background:#ff8c00" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#ffff00" style="background:#ffff00" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#00ff00" style="background:#00ff00" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#00ffff" style="background:#00ffff" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#0000ff" style="background:#0000ff" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#4b0082" style="background:#4b0082" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#8a2be2" style="background:#8a2be2" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#8b4513" style="background:#8b4513" onclick="selectThemeColor(this)"></div>
-                <div class="color-dot" data-color="#808080" style="background:#808080" onclick="selectThemeColor(this)"></div>
-            </div>
-            <label class="btn">
-                SELECT MUSIC
-                <input type="file" id="f" style="display:none">
-            </label>
-            <button class="cache-btn" style="margin-top: 15px;" onclick="clearAppCache()">CLEAR APP DATA</button>
+    <div class="settings-card">
+        <div class="setting-title">VISUALS</div>
+        <button id="auto-mode" class="auto-btn active" onclick="toggleAuto()">AUTO COVER COLOR</button>
+        <div id="theme-selector">
+            <div class="color-dot" data-color="#ff0000" style="background:#ff0000" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#ff8c00" style="background:#ff8c00" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#ffff00" style="background:#ffff00" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#00ff00" style="background:#00ff00" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#00ffff" style="background:#00ffff" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#0000ff" style="background:#0000ff" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#8a2be2" style="background:#8a2be2" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#808080" style="background:#808080" onclick="selectThemeColor(this)"></div>
         </div>
+        <label class="btn">
+            SELECT MUSIC
+            <input type="file" id="f" style="display:none">
+        </label>
+        <button class="cache-btn" style="margin-top: 15px;" onclick="clearAppCache()">CLEAR APP DATA</button>
     </div>
 </div>
 
 <div id="page-play" class="page">
-    <div class="card">
-        <img id="cover" onclick="handlePlayPause()">
-    </div>
+    <img id="cover" onclick="handlePlayPause()">
 </div>
 
-<div class="controls-wrapper">
-    <div id="title">READY TO PLAY</div>
-    
-    <div class="bottom-row">
-        <div class="play-bar">
-            <div class="mini-btn" onclick="handlePlayPause()">
-                <svg id="svg-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <svg id="svg-pause" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                <div id="loading-spinner" class="spinner" style="display:none;"></div>
-            </div>
-            <input type="range" id="seek-slider" value="0" max="1000">
+<div class="bottom-controls">
+    <div class="play-bar">
+        <div class="mini-btn" onclick="handlePlayPause()">
+            <svg id="svg-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="svg-pause" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <div id="loading-spinner" class="spinner" style="display:none;"></div>
         </div>
-        <div class="tab-bar">
-            <div class="tab-indicator" id="indicator" style="transform: translateX(50px);"></div>
-            <div class="tab-item" onclick="switchPage('play', 0)">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-            </div>
-            <div class="tab-item active" onclick="switchPage('settings', 1)">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-            </div>
+        <input type="range" id="seek-slider" value="0" max="1000">
+    </div>
+    <div class="tab-bar">
+        <div class="tab-indicator" id="indicator" style="transform: translateX(50px);"></div>
+        <div class="tab-item" onclick="switchPage('play', 0)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+        <div class="tab-item active" onclick="switchPage('settings', 1)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </div>
     </div>
 </div>
 
-<audio id="player" crossorigin="anonymous"></audio>
-
+<audio id="player"></audio>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
 <script>
-    const swCode = `const C='dp-vfinal-4';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./icon.png']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
-    const blob = new Blob([swCode], {type: 'application/javascript'});
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(blob));
-    const manifest = { name: "Devil Player", short_name: "Devil Player", start_url: "./", display: "standalone", background_color: "#000", theme_color: "#ff3e3e", icons: [{ src: "./icon.png", sizes: "512x512", type: "image/png" }] };
-    document.getElementById('pwa-manifest').setAttribute('href', 'data:application/json;base64,' + btoa(JSON.stringify(manifest)));
-
     const cvs = document.getElementById('canvas'), ctx = cvs.getContext('2d');
-    const player = document.getElementById('player'), cover = document.getElementById('cover');
+    const player = document.getElementById('player'), cover = document.getElementById('cover'), titleTag = document.getElementById('title');
     const sPlay = document.getElementById('svg-play'), sPause = document.getElementById('svg-pause'), spinner = document.getElementById('loading-spinner');
     const seek = document.getElementById('seek-slider'), indicator = document.getElementById('indicator'), autoBtn = document.getElementById('auto-mode');
 
     let aCtx, analyser, data, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false;
 
     function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resize); resize();
 
     function switchPage(p, i) {
         document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
@@ -152,25 +132,26 @@
         const file = e.target.files[0]; if (!file) return;
         setLoading(true);
         switchPage('play', 0);
-        
-        const url = URL.createObjectURL(file);
-        player.src = url;
-        document.getElementById('title').innerText = file.name;
-        
-        // 異步讀取標籤，不阻塞播放
-        window.jsmediatags.read(file, {
-            onSuccess: (tag) => {
-                const { picture, title } = tag.tags;
-                if (title) document.getElementById('title').innerText = title;
-                if (picture) {
-                    const { data, format } = picture;
-                    let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
-                    cover.src = `data:${format};base64,${window.btoa(b64)}`;
-                }
-            },
-            onError: () => { console.log("No tags found"); }
-        });
+        player.src = URL.createObjectURL(file);
+        titleTag.innerText = file.name;
 
+        // 優先開始播放，唔好等 Tag 讀完
+        player.oncanplay = () => { 
+            setLoading(false); player.play().catch(()=>{}); 
+            // 同步讀取標籤
+            window.jsmediatags.read(file, {
+                onSuccess: (tag) => {
+                    const { picture, title: tName } = tag.tags;
+                    if (tName) titleTag.innerText = tName;
+                    if (picture) {
+                        const { data, format } = picture;
+                        let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
+                        cover.src = `data:${format};base64,${window.btoa(b64)}`;
+                    }
+                },
+                onError: () => { setLoading(false); }
+            });
+        };
         if (!aCtx) initAudio();
     };
 
@@ -180,17 +161,13 @@
         sPause.style.display = val ? 'none' : (player.paused ? 'none' : 'block');
     }
 
-    // 當數據開始加載就取消轉圈，提升反應速度
-    player.onplay = () => { setLoading(false); sPlay.style.display = 'none'; sPause.style.display = 'block'; };
-    player.onplaying = () => setLoading(false);
+    player.onplay = () => { sPlay.style.display = 'none'; sPause.style.display = 'block'; };
     player.onpause = () => { sPlay.style.display = 'block'; sPause.style.display = 'none'; };
-    player.oncanplay = () => { player.play().catch(()=>{}); };
 
-    function handlePlayPause() { if (spinner.style.display === 'block' && !player.src) return; player.paused ? player.play() : player.pause(); }
+    function handlePlayPause() { if (spinner.style.display === 'block') return; player.paused ? player.play() : player.pause(); }
 
     seek.oninput = () => { isSeeking = true; };
     seek.onchange = () => { player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
-
     window.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); handlePlayPause(); } };
 
     function selectThemeColor(el) {
@@ -244,17 +221,11 @@
             g.addColorStop(0, p.color); g.addColorStop(1, 'transparent');
             ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
         });
-        if (cover.style.display === 'block') cover.style.transform = `scale(${1 + (b / 1200)})`;
+        // 增強封面跳動幅度：scale(1 + b/600) 比之前的 1200 跳得更大
+        if (cover.style.display === 'block') cover.style.transform = `scale(${1 + (b / 600)})`;
     }
 
-    async function clearAppCache() { 
-        if ('caches' in window) { 
-            const ns = await caches.keys(); 
-            await Promise.all(ns.map(n => caches.delete(n))); 
-            alert("App cache cleared. Reloading...");
-            location.reload(); 
-        } 
-    }
+    async function clearAppCache() { if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); location.reload(); } }
     window.onclick = () => { if(aCtx) aCtx.resume(); };
 </script>
 </body>
