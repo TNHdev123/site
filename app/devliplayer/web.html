@@ -10,22 +10,19 @@
     <link rel="manifest" id="pwa-manifest">
 
     <style>
-        :root { --accent: #ff3e3e; --bg: #000; }
+        :root { --accent: #ff3e3e; --bg: #000; --deep-red: #8b0000; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, sans-serif; }
         #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: blur(30px) saturate(2.2) contrast(1.4); }
         
         .page { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
         .page.active { display: flex; }
         
-        /* Settings Card */
         .settings-card { background: rgba(0, 0, 0, 0.7); padding: 25px; border-radius: 35px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); width: 80%; max-width: 280px; text-align: center; pointer-events: auto; }
         .setting-title { font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; color: white; opacity: 0.6; }
         
-        /* Cover & Visuals */
         #cover { width: 65vw; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; display: none; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.8)); pointer-events: auto; z-index: 11; transition: transform 0.05s linear, opacity 0.3s ease; opacity: 0; }
         #title { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; font-size: 0.9rem; font-weight: bold; color: white; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 100; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
 
-        /* Controls */
         .bottom-controls { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; display: flex; align-items: center; gap: 10px; z-index: 101; }
         .play-bar { flex: 1; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; height: 50px; display: flex; align-items: center; padding: 0 15px; pointer-events: auto; }
         .mini-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; margin-right: 10px; position: relative; }
@@ -33,17 +30,15 @@
         #seek-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; }
         #seek-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
-        /* Spinner */
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-left-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; position: absolute; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Tabs */
         .tab-bar { position: relative; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 5px; display: flex; gap: 5px; pointer-events: auto; }
         .tab-item { position: relative; width: 45px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; color: rgba(255,255,255,0.3); }
-        .tab-item.active { color: var(--accent); }
-        .tab-indicator { position: absolute; top: 5px; left: 5px; width: 45px; height: 40px; background: rgba(0, 0, 0, 0.5); border-radius: 20px; z-index: 1; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); }
+        .tab-item.active { color: #fff; }
+        /* 更改：深紅色波波 */
+        .tab-indicator { position: absolute; top: 5px; left: 5px; width: 45px; height: 40px; background: var(--deep-red); border-radius: 20px; z-index: 1; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); box-shadow: 0 0 15px rgba(139, 0, 0, 0.4); }
 
-        /* Settings UI Elements */
         #theme-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
         .color-dot.active { border-color: white; transform: scale(1.1); }
@@ -73,10 +68,7 @@
             <div class="color-dot" data-color="#8a2be2" style="background:#8a2be2" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#808080" style="background:#808080" onclick="selectThemeColor(this)"></div>
         </div>
-        <label class="btn">
-            SELECT MUSIC
-            <input type="file" id="f" style="display:none">
-        </label>
+        <label class="btn">SELECT MUSIC<input type="file" id="f" style="display:none"></label>
         <button class="cache-btn" style="margin-top: 15px;" onclick="clearAppCache()">CLEAR APP DATA</button>
     </div>
 </div>
@@ -115,7 +107,7 @@
     const seek = document.getElementById('seek-slider'), indicator = document.getElementById('indicator'), autoBtn = document.getElementById('auto-mode');
 
     let aCtx, analyser, data, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false;
-    let loadTimeout; // 用於強制解鎖的時間鎖
+    let loadTimeout;
 
     function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
@@ -130,63 +122,66 @@
 
     function setLoading(val) {
         if(val) {
-            spinner.style.display = 'block';
-            sPlay.style.display = 'none';
-            sPause.style.display = 'none';
+            spinner.style.display = 'block'; sPlay.style.display = 'none'; sPause.style.display = 'none';
         } else {
             spinner.style.display = 'none';
-            if(!player.paused && player.duration > 0) {
-                sPlay.style.display = 'none';
-                sPause.style.display = 'block';
-            } else {
-                sPlay.style.display = 'block';
-                sPause.style.display = 'none';
-            }
+            if(!player.paused && player.duration > 0) { sPlay.style.display = 'none'; sPause.style.display = 'block'; }
+            else { sPlay.style.display = 'block'; sPause.style.display = 'none'; }
+        }
+    }
+
+    // 支援背景播放：更新 Media Session
+    function updateMediaMetadata(title, art) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title || 'Devil Player',
+                artist: 'Devil Music',
+                artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
+            });
+            navigator.mediaSession.setActionHandler('play', () => player.play());
+            navigator.mediaSession.setActionHandler('pause', () => player.pause());
         }
     }
 
     document.getElementById('f').onchange = (e) => {
         const file = e.target.files[0]; if (!file) return;
-        
-        // 1. UI 重置
         setLoading(true);
         switchPage('play', 0);
         player.src = URL.createObjectURL(file);
         titleTag.innerText = file.name;
         cover.style.opacity = "0";
 
-        // 2. 安全機制：0.5秒後無條件強制解除 Loading 狀態
         clearTimeout(loadTimeout);
         loadTimeout = setTimeout(() => { setLoading(false); }, 500);
 
-        // 3. 播放邏輯
         player.load();
-        player.play().then(() => setLoading(false)).catch((err) => { console.log("Play failed/blocked:", err); setLoading(false); });
+        player.play().then(() => {
+            setLoading(false);
+            updateMediaMetadata(file.name);
+        }).catch(() => setLoading(false));
 
-        // 4. 讀取標籤 (延遲執行)
         setTimeout(() => {
-            if(isAuto) {
-                try {
-                    window.jsmediatags.read(file, {
-                        onSuccess: (tag) => {
-                            const { picture, title: tName } = tag.tags;
-                            if (tName) titleTag.innerText = tName;
-                            if (picture) {
-                                const { data, format } = picture;
-                                let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
-                                cover.src = `data:${format};base64,${window.btoa(b64)}`;
-                            }
-                        },
-                        onError: (e) => console.log("Tag error:", e)
-                    });
-                } catch(e) { console.log(e); }
-            }
-        }, 100);
+            window.jsmediatags.read(file, {
+                onSuccess: (tag) => {
+                    const { picture, title: tName } = tag.tags;
+                    if (tName) {
+                        titleTag.innerText = tName;
+                        updateMediaMetadata(tName, cover.src);
+                    }
+                    if (isAuto && picture) {
+                        const { data, format } = picture;
+                        let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
+                        const finalArt = `data:${format};base64,${window.btoa(b64)}`;
+                        cover.src = finalArt;
+                        updateMediaMetadata(tName || file.name, finalArt);
+                    }
+                }
+            });
+        }, 150);
 
         if (!aCtx) initAudio();
     };
 
-    player.onerror = () => { setLoading(false); };
     player.onpause = () => { if(spinner.style.display === 'none') { sPlay.style.display = 'block'; sPause.style.display = 'none'; } };
     player.onplay = () => { if(spinner.style.display === 'none') { sPlay.style.display = 'none'; sPause.style.display = 'block'; } };
 
@@ -194,10 +189,6 @@
         if (spinner.style.display === 'block') setLoading(false);
         player.paused ? player.play() : player.pause(); 
     }
-
-    seek.oninput = () => { isSeeking = true; };
-    seek.onchange = () => { player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
-    window.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); handlePlayPause(); } };
 
     function selectThemeColor(el) {
         isAuto = false; autoBtn.classList.remove('active');
@@ -217,7 +208,6 @@
         cover.style.display = 'block';
         setTimeout(() => cover.style.opacity = "1", 50);
         if (!isAuto) return;
-        
         const tC = document.createElement('canvas'), tX = tC.getContext('2d');
         tC.width = tC.height = 50; tX.drawImage(cover, 0, 0, 50, 50);
         const d = tX.getImageData(0,0,50,50).data;
@@ -236,14 +226,12 @@
     }
 
     function initAudio() {
-        try {
-            aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = aCtx.createAnalyser(); 
-            const s = aCtx.createMediaElementSource(player);
-            s.connect(analyser); analyser.connect(aCtx.destination);
-            analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
-            loop();
-        } catch(e) { console.log(e); }
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = aCtx.createAnalyser(); 
+        const s = aCtx.createMediaElementSource(player);
+        s.connect(analyser); analyser.connect(aCtx.destination);
+        analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
+        loop();
     }
 
     function loop() {
@@ -268,6 +256,8 @@
 
     async function clearAppCache() { if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); location.reload(); } }
     window.onclick = () => { if(aCtx) aCtx.resume(); };
+    seek.oninput = () => { isSeeking = true; };
+    seek.onchange = () => { player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
 </script>
 </body>
 </html>
