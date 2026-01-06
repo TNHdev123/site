@@ -13,42 +13,32 @@
         :root { --accent: #ff3e3e; --bg: #000; --deep-red: #8b0000; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, sans-serif; }
         #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: blur(30px) saturate(2.2) contrast(1.4); }
-        
         .page { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
         .page.active { display: flex; }
-        
         .settings-card { background: rgba(0, 0, 0, 0.7); padding: 25px; border-radius: 35px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); width: 85%; max-width: 300px; text-align: center; pointer-events: auto; max-height: 80vh; overflow-y: auto; }
         .setting-title { font-size: 0.75rem; font-weight: bold; margin: 15px 0 10px; color: white; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
-        
         #cover { width: 65vw; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; display: none; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.8)); pointer-events: auto; z-index: 11; transition: transform 0.05s linear, opacity 0.3s ease; opacity: 0; }
         #title { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; font-size: 0.9rem; font-weight: bold; color: white; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 100; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-
         .bottom-controls { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; display: flex; align-items: center; gap: 10px; z-index: 101; }
         .play-bar { flex: 1; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; height: 50px; display: flex; align-items: center; padding: 0 15px; pointer-events: auto; }
         .mini-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; margin-right: 10px; position: relative; }
         .mini-btn svg { width: 24px; height: 24px; fill: currentColor; }
         #seek-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; }
         #seek-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
-
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-left-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; position: absolute; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .tab-bar { position: relative; background: rgba(45, 45, 45, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 5px; display: flex; gap: 5px; pointer-events: auto; }
         .tab-item { position: relative; width: 45px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; color: rgba(255,255,255,0.3); }
         .tab-item.active { color: #fff; }
         .tab-indicator { position: absolute; top: 5px; left: 5px; width: 45px; height: 40px; background: var(--deep-red); border-radius: 20px; z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(139, 0, 0, 0.5); }
-
         #theme-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 5px; }
         .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
         .color-dot:active { transform: scale(0.9); }
         .color-dot.active { border-color: white; transform: scale(1.15); }
-        
         .opt-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 12px; margin-bottom: 8px; color: white; font-size: 0.8rem; pointer-events: auto; cursor: pointer; }
         .opt-row.active { border-left: 3px solid var(--accent); background: rgba(255,255,255,0.1); }
-        
         .btn { display: block; background: var(--accent); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.85rem; color: white; text-align: center; margin-top: 10px; }
         .cache-btn { background: none; border: none; color: white; opacity: 0.4; font-size: 0.7rem; margin-top: 20px; text-decoration: underline; cursor: pointer; width: 100%; }
-        
         audio { display: none; }
     </style>
 </head>
@@ -61,16 +51,13 @@
     <div class="settings-card">
         <div class="setting-title">Functions</div>
         <div class="opt-row active" id="opt-loop" onclick="toggleLoop()">
-            <span>LOOP PLAYBACK</span>
-            <span id="loop-status">ON</span>
+            <span>LOOP PLAYBACK</span><span id="loop-status">ON</span>
         </div>
         <div class="opt-row active" id="opt-cover" onclick="toggleCoverVisible()">
-            <span>SHOW COVER ART</span>
-            <span id="cover-status">ON</span>
+            <span>SHOW COVER ART</span><span id="cover-status">ON</span>
         </div>
         <div class="opt-row active" id="opt-auto" onclick="toggleAuto()">
-            <span>AUTO COVER COLOR</span>
-            <span id="auto-status">ON</span>
+            <span>AUTO COVER COLOR</span><span id="auto-status">ON</span>
         </div>
 
         <div class="setting-title">Custom Palette</div>
@@ -95,9 +82,7 @@
     </div>
 </div>
 
-<div id="page-play" class="page">
-    <img id="cover" onclick="handlePlayPause()">
-</div>
+<div id="page-play" class="page"><img id="cover" onclick="handlePlayPause()"></div>
 
 <div class="bottom-controls">
     <div class="play-bar">
@@ -110,12 +95,8 @@
     </div>
     <div class="tab-bar">
         <div class="tab-indicator" id="indicator" style="transform: translateX(50px);"></div>
-        <div class="tab-item" onclick="switchPage('play', 0)">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-        </div>
-        <div class="tab-item active" onclick="switchPage('settings', 1)">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-        </div>
+        <div class="tab-item" onclick="switchPage('play', 0)"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+        <div class="tab-item active" onclick="switchPage('settings', 1)"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div>
     </div>
 </div>
 
@@ -127,11 +108,8 @@
     const player = document.getElementById('player'), cover = document.getElementById('cover'), titleTag = document.getElementById('title');
     const sPlay = document.getElementById('svg-play'), sPause = document.getElementById('svg-pause'), spinner = document.getElementById('loading-spinner');
     const seek = document.getElementById('seek-slider'), indicator = document.getElementById('indicator');
+    let aCtx, analyser, data, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false, showCover = true, db;
 
-    let aCtx, analyser, data, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false, showCover = true;
-    let loadTimeout, db;
-
-    // --- IndexedDB 初始化 (devilLatest) ---
     const dbReq = indexedDB.open("devilLatestDB", 1);
     dbReq.onupgradeneeded = (e) => { e.target.result.createObjectStore("devilLatest"); };
     dbReq.onsuccess = (e) => { db = e.target.result; loadAppState(); };
@@ -147,44 +125,23 @@
         indicator.style.transform = `translateX(${i * 50}px)`;
     }
 
-    // --- 偏好設定同步與儲存 ---
     function saveSettings() {
-        localStorage.setItem('devilSettings', JSON.stringify({
-            loop: player.loop,
-            showCover: showCover,
-            isAuto: isAuto,
-            selectedColors: selectedColors
-        }));
+        localStorage.setItem('devilSettings', JSON.stringify({ loop: player.loop, showCover, isAuto, selectedColors }));
     }
 
     function loadAppState() {
-        // 1. 載入偏好設定
         const s = JSON.parse(localStorage.getItem('devilSettings'));
         if (s) {
-            player.loop = s.loop !== undefined ? s.loop : true;
-            showCover = s.showCover !== undefined ? s.showCover : true;
-            isAuto = s.isAuto !== undefined ? s.isAuto : true;
-            selectedColors = s.selectedColors || [];
-            
-            // UI 同步
+            player.loop = s.loop ?? true; showCover = s.showCover ?? true; isAuto = s.isAuto ?? true; selectedColors = s.selectedColors || [];
             document.getElementById('opt-loop').classList.toggle('active', player.loop);
             document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF";
             document.getElementById('opt-cover').classList.toggle('active', showCover);
             document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF";
             document.getElementById('opt-auto').classList.toggle('active', isAuto);
             document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF";
-            
-            if (!isAuto) {
-                document.querySelectorAll('.color-dot').forEach(d => {
-                    if (selectedColors.includes(d.getAttribute('data-color'))) d.classList.add('active');
-                });
-            }
-        } else {
-            // 首次運行，預設 Loop ON
-            player.loop = true;
-        }
+            if (!isAuto) document.querySelectorAll('.color-dot').forEach(d => { if (selectedColors.includes(d.getAttribute('data-color'))) d.classList.add('active'); });
+        } else { player.loop = true; }
 
-        // 2. 載入最後播放音檔 (IndexedDB)
         const tx = db.transaction("devilLatest", "readonly");
         const req = tx.objectStore("devilLatest").get("latestTrack");
         req.onsuccess = () => {
@@ -199,101 +156,48 @@
         updateParticles();
     }
 
-    function toggleLoop() {
-        player.loop = !player.loop;
-        document.getElementById('opt-loop').classList.toggle('active', player.loop);
-        document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF";
-        saveSettings();
-    }
-
-    function toggleCoverVisible() {
-        showCover = !showCover;
-        document.getElementById('opt-cover').classList.toggle('active', showCover);
-        document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF";
-        cover.style.display = (showCover && cover.src) ? 'block' : 'none';
-        saveSettings();
-    }
-
-    function toggleAuto() { 
-        isAuto = !isAuto;
-        document.getElementById('opt-auto').classList.toggle('active', isAuto);
-        document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF";
-        if (isAuto) {
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); 
-            selectedColors = []; 
-        }
-        updateParticles();
-        saveSettings();
-    }
+    function toggleLoop() { player.loop = !player.loop; document.getElementById('opt-loop').classList.toggle('active', player.loop); document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF"; saveSettings(); }
+    function toggleCoverVisible() { showCover = !showCover; document.getElementById('opt-cover').classList.toggle('active', showCover); document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF"; cover.style.display = (showCover && cover.src) ? 'block' : 'none'; saveSettings(); }
+    function toggleAuto() { isAuto = !isAuto; document.getElementById('opt-auto').classList.toggle('active', isAuto); document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF"; if (isAuto) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); selectedColors = []; } updateParticles(); saveSettings(); }
 
     function setLoading(val) {
-        if(val) {
-            spinner.style.display = 'block'; sPlay.style.display = 'none'; sPause.style.display = 'none';
-        } else {
-            spinner.style.display = 'none';
-            if(!player.paused && player.duration > 0) { sPlay.style.display = 'none'; sPause.style.display = 'block'; }
-            else { sPlay.style.display = 'block'; sPause.style.display = 'none'; }
-        }
-    }
-
-    function updateMediaMetadata(title, art) {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: title || 'Devil Player',
-                artist: 'Devil Music',
-                artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
-            });
-            navigator.mediaSession.setActionHandler('play', () => player.play());
-            navigator.mediaSession.setActionHandler('pause', () => player.pause());
-        }
+        spinner.style.display = val ? 'block' : 'none';
+        if(!val) { sPlay.style.display = player.paused ? 'block' : 'none'; sPause.style.display = player.paused ? 'none' : 'block'; }
+        else { sPlay.style.display = 'none'; sPause.style.display = 'none'; }
     }
 
     document.getElementById('f').onchange = (e) => {
         const file = e.target.files[0]; if (!file) return;
-        setLoading(true);
-        switchPage('play', 0);
+        setLoading(true); switchPage('play', 0);
+        if (player.src) URL.revokeObjectURL(player.src);
         player.src = URL.createObjectURL(file);
-        titleTag.innerText = file.name;
-        cover.style.opacity = "0";
-
-        // 儲存音檔到 IndexedDB
+        titleTag.innerText = file.name; cover.style.opacity = "0";
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
-
-        clearTimeout(loadTimeout);
-        loadTimeout = setTimeout(() => { setLoading(false); }, 500);
-
-        player.load();
-        player.play().then(() => { setLoading(false); updateMediaMetadata(file.name); }).catch(() => setLoading(false));
-
+        player.load(); player.play().then(() => { setLoading(false); }).catch(() => setLoading(false));
         processFileMetadata(file);
-        if (!aCtx) initAudio();
     };
 
     function processFileMetadata(file) {
-        setTimeout(() => {
-            window.jsmediatags.read(file, {
-                onSuccess: (tag) => {
-                    const { picture, title: tName } = tag.tags;
-                    if (tName) { titleTag.innerText = tName; updateMediaMetadata(tName, cover.src); }
-                    if (picture) {
-                        const { data, format } = picture;
-                        let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
-                        const finalArt = `data:${format};base64,${window.btoa(b64)}`;
-                        cover.src = finalArt;
-                        if(isAuto) updateMediaMetadata(tName || file.name, finalArt);
-                    }
+        window.jsmediatags.read(file, {
+            onSuccess: (tag) => {
+                const { picture, title: tName } = tag.tags;
+                if (tName) titleTag.innerText = tName;
+                if (picture) {
+                    const { data, format } = picture;
+                    let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
+                    cover.src = `data:${format};base64,${window.btoa(b64)}`;
                 }
-            });
-        }, 150);
+            }
+        });
     }
 
-    player.onpause = () => { if(spinner.style.display === 'none') { sPlay.style.display = 'block'; sPause.style.display = 'none'; } };
-    player.onplay = () => { if(spinner.style.display === 'none') { sPlay.style.display = 'none'; sPause.style.display = 'block'; } };
+    player.onpause = () => { sPlay.style.display = 'block'; sPause.style.display = 'none'; if(aCtx) aCtx.suspend(); };
+    player.onplay = () => { sPlay.style.display = 'none'; sPause.style.display = 'block'; if(!aCtx) initAudio(); else aCtx.resume(); };
 
     function handlePlayPause() { 
-        if (spinner.style.display === 'block') setLoading(false);
-        player.paused ? player.play() : player.pause(); 
+        if (!player.src) return;
+        if (player.paused) player.play(); else player.pause(); 
     }
 
     function selectThemeColor(el) {
@@ -301,22 +205,16 @@
         const c = el.getAttribute('data-color');
         if (el.classList.contains('active')) { el.classList.remove('active'); selectedColors = selectedColors.filter(x => x !== c); }
         else if (selectedColors.length < 13) { el.classList.add('active'); selectedColors.push(c); }
-        updateParticles();
-        saveSettings();
+        updateParticles(); saveSettings();
     }
     
     cover.onload = () => {
         if (showCover) cover.style.display = 'block';
         setTimeout(() => cover.style.opacity = "1", 50);
         if (!isAuto) return;
-        const tC = document.createElement('canvas'), tX = tC.getContext('2d');
-        tC.width = tC.height = 50; tX.drawImage(cover, 0, 0, 50, 50);
-        const d = tX.getImageData(0,0,50,50).data;
-        albumPalette = [];
-        for (let i = 0; i < 10; i++) {
-            let idx = Math.floor(Math.random() * (d.length / 4)) * 4;
-            albumPalette.push(`rgb(${d[idx]},${d[idx+1]},${d[idx+2]})`);
-        }
+        const tC = document.createElement('canvas'), tX = tC.getContext('2d'); tC.width = tC.height = 50; tX.drawImage(cover, 0, 0, 50, 50);
+        const d = tX.getImageData(0,0,50,50).data; albumPalette = [];
+        for (let i = 0; i < 10; i++) { let idx = Math.floor(Math.random() * (d.length / 4)) * 4; albumPalette.push(`rgb(${d[idx]},${d[idx+1]},${d[idx+2]})`); }
         updateParticles();
     };
 
@@ -327,9 +225,9 @@
     }
 
     function initAudio() {
+        if (aCtx) return;
         aCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = aCtx.createAnalyser(); 
-        const s = aCtx.createMediaElementSource(player);
+        analyser = aCtx.createAnalyser(); const s = aCtx.createMediaElementSource(player);
         s.connect(analyser); analyser.connect(aCtx.destination);
         analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
         loop();
@@ -337,42 +235,30 @@
 
     function loop() {
         requestAnimationFrame(loop);
-        if (!isSeeking && player.duration) seek.value = (player.currentTime / player.duration) * 1000;
+        if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
         let b = 0, m = 0;
-        if (analyser && !player.paused) { analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; }
-        ctx.clearRect(0, 0, cvs.width, cvs.height);
-        ctx.globalCompositeOperation = 'screen';
+        if (analyser && aCtx && aCtx.state === 'running') { analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; }
+        ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
         particles.forEach((p, i) => {
-            let e = (i % 2 === 0) ? b : m;
-            p.angle += p.speed + (e / 1500);
+            let e = (i % 2 === 0) ? b : m; p.angle += p.speed + (e / 1500);
             p.distance += ((e / 255) * (Math.min(cvs.width, cvs.height)*0.25) - p.distance) * 0.15;
             let x = (cvs.width/2) + Math.cos(p.angle) * p.distance, y = (cvs.height/2) + Math.sin(p.angle) * p.distance;
-            let sz = p.baseSize + (e * 0.6);
-            const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
-            g.addColorStop(0, p.color); g.addColorStop(1, 'transparent');
-            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
+            let sz = p.baseSize + (e * 0.6); const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
+            g.addColorStop(0, p.color); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
         });
         if (showCover && cover.style.display === 'block') cover.style.transform = `scale(${1 + (b / 600)})`;
     }
 
     async function clearAppCache() { 
-        if (confirm('Clear all settings, IndexedDB music and cache?')) { 
-            // 1. 清除 LocalStorage
-            localStorage.removeItem('devilSettings');
-            // 2. 清除 IndexedDB
-            const delReq = indexedDB.deleteDatabase("devilLatestDB");
-            // 3. 清除 Cache Storage (devilApp)
-            if ('caches' in window) { 
-                const ns = await caches.keys(); 
-                await Promise.all(ns.map(n => caches.delete(n))); 
-            }
+        if (confirm('Clear all settings, music and cache?')) { 
+            localStorage.clear(); indexedDB.deleteDatabase("devilLatestDB");
+            if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); }
             location.reload(); 
         } 
     }
     
-    window.onclick = () => { if(aCtx) aCtx.resume(); };
     seek.oninput = () => { isSeeking = true; };
-    seek.onchange = () => { player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
+    seek.onchange = () => { if(player.duration) player.currentTime = (seek.value / 1000) * player.duration; setTimeout(() => isSeeking = false, 50); };
 </script>
 </body>
 </html>
