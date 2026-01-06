@@ -100,7 +100,7 @@
     </div>
 </div>
 
-<audio id="player"></audio>
+<audio id="player" crossorigin="anonymous"></audio>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
 <script>
@@ -218,7 +218,7 @@
 
     player.onplay = () => { 
         sPlay.style.display = 'none'; sPause.style.display = 'block'; 
-        if (aCtx) { if (aCtx.state === 'suspended') aCtx.resume(); } else { initAudio(); }
+        if (!aCtx) { initAudio(); } else if (aCtx.state === 'suspended') { aCtx.resume(); }
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"; 
     };
 
@@ -260,16 +260,17 @@
             s.connect(analyser); analyser.connect(aCtx.destination);
             analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
             loop();
-        } catch(e) { console.log("Init Failed", e); }
+        } catch(e) { console.warn("AudioContext init failed", e); }
     }
 
     function loop() {
         requestAnimationFrame(loop);
         if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
         let b = 0, m = 0;
-        // 注意：這裡只在 aCtx 運行時獲取頻譜，確保不阻塞主音軌
+        // 核心邏輯：僅當播放且 aCtx 運行時才抓取數據，但 loop 本身不中斷
         if (analyser && !player.paused && aCtx && aCtx.state === 'running') { 
-            analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; 
+            analyser.getByteFrequencyData(data); 
+            b = data[2]; m = data[15]; 
         }
         ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
         particles.forEach((p, i) => {
