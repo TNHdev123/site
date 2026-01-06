@@ -156,6 +156,21 @@
         updateParticles();
     }
 
+    // --- Background Media Session Logic ---
+    function updateBackgroundInfo(title, art) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title || titleTag.innerText,
+                artist: 'Devil Player',
+                artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
+            });
+            navigator.mediaSession.setActionHandler('play', () => player.play());
+            navigator.mediaSession.setActionHandler('pause', () => player.pause());
+            navigator.mediaSession.setActionHandler('seekbackward', (details) => { player.currentTime = Math.max(player.currentTime - (details.seekOffset || 10), 0); });
+            navigator.mediaSession.setActionHandler('seekforward', (details) => { player.currentTime = Math.min(player.currentTime + (details.seekOffset || 10), player.duration); });
+        }
+    }
+
     function toggleLoop() { player.loop = !player.loop; document.getElementById('opt-loop').classList.toggle('active', player.loop); document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF"; saveSettings(); }
     function toggleCoverVisible() { showCover = !showCover; document.getElementById('opt-cover').classList.toggle('active', showCover); document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF"; cover.style.display = (showCover && cover.src) ? 'block' : 'none'; saveSettings(); }
     function toggleAuto() { isAuto = !isAuto; document.getElementById('opt-auto').classList.toggle('active', isAuto); document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF"; if (isAuto) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); selectedColors = []; } updateParticles(); saveSettings(); }
@@ -174,7 +189,7 @@
         titleTag.innerText = file.name; cover.style.opacity = "0";
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
-        player.load(); player.play().then(() => { setLoading(false); }).catch(() => setLoading(false));
+        player.load(); player.play().then(() => { setLoading(false); if (!aCtx) initAudio(); }).catch(() => setLoading(false));
         processFileMetadata(file);
     };
 
@@ -182,22 +197,27 @@
         window.jsmediatags.read(file, {
             onSuccess: (tag) => {
                 const { picture, title: tName } = tag.tags;
-                if (tName) titleTag.innerText = tName;
+                const finalTitle = tName || (file.name ? file.name.replace(/\.[^/.]+$/, "") : "Unknown");
+                titleTag.innerText = finalTitle;
+                let finalArt = null;
                 if (picture) {
                     const { data, format } = picture;
                     let b64 = ""; for (let i = 0; i < data.length; i++) b64 += String.fromCharCode(data[i]);
-                    cover.src = `data:${format};base64,${window.btoa(b64)}`;
+                    finalArt = `data:${format};base64,${window.btoa(b64)}`;
+                    cover.src = finalArt;
                 }
-            }
+                updateBackgroundInfo(finalTitle, finalArt);
+            },
+            onError: () => updateBackgroundInfo(titleTag.innerText, null)
         });
     }
 
-    player.onpause = () => { sPlay.style.display = 'block'; sPause.style.display = 'none'; if(aCtx) aCtx.suspend(); };
-    player.onplay = () => { sPlay.style.display = 'none'; sPause.style.display = 'block'; if(!aCtx) initAudio(); else aCtx.resume(); };
+    player.onpause = () => { sPlay.style.display = 'block'; sPause.style.display = 'none'; if(aCtx) aCtx.suspend(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"; };
+    player.onplay = () => { sPlay.style.display = 'none'; sPause.style.display = 'block'; if(aCtx) aCtx.resume(); else initAudio(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"; };
 
     function handlePlayPause() { 
         if (!player.src) return;
-        if (player.paused) player.play(); else player.pause(); 
+        if (player.paused) { player.play(); } else { player.pause(); } 
     }
 
     function selectThemeColor(el) {
@@ -237,7 +257,7 @@
         requestAnimationFrame(loop);
         if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
         let b = 0, m = 0;
-        if (analyser && aCtx && aCtx.state === 'running') { analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; }
+        if (analyser && !player.paused) { analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; }
         ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
         particles.forEach((p, i) => {
             let e = (i % 2 === 0) ? b : m; p.angle += p.speed + (e / 1500);
@@ -258,7 +278,7 @@
     }
     
     seek.oninput = () => { isSeeking = true; };
-    seek.onchange = () => { if(player.duration) player.currentTime = (seek.value / 1000) * player.duration; setTimeout(() => isSeeking = false, 50); };
+    seek.onchange = () => { if(player.duration) player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
 </script>
 </body>
 </html>
