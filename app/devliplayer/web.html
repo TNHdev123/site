@@ -100,7 +100,7 @@
     </div>
 </div>
 
-<audio id="player" crossorigin="anonymous"></audio>
+<audio id="player" playsinline></audio>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
 <script>
@@ -109,6 +109,7 @@
     const sPlay = document.getElementById('svg-play'), sPause = document.getElementById('svg-pause'), spinner = document.getElementById('loading-spinner');
     const seek = document.getElementById('seek-slider'), indicator = document.getElementById('indicator');
     let aCtx, analyser, data, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false, showCover = true, db;
+    let animId = null;
 
     const dbReq = indexedDB.open("devilLatestDB", 1);
     dbReq.onupgradeneeded = (e) => { e.target.result.createObjectStore("devilLatest"); };
@@ -149,6 +150,8 @@
                 const fileBlob = req.result.blob;
                 player.src = URL.createObjectURL(fileBlob);
                 titleTag.innerText = req.result.name;
+                // Init simple metadata immediately
+                updateBackgroundInfo(req.result.name, null);
                 processFileMetadata(fileBlob);
                 switchPage('play', 0);
             }
@@ -159,14 +162,23 @@
     function updateBackgroundInfo(title, art) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: title || titleTag.innerText,
+                title: title || titleTag.innerText || "Unknown Track",
                 artist: 'Devil Player',
                 artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
             });
-            navigator.mediaSession.setActionHandler('play', () => player.play());
-            navigator.mediaSession.setActionHandler('pause', () => player.pause());
-            navigator.mediaSession.setActionHandler('seekbackward', (details) => { player.currentTime = Math.max(player.currentTime - (details.seekOffset || 10), 0); });
-            navigator.mediaSession.setActionHandler('seekforward', (details) => { player.currentTime = Math.min(player.currentTime + (details.seekOffset || 10), player.duration); });
+            
+            const actionHandlers = [
+                ['play', () => { player.play(); }],
+                ['pause', () => { player.pause(); }],
+                ['previoustrack', null],
+                ['nexttrack', null],
+                ['seekbackward', (details) => { player.currentTime = Math.max(player.currentTime - (details.seekOffset || 10), 0); }],
+                ['seekforward', (details) => { player.currentTime = Math.min(player.currentTime + (details.seekOffset || 10), player.duration); }]
+            ];
+
+            actionHandlers.forEach(([action, handler]) => {
+                try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {}
+            });
         }
     }
 
@@ -185,10 +197,18 @@
         setLoading(true); switchPage('play', 0);
         if (player.src) URL.revokeObjectURL(player.src);
         player.src = URL.createObjectURL(file);
-        titleTag.innerText = file.name; cover.style.opacity = "0";
+        
+        // Immediate metadata update to secure background play intent
+        const tempTitle = file.name;
+        titleTag.innerText = tempTitle;
+        cover.style.opacity = "0";
+        updateBackgroundInfo(tempTitle, null);
+
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
-        player.load(); player.play().then(() => { setLoading(false); }).catch(() => setLoading(false));
+        
+        player.load(); 
+        player.play().then(() => { setLoading(false); }).catch(() => setLoading(false));
         processFileMetadata(file);
     };
 
@@ -207,20 +227,32 @@
                 }
                 updateBackgroundInfo(finalTitle, finalArt);
             },
-            onError: () => updateBackgroundInfo(titleTag.innerText, null)
+            onError: () => { /* Already set initial info */ }
         });
     }
 
+    // Critical for Glitch Fix (Suspend on Pause)
     player.onpause = () => { 
         sPlay.style.display = 'block'; sPause.style.display = 'none'; 
+        if (aCtx && aCtx.state === 'running') aCtx.suspend(); 
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"; 
     };
 
+    // Critical for Background Play (Resume on Play)
     player.onplay = () => { 
         sPlay.style.display = 'none'; sPause.style.display = 'block'; 
-        if (!aCtx) { initAudio(); } else if (aCtx.state === 'suspended') { aCtx.resume(); }
+        if (aCtx) { if (aCtx.state === 'suspended') aCtx.resume(); } else { initAudio(); }
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"; 
     };
+
+    // Background Optimization: Stop drawing when hidden to prevent OS killing audio
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            if (animId) { cancelAnimationFrame(animId); animId = null; }
+        } else {
+            if (!animId && !player.paused) loop();
+        }
+    });
 
     function handlePlayPause() { 
         if (!player.src) return;
@@ -260,19 +292,20 @@
             s.connect(analyser); analyser.connect(aCtx.destination);
             analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
             loop();
-        } catch(e) { console.warn("AudioContext init failed", e); }
+        } catch(e) { console.log("AudioContext blocked"); }
     }
 
     function loop() {
-        requestAnimationFrame(loop);
+        if (document.hidden) return; // Double protection
+        animId = requestAnimationFrame(loop);
+        
         if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
+        
         let b = 0, m = 0;
-        // 核心邏輯：僅當播放且 aCtx 運行時才抓取數據，但 loop 本身不中斷
-        if (analyser && !player.paused && aCtx && aCtx.state === 'running') { 
-            analyser.getByteFrequencyData(data); 
-            b = data[2]; m = data[15]; 
-        }
+        if (analyser && !player.paused && aCtx.state === 'running') { analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; }
+        
         ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
+        
         particles.forEach((p, i) => {
             let e = (i % 2 === 0) ? b : m; p.angle += p.speed + (e / 1500);
             p.distance += ((e / 255) * (Math.min(cvs.width, cvs.height)*0.25) - p.distance) * 0.15;
