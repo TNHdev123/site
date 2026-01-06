@@ -53,6 +53,9 @@
         <div class="opt-row active" id="opt-loop" onclick="toggleLoop()">
             <span>LOOP PLAYBACK</span><span id="loop-status">ON</span>
         </div>
+        <div class="opt-row" id="opt-bgmode" onclick="toggleBGMode()">
+            <span>BACKGROUND MODE</span><span id="bgmode-status">OFF</span>
+        </div>
         <div class="opt-row active" id="opt-cover" onclick="toggleCoverVisible()">
             <span>SHOW COVER ART</span><span id="cover-status">ON</span>
         </div>
@@ -108,9 +111,9 @@
     const player = document.getElementById('player'), cover = document.getElementById('cover'), titleTag = document.getElementById('title');
     const sPlay = document.getElementById('svg-play'), sPause = document.getElementById('svg-pause'), spinner = document.getElementById('loading-spinner');
     const seek = document.getElementById('seek-slider'), indicator = document.getElementById('indicator');
-    let aCtx, analyser, data, source, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false, showCover = true, db;
+    let aCtx, analyser, data, source, particles = [], albumPalette = [], selectedColors = [], isAuto = true, isSeeking = false, showCover = true, db, isBGStable = false;
 
-    // --- Init DB ---
+    // --- DB Setup ---
     const dbReq = indexedDB.open("devilLatestDB", 1);
     dbReq.onupgradeneeded = (e) => { e.target.result.createObjectStore("devilLatest"); };
     dbReq.onsuccess = (e) => { db = e.target.result; loadAppState(); };
@@ -127,19 +130,27 @@
     }
 
     function saveSettings() {
-        localStorage.setItem('devilSettings', JSON.stringify({ loop: player.loop, showCover, isAuto, selectedColors }));
+        localStorage.setItem('devilSettings', JSON.stringify({ loop: player.loop, showCover, isAuto, selectedColors, isBGStable }));
     }
 
     function loadAppState() {
         const s = JSON.parse(localStorage.getItem('devilSettings'));
         if (s) {
-            player.loop = s.loop ?? true; showCover = s.showCover ?? true; isAuto = s.isAuto ?? true; selectedColors = s.selectedColors || [];
+            player.loop = s.loop ?? true; 
+            showCover = s.showCover ?? true; 
+            isAuto = s.isAuto ?? true; 
+            selectedColors = s.selectedColors || [];
+            isBGStable = s.isBGStable ?? false;
+
             document.getElementById('opt-loop').classList.toggle('active', player.loop);
             document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF";
             document.getElementById('opt-cover').classList.toggle('active', showCover);
             document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF";
             document.getElementById('opt-auto').classList.toggle('active', isAuto);
             document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF";
+            document.getElementById('opt-bgmode').classList.toggle('active', isBGStable);
+            document.getElementById('bgmode-status').innerText = isBGStable ? "ON" : "OFF";
+
             if (!isAuto) document.querySelectorAll('.color-dot').forEach(d => { if (selectedColors.includes(d.getAttribute('data-color'))) d.classList.add('active'); });
         } else { player.loop = true; }
 
@@ -157,7 +168,7 @@
         updateParticles();
     }
 
-    // --- Media Session (Lock Screen Info) ---
+    // --- Background Info ---
     function updateBackgroundInfo(title, art) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -167,12 +178,10 @@
             });
             navigator.mediaSession.setActionHandler('play', () => player.play());
             navigator.mediaSession.setActionHandler('pause', () => player.pause());
-            navigator.mediaSession.setActionHandler('seekbackward', (details) => { player.currentTime = Math.max(player.currentTime - (details.seekOffset || 10), 0); });
-            navigator.mediaSession.setActionHandler('seekforward', (details) => { player.currentTime = Math.min(player.currentTime + (details.seekOffset || 10), player.duration); });
         }
     }
 
-    // --- Audio Init & Routing Logic ---
+    // --- Audio Logic ---
     function initAudio() {
         if (!aCtx) {
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -181,48 +190,27 @@
             data = new Uint8Array(analyser.frequencyBinCount);
         }
         
-        // 確保唔好重複創建 source，否則會報錯
-        if (!source && player.src) {
+        // 只有關閉「穩定模式」時才接管音訊流，實現精準動畫
+        if (!isBGStable && !source && player.src) {
             try {
                 source = aCtx.createMediaElementSource(player);
                 source.connect(analyser);
                 analyser.connect(aCtx.destination);
-            } catch(e) { console.log(e); }
-        } else if (source) {
-            // 如果已經有 source，確保重新連接
-            try {
-                source.connect(analyser);
-                analyser.connect(aCtx.destination);
-            } catch(e) {}
+            } catch(e) { console.log("Precision Mode Error:", e); }
         }
         loop();
     }
 
-    // 當離開 App 時，切斷 Web Audio 連接，讓音訊回歸原生標籤
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (source) {
-                try {
-                    // 切斷與目的地的連接，嘗試讓瀏覽器接管原生 Audio
-                    source.disconnect();
-                    // source = null; // 註：某些瀏覽器唔准重複創建，所以保留 variable 但切斷連接
-                } catch(e) {}
-            }
-        } else {
-            // 返回 App 時，重新連接以驅動動畫
-            if (source && !player.paused) {
-                try {
-                    source.connect(analyser);
-                    analyser.connect(aCtx.destination);
-                    if (aCtx.state === 'suspended') aCtx.resume();
-                } catch(e) {}
-            } else if (!source && !player.paused) {
-                initAudio();
-            }
-        }
-    });
+    // --- Toggle Functions ---
+    function toggleBGMode() {
+        isBGStable = !isBGStable;
+        document.getElementById('opt-bgmode').classList.toggle('active', isBGStable);
+        document.getElementById('bgmode-status').innerText = isBGStable ? "ON" : "OFF";
+        saveSettings();
+        // 提醒用戶需要重新載入或重新播放才能生效
+        if (player.src) alert("Mode switched. Please re-select or play the track to apply.");
+    }
 
-    // --- UI Actions ---
     function toggleLoop() { player.loop = !player.loop; document.getElementById('opt-loop').classList.toggle('active', player.loop); document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF"; saveSettings(); }
     function toggleCoverVisible() { showCover = !showCover; document.getElementById('opt-cover').classList.toggle('active', showCover); document.getElementById('cover-status').innerText = showCover ? "ON" : "OFF"; cover.style.display = (showCover && cover.src) ? 'block' : 'none'; saveSettings(); }
     function toggleAuto() { isAuto = !isAuto; document.getElementById('opt-auto').classList.toggle('active', isAuto); document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF"; if (isAuto) { document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); selectedColors = []; } updateParticles(); saveSettings(); }
@@ -238,14 +226,15 @@
         setLoading(true); switchPage('play', 0);
         if (player.src) URL.revokeObjectURL(player.src);
         player.src = URL.createObjectURL(file);
-        titleTag.innerText = file.name; cover.style.opacity = "0";
+        titleTag.innerText = file.name; 
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
         
-        // 重置 source 以避免舊音頻干擾
-        if (source) { try{ source.disconnect(); }catch(e){} source = null; }
+        // 每次重新選歌時清空 source 重新根據模式判定
+        if (source) { try{ source.disconnect(); }catch(ex){} source = null; }
 
-        player.load(); player.play().then(() => { setLoading(false); initAudio(); }).catch(() => setLoading(false));
+        player.load(); 
+        player.play().then(() => { setLoading(false); initAudio(); }).catch(() => setLoading(false));
         processFileMetadata(file);
     };
 
@@ -268,21 +257,12 @@
         });
     }
 
-    player.onpause = () => { 
-        sPlay.style.display = 'block'; sPause.style.display = 'none'; 
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"; 
-    };
-
-    player.onplay = () => { 
-        sPlay.style.display = 'none'; sPause.style.display = 'block'; 
-        if (!aCtx) { initAudio(); } 
-        else if (aCtx.state === 'suspended') { aCtx.resume(); }
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"; 
-    };
+    player.onpause = () => { sPlay.style.display = 'block'; sPause.style.display = 'none'; };
+    player.onplay = () => { sPlay.style.display = 'none'; sPause.style.display = 'block'; if(!aCtx) initAudio(); };
 
     function handlePlayPause() { 
         if (!player.src) return;
-        if (player.paused) { player.play(); } else { player.pause(); } 
+        player.paused ? player.play() : player.pause();
     }
 
     function selectThemeColor(el) {
@@ -312,11 +292,16 @@
     function loop() {
         requestAnimationFrame(loop);
         if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
-        let b = 0, m = 0;
         
-        // 只有在前台 + 音頻上下文運行時才獲取數據
-        if (analyser && !player.paused && aCtx && aCtx.state === 'running' && !document.hidden) { 
-            analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; 
+        let b = 0, m = 0;
+        if (analyser && !player.paused) {
+            if (!isBGStable) {
+                // 精準模式：直接讀取頻譜
+                analyser.getByteFrequencyData(data); b = data[2]; m = data[15];
+            } else {
+                // 穩定模式：模擬動畫，防止斷聲
+                b = 100 + Math.random() * 50; m = 80 + Math.random() * 40;
+            }
         }
 
         ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
@@ -333,7 +318,6 @@
     async function clearAppCache() { 
         if (confirm('Clear all settings, music and cache?')) { 
             localStorage.clear(); indexedDB.deleteDatabase("devilLatestDB");
-            if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); }
             location.reload(); 
         } 
     }
