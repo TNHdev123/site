@@ -58,8 +58,8 @@
                 artist: 'Devil Player',
                 artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
             });
-            navigator.mediaSession.setActionHandler('play', () => player.play());
-            navigator.mediaSession.setActionHandler('pause', () => player.pause());
+            navigator.mediaSession.setActionHandler('play', () => { player.play(); });
+            navigator.mediaSession.setActionHandler('pause', () => { player.pause(); });
             navigator.mediaSession.setActionHandler('seekbackward', (details) => { player.currentTime = Math.max(player.currentTime - (details.seekOffset || 10), 0); });
             navigator.mediaSession.setActionHandler('seekforward', (details) => { player.currentTime = Math.min(player.currentTime + (details.seekOffset || 10), player.duration); });
         }
@@ -106,17 +106,14 @@
         });
     }
 
-    // 關鍵修復：分離 AudioContext 的狀態與播放器的狀態
     player.onpause = () => { 
-        sPlay.style.display = 'block'; 
-        sPause.style.display = 'none'; 
+        sPlay.style.display = 'block'; sPause.style.display = 'none'; 
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"; 
     };
 
     player.onplay = () => { 
-        sPlay.style.display = 'none'; 
-        sPause.style.display = 'block'; 
-        // 確保進入動畫，但不阻塞背景播放
+        sPlay.style.display = 'none'; sPause.style.display = 'block'; 
+        // 關鍵：確保 AudioContext 在用戶手動點擊後激活，但暫停時不強行 suspend 整個上下文
         if (aCtx) { if (aCtx.state === 'suspended') aCtx.resume(); } else { initAudio(); }
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"; 
     };
@@ -157,33 +154,27 @@
             analyser = aCtx.createAnalyser(); 
             const s = aCtx.createMediaElementSource(player);
             s.connect(analyser); 
-            analyser.connect(aCtx.destination);
-            analyser.fftSize = 256; 
-            data = new Uint8Array(analyser.frequencyBinCount);
+            analyser.connect(aCtx.destination); // 確保與目的地連結
+            analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
             loop();
-        } catch(e) { console.log("Init Audio blocked"); }
+        } catch(e) { console.log("AudioContext blocked"); }
     }
 
     function loop() {
         requestAnimationFrame(loop);
         if (!isSeeking && player.duration && !player.paused) seek.value = (player.currentTime / player.duration) * 1000;
         let b = 0, m = 0;
-        // 只有在前台且 aCtx 運行時才更新頻譜數據
+        // 只有在 Context 運作且非暫停時才抓取頻率數據
         if (analyser && !player.paused && aCtx && aCtx.state === 'running') { 
-            analyser.getByteFrequencyData(data); 
-            b = data[2]; 
-            m = data[15]; 
+            analyser.getByteFrequencyData(data); b = data[2]; m = data[15]; 
         }
-        ctx.clearRect(0, 0, cvs.width, cvs.height); 
-        ctx.globalCompositeOperation = 'screen';
+        ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
         particles.forEach((p, i) => {
             let e = (i % 2 === 0) ? b : m; p.angle += p.speed + (e / 1500);
             p.distance += ((e / 255) * (Math.min(cvs.width, cvs.height)*0.25) - p.distance) * 0.15;
             let x = (cvs.width/2) + Math.cos(p.angle) * p.distance, y = (cvs.height/2) + Math.sin(p.angle) * p.distance;
-            let sz = p.baseSize + (e * 0.6); 
-            const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
-            g.addColorStop(0, p.color); g.addColorStop(1, 'transparent'); 
-            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
+            let sz = p.baseSize + (e * 0.6); const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
+            g.addColorStop(0, p.color); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
         });
         if (showCover && cover.style.display === 'block') cover.style.transform = `scale(${1 + (b / 600)})`;
     }
