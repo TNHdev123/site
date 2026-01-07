@@ -65,12 +65,13 @@
 
         <div class="setting-title">Custom Palette</div>
         <div id="theme-selector">
-            <div class="color-dot" data-color="#ffc0cb" style="background:#ffc0cb" onclick="selectThemeColor(this)"></div> 
+            <div class="color-dot" data-color="#ffc0cb" style="background:#ffc0cb" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff0000" style="background:#ff0000" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff8c00" style="background:#ff8c00" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ffff00" style="background:#ffff00" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#00ff00" style="background:#00ff00" onclick="selectThemeColor(this)"></div>
-            <div class="color-dot" data-color="#00ff7f" style="background:#00ff7f" onclick="selectThemeColor(this)"></div> <div class="color-dot" data-color="#00ffff" style="background:#00ffff" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#00ff80" style="background:#00ff80" onclick="selectThemeColor(this)"></div>
+            <div class="color-dot" data-color="#00ffff" style="background:#00ffff" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#0000ff" style="background:#0000ff" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#8a2be2" style="background:#8a2be2" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff00ff" style="background:#ff00ff" onclick="selectThemeColor(this)"></div> 
@@ -140,7 +141,6 @@
             isAuto = s.isAuto ?? true; 
             selectedColors = s.selectedColors || [];
             isBackground = s.isBackground ?? false;
-
             document.getElementById('opt-loop').classList.toggle('active', player.loop);
             document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF";
             document.getElementById('opt-cover').classList.toggle('active', showCover);
@@ -149,7 +149,6 @@
             document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF";
             document.getElementById('opt-bg').classList.toggle('active', isBackground);
             document.getElementById('bg-status').innerText = isBackground ? "ON" : "OFF";
-
             if (!isAuto) document.querySelectorAll('.color-dot').forEach(d => { if (selectedColors.includes(d.getAttribute('data-color'))) d.classList.add('active'); });
         } else { player.loop = true; }
 
@@ -170,8 +169,7 @@
     function updateBackgroundInfo(title, art) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: title || titleTag.innerText,
-                artist: 'Devil Player',
+                title: title || titleTag.innerText, artist: 'Devil Player',
                 artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
             });
             navigator.mediaSession.setActionHandler('play', () => player.play());
@@ -186,16 +184,12 @@
         document.getElementById('opt-bg').classList.toggle('active', isBackground);
         document.getElementById('bg-status').innerText = isBackground ? "ON" : "OFF";
         saveSettings();
-        if (player.src) {
-            const wasPlaying = !player.paused;
-            resetAudioNodes();
-            if (wasPlaying) player.play();
-        }
+        if (player.src) { const wasPlaying = !player.paused; resetAudioNodes(); if (wasPlaying) player.play(); }
     }
 
     function resetAudioNodes() {
-        if (sourceNode) { try { sourceNode.disconnect(); } catch(e){} sourceNode = null; }
-        if (aCtx) { try { aCtx.close(); } catch(e){} aCtx = null; analyser = null; }
+        if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
+        if (aCtx) { aCtx.close(); aCtx = null; analyser = null; }
     }
 
     function toggleLoop() { player.loop = !player.loop; document.getElementById('opt-loop').classList.toggle('active', player.loop); document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF"; saveSettings(); }
@@ -216,8 +210,7 @@
         titleTag.innerText = file.name; cover.style.opacity = "0";
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
-        resetAudioNodes();
-        player.load(); 
+        resetAudioNodes(); player.load(); 
         player.play().then(() => { setLoading(false); initAudio(); }).catch(() => setLoading(false));
         processFileMetadata(file);
     };
@@ -274,20 +267,15 @@
     }
 
     function initAudio() {
-        if (aCtx || isBackground) {
-            if (isBackground) loop();
-            return;
-        }
+        if (aCtx || isBackground) { if (isBackground && !aCtx) { loop(); } return; }
         try {
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = aCtx.createAnalyser(); 
             sourceNode = aCtx.createMediaElementSource(player);
-            sourceNode.connect(analyser); 
-            analyser.connect(aCtx.destination);
-            analyser.fftSize = 256; 
-            data = new Uint8Array(analyser.frequencyBinCount);
+            sourceNode.connect(analyser); analyser.connect(aCtx.destination);
+            analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
             loop();
-        } catch(e) {}
+        } catch(e) { console.error(e); }
     }
 
     function loop() {
@@ -297,15 +285,14 @@
         let b = 0, m = 0;
         if (!player.paused) {
             if (analyser && !isBackground) {
-                analyser.getByteFrequencyData(data); 
-                b = data[2]; m = data[15];
+                analyser.getByteFrequencyData(data); b = data[2]; m = data[15];
             } else {
-                // 背景播放隨機動畫優化：播放時基礎振幅較大
+                // 背景模式下播放緊嘅隨機動畫：粒波會變大
                 b = 100 + Math.random() * 50; 
                 m = 80 + Math.random() * 40;
             }
         } else {
-            // 暫停時振幅歸零
+            // 暫停時：b 同 m 回歸 0，粒波縮小
             b = 0; m = 0;
         }
 
@@ -314,33 +301,24 @@
             let e = (i % 2 === 0) ? b : m; p.angle += p.speed + (e / 1500);
             p.distance += ((e / 255) * (Math.min(cvs.width, cvs.height)*0.25) - p.distance) * 0.15;
             let x = (cvs.width/2) + Math.cos(p.angle) * p.distance, y = (cvs.height/2) + Math.sin(p.angle) * p.distance;
-            let sz = p.baseSize + (e * 0.6); 
-            const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
+            let sz = p.baseSize + (e * 0.6); const g = ctx.createRadialGradient(x, y, 0, x, y, sz);
             g.addColorStop(0, p.color); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
         });
         if (showCover && cover.style.display === 'block') cover.style.transform = `scale(${1 + (b / 600)})`;
     }
 
     async function clearAppCache() { 
-        if (confirm('Clear ALL data? (This will delete saved music, settings, and cache)')) { 
-            // 1. 清除 LocalStorage
+        if (confirm('Clear all settings, music and cache?')) { 
             localStorage.clear(); 
-            // 2. 清除 IndexedDB (音樂存儲)
-            const dbs = ["devilLatestDB"];
-            dbs.forEach(dbName => {
-                const req = indexedDB.deleteDatabase(dbName);
-                req.onsuccess = () => console.log("DB deleted");
-            });
-            // 3. 清除 Service Worker Cache
-            if ('caches' in window) { 
-                const ns = await caches.keys(); 
-                await Promise.all(ns.map(n => caches.delete(n))); 
-            }
-            alert('Data cleared. Reloading...');
-            location.reload(); 
+            // 徹底刪除 IndexedDB 裡面嘅音樂
+            const delReq = indexedDB.deleteDatabase("devilLatestDB");
+            delReq.onsuccess = async () => {
+                if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); }
+                alert("All data and music cleared.");
+                location.reload(); 
+            };
         } 
     }
-    
     seek.oninput = () => { isSeeking = true; };
     seek.onchange = () => { if(player.duration) player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
 </script>
