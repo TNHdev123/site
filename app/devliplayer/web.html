@@ -65,16 +65,15 @@
 
         <div class="setting-title">Custom Palette</div>
         <div id="theme-selector">
-            <div class="color-dot" data-color="#ffc0cb" style="background:#ffc0cb" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff0000" style="background:#ff0000" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff8c00" style="background:#ff8c00" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ffff00" style="background:#ffff00" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#00ff00" style="background:#00ff00" onclick="selectThemeColor(this)"></div>
-            <div class="color-dot" data-color="#00ff80" style="background:#00ff80" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#00ffff" style="background:#00ffff" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#0000ff" style="background:#0000ff" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#8a2be2" style="background:#8a2be2" onclick="selectThemeColor(this)"></div>
             <div class="color-dot" data-color="#ff00ff" style="background:#ff00ff" onclick="selectThemeColor(this)"></div> 
+            <div class="color-dot" data-color="#ffc0cb" style="background:#ffc0cb" onclick="selectThemeColor(this)"></div> 
             <div class="color-dot" data-color="#ffffff" style="background:#ffffff" onclick="selectThemeColor(this)"></div> 
             <div class="color-dot" data-color="#f5f5dc" style="background:#f5f5dc" onclick="selectThemeColor(this)"></div> 
             <div class="color-dot" data-color="#8b4513" style="background:#8b4513" onclick="selectThemeColor(this)"></div> 
@@ -141,6 +140,7 @@
             isAuto = s.isAuto ?? true; 
             selectedColors = s.selectedColors || [];
             isBackground = s.isBackground ?? false;
+
             document.getElementById('opt-loop').classList.toggle('active', player.loop);
             document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF";
             document.getElementById('opt-cover').classList.toggle('active', showCover);
@@ -149,6 +149,7 @@
             document.getElementById('auto-status').innerText = isAuto ? "ON" : "OFF";
             document.getElementById('opt-bg').classList.toggle('active', isBackground);
             document.getElementById('bg-status').innerText = isBackground ? "ON" : "OFF";
+
             if (!isAuto) document.querySelectorAll('.color-dot').forEach(d => { if (selectedColors.includes(d.getAttribute('data-color'))) d.classList.add('active'); });
         } else { player.loop = true; }
 
@@ -169,7 +170,8 @@
     function updateBackgroundInfo(title, art) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: title || titleTag.innerText, artist: 'Devil Player',
+                title: title || titleTag.innerText,
+                artist: 'Devil Player',
                 artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
             });
             navigator.mediaSession.setActionHandler('play', () => player.play());
@@ -184,12 +186,24 @@
         document.getElementById('opt-bg').classList.toggle('active', isBackground);
         document.getElementById('bg-status').innerText = isBackground ? "ON" : "OFF";
         saveSettings();
-        if (player.src) { const wasPlaying = !player.paused; resetAudioNodes(); if (wasPlaying) player.play(); }
+        // 如果正在播放，切換模式時重置音訊連接
+        if (player.src) {
+            const wasPlaying = !player.paused;
+            resetAudioNodes();
+            if (wasPlaying) player.play();
+        }
     }
 
     function resetAudioNodes() {
-        if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
-        if (aCtx) { aCtx.close(); aCtx = null; analyser = null; }
+        if (sourceNode) {
+            sourceNode.disconnect();
+            sourceNode = null;
+        }
+        if (aCtx) {
+            aCtx.close();
+            aCtx = null;
+            analyser = null;
+        }
     }
 
     function toggleLoop() { player.loop = !player.loop; document.getElementById('opt-loop').classList.toggle('active', player.loop); document.getElementById('loop-status').innerText = player.loop ? "ON" : "OFF"; saveSettings(); }
@@ -210,8 +224,13 @@
         titleTag.innerText = file.name; cover.style.opacity = "0";
         const tx = db.transaction("devilLatest", "readwrite");
         tx.objectStore("devilLatest").put({ name: file.name, blob: file }, "latestTrack");
-        resetAudioNodes(); player.load(); 
-        player.play().then(() => { setLoading(false); initAudio(); }).catch(() => setLoading(false));
+        
+        resetAudioNodes(); // 更換音樂時重置
+        player.load(); 
+        player.play().then(() => { 
+            setLoading(false); 
+            initAudio(); 
+        }).catch(() => setLoading(false));
         processFileMetadata(file);
     };
 
@@ -246,7 +265,7 @@
         if (isAuto) toggleAuto();
         const c = el.getAttribute('data-color');
         if (el.classList.contains('active')) { el.classList.remove('active'); selectedColors = selectedColors.filter(x => x !== c); }
-        else if (selectedColors.length < 14) { el.classList.add('active'); selectedColors.push(c); }
+        else if (selectedColors.length < 13) { el.classList.add('active'); selectedColors.push(c); }
         updateParticles(); saveSettings();
     }
     
@@ -267,15 +286,25 @@
     }
 
     function initAudio() {
-        if (aCtx || isBackground) { if (isBackground && !aCtx) { loop(); } return; }
+        if (aCtx || isBackground) {
+            // 如果是背景模式，不進行 AudioContext 劫持，確保聲音走原生通道
+            if (isBackground && !aCtx) {
+                loop(); // 仍然啟動動畫迴圈，但會走模擬分支
+            }
+            return;
+        }
         try {
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = aCtx.createAnalyser(); 
             sourceNode = aCtx.createMediaElementSource(player);
-            sourceNode.connect(analyser); analyser.connect(aCtx.destination);
-            analyser.fftSize = 256; data = new Uint8Array(analyser.frequencyBinCount);
+            sourceNode.connect(analyser); 
+            analyser.connect(aCtx.destination);
+            analyser.fftSize = 256; 
+            data = new Uint8Array(analyser.frequencyBinCount);
             loop();
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            console.error("AudioContext blocked or failed:", e);
+        }
     }
 
     function loop() {
@@ -285,15 +314,15 @@
         let b = 0, m = 0;
         if (!player.paused) {
             if (analyser && !isBackground) {
-                analyser.getByteFrequencyData(data); b = data[2]; m = data[15];
+                // 精準模式：讀取實際頻譜
+                analyser.getByteFrequencyData(data); 
+                b = data[2]; 
+                m = data[15];
             } else {
-                // 背景模式下播放緊嘅隨機動畫：粒波會變大
-                b = 100 + Math.random() * 50; 
-                m = 80 + Math.random() * 40;
+                // 背景播放/穩定模式：模擬隨機跳動，確保視覺不停止
+                b = 80 + Math.random() * 40; 
+                m = 60 + Math.random() * 30;
             }
-        } else {
-            // 暫停時：b 同 m 回歸 0，粒波縮小
-            b = 0; m = 0;
         }
 
         ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.globalCompositeOperation = 'screen';
@@ -309,16 +338,12 @@
 
     async function clearAppCache() { 
         if (confirm('Clear all settings, music and cache?')) { 
-            localStorage.clear(); 
-            // 徹底刪除 IndexedDB 裡面嘅音樂
-            const delReq = indexedDB.deleteDatabase("devilLatestDB");
-            delReq.onsuccess = async () => {
-                if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); }
-                alert("All data and music cleared.");
-                location.reload(); 
-            };
+            localStorage.clear(); indexedDB.deleteDatabase("devilLatestDB");
+            if ('caches' in window) { const ns = await caches.keys(); await Promise.all(ns.map(n => caches.delete(n))); }
+            location.reload(); 
         } 
     }
+    
     seek.oninput = () => { isSeeking = true; };
     seek.onchange = () => { if(player.duration) player.currentTime = (seek.value / 1000) * player.duration; isSeeking = false; };
 </script>
