@@ -23,8 +23,6 @@
       "fallbackIcon": "example"
     },
     {
-  "tweaks": [
-    {
       "id": "installedfix",
       "name": "Installed Fix",
       "description": "Fix Apps that Install outside AppStore not showing on Home Screen.",
