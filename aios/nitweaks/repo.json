@@ -32,6 +32,15 @@
       "category": "System",
       "type": "js",
       "fallbackIcon": "🛠️"
+    },
+    {
+      "id": "natural-board-01",
+      "name": "NaturalBoard",
+      "category": "Board",
+      "description": "like iOS WinterBoard",
+      "iconColor": "#5856D6",
+      "fallbackIcon": "📱",
+      "url": "https://tnhdev123.github.io/site/aios/nitweaks/nboard.js"
     }
   ]
 }
