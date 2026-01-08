@@ -41,6 +41,15 @@
       "iconColor": "#5856D6",
       "fallbackIcon": "📱",
       "url": "https://tnhdev123.github.io/site/aios/nitweaks/nboard.js"
+    },
+    {
+      "id": "booster",
+      "name": "TweakBooster",
+      "category": "System",
+      "description": "Automatically load Tweaks when Reboot",
+      "iconColor": "#FF9500",
+      "fallbackIcon": "🚀",
+      "url": "https://tnhdev123.github.io/site/aios/nitweaks/booster.js"
     }
   ]
 }
