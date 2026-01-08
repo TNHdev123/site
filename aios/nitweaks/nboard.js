@@ -1,11 +1,10 @@
 (function() {
-    console.log("[NaturalBoard] Integrating System Apps...");
+    console.log("[NaturalBoard] Initializing Smart Layout...");
 
-    // 1. 樣式定義：完全跟隨原版 HTML 的視覺規範
+    // 1. 注入 CSS：確保排佈與時鐘交互樣式
     const style = document.createElement('style');
     style.innerHTML = `
         #appsGrid > .app-icon { display: none !important; }
-
         #natural-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -14,72 +13,32 @@
             width: 100%;
             box-sizing: border-box;
         }
-
-        .nb-app-wrapper {
+        .nb-app-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.2s;
-            animation: nbFadeIn 0.4s ease-out;
-        }
-
-        .nb-app-wrapper:active { transform: scale(0.9); }
-
-        .nb-icon-main {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            position: relative;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .nb-icon-main img {
-            width: 100%;
-            height: 100%;
-            border-radius: 14px;
-            object-fit: cover;
-        }
-
-        .nb-app-name {
-            margin-top: 8px;
-            font-size: 11px;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             text-align: center;
-            width: 72px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-
-        @keyframes nbFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nb-icon-container {
+            width: 60px; height: 60px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background-color: #333; font-size: 30px;
+        }
+        .nb-icon-container img { width: 100%; height: 100%; object-fit: cover; }
+        .nb-app-label {
+            margin-top: 8px; font-size: 11px; color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        /* 時鐘小工具點擊效果 */
+        .clock-display { cursor: pointer; transition: opacity 0.2s; }
+        .clock-display:active { opacity: 0.7; }
     `;
     document.head.appendChild(style);
 
-    // 2. 定義系統 App 數據庫 (從 HTML/JS 提取)
-    const systemApps = [
-        { id: 'camera', name: 'Camera', fallbackIcon: '📷', iconColor: 'linear-gradient(135deg, #8e8e93, #48484a)' },
-        { id: 'calculator', name: 'Calculator', fallbackIcon: '➗', iconColor: '#ff9500' },
-        { id: 'ai-to-ui', name: 'AI to UI', fallbackIcon: '✨', iconColor: 'linear-gradient(135deg, #5856d6, #af52de)' },
-        { id: 'app-store', name: 'App Store', fallbackIcon: '🛍️', iconColor: '#007aff' },
-        { id: 'settings', name: 'Settings', fallbackIcon: '⚙️', iconColor: '#8e8e93' },
-        { id: 'phone', name: 'Phone', fallbackIcon: '📞', iconColor: '#34c759' },
-        { id: 'photos', name: 'Photos', fallbackIcon: '🖼️', iconColor: 'linear-gradient(135deg, #fff, #f2f2f7)' },
-        { id: 'maths-ai', name: 'Maths AI', fallbackIcon: '🧠', iconColor: '#5856d6' },
-        { id: 'ai-messages', name: 'Messages', fallbackIcon: '💬', iconColor: '#34c759' },
-        { id: 'ai-assistant', name: 'Assistant', fallbackIcon: '🤖', iconColor: '#000' },
-        { id: 'terminal', name: 'Terminal', fallbackIcon: '💻', iconColor: '#2c3e50' },
-        { id: 'cydia2', name: 'Cydia 2', fallbackIcon: '📦', iconColor: '#6d4c41' },
-        { id: 'aos-switcher', name: 'Switcher', fallbackIcon: '🔄', iconColor: '#546e7a' }
-    ];
-
+    // 2. 核心渲染與系統 App 補完邏輯
     const renderNaturalBoard = () => {
         const appsGrid = document.getElementById('appsGrid');
         if (!appsGrid) return;
@@ -92,59 +51,100 @@
         }
         naturalGrid.innerHTML = '';
 
-        // 合併已安裝的第三方 Apps
-        const installedApps = JSON.parse(localStorage.getItem('installedApps') || '[]');
-        
-        // 建立一個完整的清單：系統 App 優先，之後跟隨已安裝 App (排除核心 ID)
-        const allApps = [...systemApps];
-        installedApps.forEach(app => {
-            if (app.id !== 'ni-core-system' && !systemApps.find(s => s.id === app.id)) {
-                allApps.push(app);
+        // 讀取已安裝 App 並補完缺少的系統 App
+        let apps = JSON.parse(localStorage.getItem('installedApps') || '[]');
+        const systemApps = [
+            { id: 'settings', name: 'Settings', fallback: '⚙️', color: '#8E8E93' },
+            { id: 'camera', name: 'Camera', fallback: '📷', color: '#4A4A4A' },
+            { id: 'calculator', name: 'Calculator', fallback: '🔢', color: '#FF9500' },
+            { id: 'app-store', name: 'App Store', fallback: '🅰️', color: '#007AFF' }
+        ];
+
+        systemApps.forEach(sApp => {
+            if (!apps.find(a => a.id === sApp.id)) {
+                apps.push({
+                    id: sApp.id + "-nboard",
+                    name: sApp.name,
+                    fallbackIcon: sApp.fallback,
+                    iconColor: sApp.color,
+                    isSystemGenerated: true
+                });
             }
         });
 
-        allApps.forEach(app => {
-            const appWrapper = document.createElement('div');
-            appWrapper.className = 'nb-app-wrapper';
-
-            // 判斷圖示顯示方式
-            let iconStyle = `background: ${app.iconColor || '#333'};`;
-            let iconContent = '';
-
-            if (app.icon && (app.icon.startsWith('http') || app.icon.startsWith('data:'))) {
-                iconContent = `<img src="${app.icon}">`;
+        apps.forEach(app => {
+            const item = document.createElement('div');
+            item.className = 'nb-app-item';
+            
+            let iconHtml = '';
+            let isNi = (app.id === 'ni-core-system');
+            
+            if (isNi) {
+                // 📂 Ni管理器核心顯示
+                iconHtml = `<span>📂</span>`;
+            } else if (app.icon && app.icon.startsWith('http')) {
+                iconHtml = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
+                iconHtml += `<span style="display:none;">${app.fallbackIcon || '📱'}</span>`;
             } else {
-                iconContent = `<span>${app.fallbackIcon || '📱'}</span>`;
+                iconHtml = `<span>${app.fallbackIcon || '📱'}</span>`;
             }
 
-            appWrapper.innerHTML = `
-                <div class="nb-icon-main" style="${iconStyle}">
-                    ${iconContent}
+            item.innerHTML = `
+                <div class="nb-icon-container" style="background-color: ${app.iconColor || '#333'}">
+                    ${iconHtml}
                 </div>
-                <div class="nb-app-name">${app.name}</div>
+                <div class="nb-app-label">${app.name}</div>
             `;
 
-            appWrapper.onclick = () => {
-                if (typeof window.openApp === 'function') {
-                    window.openApp(app.id);
-                } else if (app.url) {
-                    window.location.href = app.url;
+            item.onclick = () => {
+                const targetId = app.id.replace("-nboard", "");
+                if (isNi) {
+                    if (window.openNiManager) window.openNiManager();
+                    else if (typeof openApp === 'function') openApp('ni-core-system');
+                } else if (typeof openApp === 'function') {
+                    openApp(targetId);
                 }
             };
-
-            naturalGrid.appendChild(appWrapper);
+            naturalGrid.appendChild(item);
         });
     };
 
-    const init = () => {
-        const check = setInterval(() => {
-            if (document.getElementById('appsGrid')) {
-                renderNaturalBoard();
-                clearInterval(check);
+    // 3. 時鐘小工具切換天氣邏輯
+    let showWeather = false;
+    const initWidget = () => {
+        const clockWidget = document.querySelector('.clock-display');
+        if (!clockWidget) return;
+
+        clockWidget.onclick = () => {
+            showWeather = !showWeather;
+            const timeEl = document.getElementById('current-time');
+            const dateEl = document.getElementById('current-date');
+            
+            if (showWeather) {
+                // 模擬獲取天氣資料
+                timeEl.innerText = "24°C";
+                dateEl.innerText = "Partly Cloudy - Taipei";
+            } else {
+                // 觸發系統更新時間（或重新讀取）
+                if (window.updateClock) window.updateClock(); 
             }
-        }, 200);
+        };
+    };
+
+    // 4. 啟動
+    const init = () => {
+        const observer = new MutationObserver(() => {
+            if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) {
+                renderNaturalBoard();
+                initWidget();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        if (document.getElementById('appsGrid')) {
+            renderNaturalBoard();
+            initWidget();
+        }
     };
 
     init();
-    window.refreshNaturalBoard = renderNaturalBoard;
 })();
