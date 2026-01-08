@@ -1,15 +1,15 @@
 (function() {
     console.log("[NaturalBoard] Initializing...");
 
-    // 1. 注入樣式：隱藏原生圖示，優化新 Grid 樣式以貼近原版
+    // 1. 注入樣式：直接使用原版 CSS 類名，確保排佈 100% 一致
     const style = document.createElement('style');
     style.innerHTML = `
-        /* 隱藏原生 Grid 內的圖示，但保留容器 */
+        /* 隱藏原生 Grid 內容 */
         #appsGrid > .app-icon {
             display: none !important;
         }
 
-        /* 定義 NaturalBoard 容器，繼承原版 apps-grid 的行為 */
+        /* 讓 Natural Grid 繼承原版 .apps-grid 的所有屬性 */
         #natural-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -17,138 +17,135 @@
             padding: 20px;
             width: 100%;
             box-sizing: border-box;
+            /* 確保位置與原版重疊 */
         }
 
-        /* 模仿原版 .app-icon 的佈局 */
-        .nb-app-wrapper {
+        /* 模仿 index.html 原生 .app-icon 結構 */
+        .nb-app-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
             cursor: pointer;
-            transition: transform 0.2s;
-            animation: nbFadeIn 0.5s ease;
+            text-align: center;
         }
 
-        .nb-app-wrapper:active {
-            transform: scale(0.9);
-        }
-
-        /* 圖示主體 */
-        .nb-icon-main {
+        .nb-icon-container {
             width: 60px;
             height: 60px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             overflow: hidden;
-            background-size: cover;
-            background-position: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background-color: #333;
+            position: relative;
         }
 
-        .nb-icon-main img {
+        .nb-icon-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* 模仿原版 .app-name */
-        .nb-app-name {
+        .nb-fallback-icon {
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nb-app-label {
             margin-top: 8px;
             font-size: 11px;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            text-align: center;
             width: 72px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        @keyframes nbFadeIn { 
-            from { opacity: 0; transform: scale(0.8); } 
-            to { opacity: 1; transform: scale(1); } 
         }
     `;
     document.head.appendChild(style);
 
     // 2. 渲染函數
     const renderNaturalBoard = () => {
-        const appsGrid = document.getElementById('appsGrid');
-        if (!appsGrid) return;
+        try {
+            const appsGrid = document.getElementById('appsGrid');
+            if (!appsGrid) return;
 
-        // 清理舊容器
-        let naturalGrid = document.getElementById('natural-grid');
-        if (naturalGrid) naturalGrid.innerHTML = '';
-        else {
-            naturalGrid = document.createElement('div');
-            naturalGrid.id = 'natural-grid';
-            // 插入到原 grid 之前，確保視覺順序
-            appsGrid.parentNode.insertBefore(naturalGrid, appsGrid);
-        }
-
-        // 獲取已安裝 App
-        const apps = JSON.parse(localStorage.getItem('installedApps') || '[]');
-
-        apps.forEach(app => {
-            // 過濾掉 Ni管理器核心程式 (ni-core-system)，不顯示其圖標
-            if (app.id === 'ni-core-system') return;
-
-            const appWrapper = document.createElement('div');
-            appWrapper.className = 'nb-app-wrapper';
-            
-            // 處理圖標顯示邏輯
-            let iconContent = '';
-            const hasImage = app.icon && (app.icon.startsWith('http') || app.icon.startsWith('data:'));
-
-            if (hasImage) {
-                // 如果有圖片連結，直接顯示圖片
-                iconContent = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
+            let naturalGrid = document.getElementById('natural-grid');
+            if (!naturalGrid) {
+                naturalGrid = document.createElement('div');
+                naturalGrid.id = 'natural-grid';
+                appsGrid.parentNode.insertBefore(naturalGrid, appsGrid);
             }
-            
-            // 準備 Fallback Icon (當圖片載入失敗或根本沒有圖片時顯示)
-            const bgColor = app.iconColor || '#333';
-            const fallback = app.fallbackIcon || '📱';
-            const fallbackHtml = `<div class="nb-fallback-content" style="display: ${hasImage ? 'none' : 'flex'};">${fallback}</div>`;
+            naturalGrid.innerHTML = '';
 
-            appWrapper.innerHTML = `
-                <div class="nb-icon-main" style="background-color: ${bgColor}">
-                    ${iconContent}
-                    ${fallbackHtml}
-                </div>
-                <div class="nb-app-name">${app.name}</div>
-            `;
+            const apps = JSON.parse(localStorage.getItem('installedApps') || '[]');
 
-            // 點擊事件
-            appWrapper.onclick = () => {
-                // 優先檢查是否有自定義 URL，否則嘗試調用原生的 openApp
-                if (app.url && app.type === 'website') {
-                    window.location.href = app.url;
-                } else if (typeof window.openApp === 'function') {
-                    window.openApp(app.id);
+            apps.forEach(app => {
+                const item = document.createElement('div');
+                item.className = 'nb-app-item';
+                
+                let iconHtml = '';
+                let bgColor = app.iconColor || '#333';
+                let isNiManager = (app.id === 'ni-core-system');
+
+                // 處理圖標內容
+                if (isNiManager) {
+                    // 如果係 Ni 管理器，顯示專屬齒輪圖標，但位置跟返 Array 順序
+                    iconHtml = `<div class="nb-fallback-icon" style="background: linear-gradient(135deg, #2c3e50, #000); width:100%; height:100%;">⚙️</div>`;
+                } else if (app.icon && (app.icon.startsWith('http') || app.icon.startsWith('data:'))) {
+                    // 正常圖片
+                    iconHtml = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
+                    iconHtml += `<div class="nb-fallback-icon" style="display:none; width:100%; height:100%;">${app.fallbackIcon || '📱'}</div>`;
                 } else {
-                    console.log("Launching:", app.name);
+                    // 無圖片連結，顯示 fallback
+                    iconHtml = `<div class="nb-fallback-icon" style="width:100%; height:100%;">${app.fallbackIcon || '📱'}</div>`;
                 }
-            };
 
-            naturalGrid.appendChild(appWrapper);
-        });
+                item.innerHTML = `
+                    <div class="nb-icon-container" style="background-color: ${bgColor}">
+                        ${iconHtml}
+                    </div>
+                    <div class="nb-app-label">${app.name}</div>
+                `;
+
+                // 點擊事件
+                item.onclick = () => {
+                    if (isNiManager) {
+                        if (window.openNiManager) window.openNiManager();
+                        else if (typeof openApp === 'function') openApp('ni-core-system');
+                    } else if (app.url && app.type === 'website') {
+                        window.location.href = app.url;
+                    } else if (typeof openApp === 'function') {
+                        openApp(app.id);
+                    }
+                };
+
+                naturalGrid.appendChild(item);
+            });
+        } catch (e) {
+            console.error("[NaturalBoard] Render Error:", e);
+        }
     };
 
-    // 3. 啟動與監測
+    // 3. 監測與啟動
     const init = () => {
-        const check = setInterval(() => {
-            if (document.getElementById('appsGrid')) {
+        // 使用 MutationObserver 監測，比 setInterval 更穩定，防止 Board 消失
+        const observer = new MutationObserver((mutations) => {
+            if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) {
                 renderNaturalBoard();
-                clearInterval(check);
             }
-        }, 200);
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // 初始執行
+        if (document.getElementById('appsGrid')) renderNaturalBoard();
     };
 
     init();
-
-    // 暴露刷新接口，方便後續連動
-    window.refreshNaturalBoard = renderNaturalBoard;
 })();
