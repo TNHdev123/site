@@ -23,18 +23,7 @@
       "fallbackIcon": "example"
     },
     {
-      "id": "installedfix",
-      "name": "Installed Fix",
-      "description": "Fix Apps that Install outside AppStore not showing on Home Screen.",
-      "icon": "https://img.icons8.com/fluency/48/checked-user-male.png",
-      "iconColor": "#FF9500",
-      "url": "https://tnhdev123.github.io/site/aios/nitweaks/installedfix.js",
-      "category": "System",
-      "type": "js",
-      "fallbackIcon": "🛠️"
-    },
-    {
-      "id": "natural-board-01",
+      "id": "nboard",
       "name": "NaturalBoard",
       "category": "Board",
       "description": "like iOS WinterBoard",
