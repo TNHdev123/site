@@ -1,67 +1,61 @@
 (function() {
     console.log("[WallLoad] Exploit Module Initialized.");
 
-    // 1. 建立 WallLoad 專屬測試面板
+    // 1. 建立 WallLoad 基礎調試面板 (移除版本號與特定風格)
     const wallLoadUI = document.createElement('div');
     wallLoadUI.id = 'wallload-debug-panel';
     wallLoadUI.innerHTML = `
-        <div style="font-family: 'SF Mono', monospace; font-size: 11px; color: #ff3b30; font-weight: bold;">
-            [WallLoad] VULN_INJECTOR ACTIVE
+        <div id="wl-label" style="font-family: monospace; font-weight: bold; margin-bottom: 8px;">WallLoad</div>
+        <div>
+            <input type="text" id="wl-input" placeholder="Image URL" 
+                   style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 12px; box-sizing: border-box;">
+            <div style="display: flex; gap: 5px; margin-top: 8px;">
+                <button id="wl-inject-btn" style="flex: 1; padding: 6px; cursor: pointer;">Inject</button>
+                <button id="wl-clear-btn" style="flex: 0.5; padding: 6px; cursor: pointer;">Clear</button>
+            </div>
         </div>
-        <div style="margin-top: 5px;">
-            <input type="text" id="wl-input" placeholder="Image URL / Asset Path" 
-                   style="width: 140px; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 10px;">
-            <button id="wl-inject-btn" style="background: #ff3b30; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; margin-left: 4px; cursor: pointer; font-size: 10px; font-weight: bold;">LOAD</button>
-        </div>
-        <div id="wl-status" style="font-size: 9px; color: #888; margin-top: 4px;">Waiting for payload...</div>
+        <div id="wl-status" style="font-size: 10px; margin-top: 8px; font-family: monospace;">Ready</div>
     `;
     
-    // 面板樣式：固定喺畫面邊緣，方便調試
+    // 基礎定位與毛玻璃背景 (維持能見度)
     Object.assign(wallLoadUI.style, {
-        position: 'fixed',
-        top: '150px',
-        right: '10px',
-        width: '210px',
-        padding: '12px',
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        backdropFilter: 'blur(10px)',
-        webkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '12px',
-        zIndex: '20000',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        pointerEvents: 'auto'
+        position: 'fixed', top: '160px', right: '15px', width: '200px', padding: '15px',
+        backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', webkitBackdropFilter: 'blur(10px)',
+        border: '1px solid #999', borderRadius: '8px', zIndex: '20000', pointerEvents: 'auto',
+        color: '#000'
     });
 
-    // 2. 漏洞注入邏輯
-    function triggerWallLoad(url) {
+    // 2. 漏洞注入邏輯：直接針對 homeWallpaper Key
+    function forceInjectWallpaper(url) {
         const status = document.getElementById('wl-status');
-        status.innerText = "[...] Attempting Buffer Injection...";
-        status.style.color = "#ff9500";
+        status.innerText = "Writing to Key...";
 
-        // 模擬繞過系統限制，強制修改 mobile-os 背景
-        const target = document.getElementById('mobile-os');
-        if (target) {
-            setTimeout(() => {
-                target.style.backgroundImage = `url('${url}')`;
-                target.style.backgroundSize = 'cover';
-                target.style.backgroundPosition = 'center';
-                
-                // 模擬持久化寫入漏洞緩存
-                localStorage.setItem('wallload_exploit_data', url);
-                
-                status.innerText = "[OK] Wallpaper Overridden via WallLoad";
-                status.style.color = "#4cd964";
-                
-                // 注入成功後嘅視覺反饋
-                target.style.transition = "opacity 0.5s";
-                target.style.opacity = "0.8";
-                setTimeout(() => target.style.opacity = "1", 500);
-            }, 800);
-        } else {
-            status.innerText = "[ERR] System UI (mobile-os) not found";
-            status.style.color = "#ff3b30";
+        // 核心：直接取代或製作 homeWallpaper 數據
+        localStorage.setItem('homeWallpaper', url);
+
+        // 視覺：製作獨立圖層確保注入成功
+        let bgLayer = document.getElementById('wallload-injected-layer');
+        if (!bgLayer) {
+            bgLayer = document.createElement('div');
+            bgLayer.id = 'wallload-injected-layer';
+            Object.assign(bgLayer.style, {
+                position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+                zIndex: '-2', backgroundSize: 'cover', backgroundPosition: 'center',
+                transition: 'opacity 0.8s'
+            });
+            document.body.appendChild(bgLayer);
         }
+
+        const img = new Image();
+        img.onload = function() {
+            bgLayer.style.backgroundImage = `url('${url}')`;
+            bgLayer.style.opacity = '1';
+            status.innerText = "Key 'homeWallpaper' updated.";
+        };
+        img.onerror = function() {
+            status.innerText = "Error: Invalid Payload.";
+        };
+        img.src = url;
     }
 
     // 3. 事件綁定
@@ -69,14 +63,19 @@
     
     document.getElementById('wl-inject-btn').onclick = () => {
         const url = document.getElementById('wl-input').value;
-        if (url) triggerWallLoad(url);
+        if (url) forceInjectWallpaper(url);
     };
 
-    // 檢查是否有先前透過 WallLoad 注入嘅設定
-    const savedPayload = localStorage.getItem('wallload_exploit_data');
-    if (savedPayload) {
-        console.log("[WallLoad] Persistent payload detected. Executing...");
-        setTimeout(() => triggerWallLoad(savedPayload), 1000);
-    }
+    document.getElementById('wl-clear-btn').onclick = () => {
+        localStorage.removeItem('homeWallpaper');
+        const bgLayer = document.getElementById('wallload-injected-layer');
+        if (bgLayer) bgLayer.remove();
+        document.getElementById('wl-status').innerText = "Key cleared.";
+    };
 
+    // 初始化檢查
+    const saved = localStorage.getItem('homeWallpaper');
+    if (saved) {
+        setTimeout(() => forceInjectWallpaper(saved), 500);
+    }
 })();
