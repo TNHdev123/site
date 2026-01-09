@@ -20,7 +20,7 @@
       "url": "https://tnhdev123.github.io/site/aios/nitweaks/test.js",
       "category": "Test",
       "type": "js",
-      "fallbackIcon": "example"
+      "fallbackIcon": "test"
     },
     {
       "id": "nboard",
@@ -32,13 +32,13 @@
       "url": "https://tnhdev123.github.io/site/aios/nitweaks/nboard.js"
     },
     {
-      "id": "booster",
-      "name": "TweakBooster",
+      "id": "wallload",
+      "name": "WallLoad",
       "category": "System",
-      "description": "Automatically load Tweaks when Reboot",
+      "description": "Load Tweaks when Reboot",
       "iconColor": "#FF9500",
-      "fallbackIcon": "🚀",
-      "url": "https://tnhdev123.github.io/site/aios/nitweaks/booster.js"
+      "fallbackIcon": "🧱",
+      "url": "https://tnhdev123.github.io/site/aios/nitweaks/wallloaf.js"
     }
   ]
 }
