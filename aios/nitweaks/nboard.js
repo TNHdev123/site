@@ -1,9 +1,8 @@
 (function() {
-    console.log("[NaturalBoard] Finalizing System Integration...");
+    console.log("[NaturalBoard] Initializing Dual-Widget System...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
-    // 嚴格對照你提供的系統 App 名稱與 ID
     const SYSTEM_DEFAULTS = {
         'ni-core-system': { name: 'NI Manager', icon: '📂', color: '#2c3e50' },
         'camera': { name: 'Camera', icon: '📷', color: '#4A4A4A' },
@@ -23,7 +22,7 @@
 
     const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Toronto"];
 
-    // 1. 注入 CSS (優化介面與動畫)
+    // 1. 注入 CSS (優化小工具切換動畫)
     const style = document.createElement('style');
     style.innerHTML = `
         #appsGrid > .app-icon { display: none !important; }
@@ -31,8 +30,7 @@
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 20px; padding: 20px; width: 100%; box-sizing: border-box;
         }
-        .nb-app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.1s; }
-        .nb-app-item:active { transform: scale(0.9); }
+        .nb-app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .nb-icon-box {
             width: 60px; height: 60px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
@@ -45,46 +43,52 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             width: 72px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+
+        /* 天氣小工具專屬樣式 */
+        #nb-weather-widget {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; width: 100%; cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        }
+        .weather-temp { font-size: 48px; font-weight: 200; color: white; }
+        .weather-loc { font-size: 16px; color: rgba(255,255,255,0.8); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000;
             display: none; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 44px);
-            color: white; font-family: sans-serif;
+            padding-top: env(safe-area-inset-top, 44px); color: white;
         }
         .nb-ui-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
         .nb-ui-body { flex: 1; overflow-y: auto; padding: 20px; }
         .nb-sort-row { display: flex; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 12px; }
         .nb-row-icon { width: 32px; height: 32px; border-radius: 7px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
-        .nb-row-icon img { width: 100%; height: 100%; object-fit: cover; }
         .nb-search-bar { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #222; color: white; margin-bottom: 15px; }
         .nb-city-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; }
-        .clock-display { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     `;
     document.head.appendChild(style);
 
-    // 2. 數據同步檢查與獲取
+    // 2. 數據同步檢查
     function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
         let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
-
         const installed = JSON.parse(localStorage.getItem('installedApps') || '[]');
         let currentApps = data.apps;
         let changed = false;
 
-        // 確保系統 App 存在且名稱正確
         Object.keys(SYSTEM_DEFAULTS).forEach(id => {
             let existing = currentApps.find(a => a.id === id);
             if (!existing) {
                 currentApps.push({ id, ...SYSTEM_DEFAULTS[id], isSystem: true });
                 changed = true;
             } else if (existing.name !== SYSTEM_DEFAULTS[id].name) {
-                existing.name = SYSTEM_DEFAULTS[id].name; // 修復名稱
+                existing.name = SYSTEM_DEFAULTS[id].name;
                 changed = true;
             }
         });
 
-        // 同步新安裝 App
         installed.forEach(instApp => {
             if (!currentApps.find(a => a.id === instApp.id)) {
                 currentApps.push(instApp);
@@ -92,43 +96,60 @@
             }
         });
 
-        // 同步已刪除 App (非系統 App)
         data.apps = currentApps.filter(app => {
             if (SYSTEM_DEFAULTS[app.id]) return true;
-            const stillHere = installed.find(i => i.id === app.id);
-            if (!stillHere) changed = true;
-            return stillHere;
+            return installed.find(i => i.id === app.id);
         });
 
         if (changed || !store) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         return data;
     }
 
-    // 3. 實時天氣 (修正閃爍與自動復原問題)
-    let weatherActive = false;
-    async function toggleWeather(city) {
-        const t = document.getElementById('current-time');
-        const d = document.getElementById('current-date');
-        
-        if (!weatherActive) {
-            weatherActive = true;
-            t.innerText = "Loading...";
-            try {
-                const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t|%l`);
-                const text = await response.text();
-                if (text.includes('|') && weatherActive) {
-                    const [temp, location] = text.split('|');
-                    t.innerText = temp.trim();
-                    d.innerText = location.trim();
-                }
-            } catch (e) { t.innerText = "Offline"; }
-        } else {
-            weatherActive = false;
-            if (window.updateClock) window.updateClock(); // 呼叫原生時鐘復原
-        }
+    // 3. 實時天氣切換邏輯
+    async function updateWeatherData(city) {
+        const tempEl = document.querySelector('.weather-temp');
+        const locEl = document.querySelector('.weather-loc');
+        tempEl.innerText = "--°";
+        locEl.innerText = "Loading...";
+        try {
+            const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t|%l`);
+            const text = await response.text();
+            if (text.includes('|')) {
+                const [temp, location] = text.split('|');
+                tempEl.innerText = temp.trim();
+                locEl.innerText = location.trim();
+            }
+        } catch (e) { locEl.innerText = "Offline"; }
     }
 
-    // 4. 渲染主介面
+    function initDualWidget(city) {
+        const clockWidget = document.querySelector('.clock-display');
+        if (!clockWidget) return;
+
+        // 如果天氣小工具未建立，就建立佢
+        let weatherWidget = document.getElementById('nb-weather-widget');
+        if (!weatherWidget) {
+            weatherWidget = document.createElement('div');
+            weatherWidget.id = 'nb-weather-widget';
+            weatherWidget.innerHTML = `<div class="weather-temp">--°</div><div class="weather-loc">Loading...</div>`;
+            clockWidget.parentNode.insertBefore(weatherWidget, clockWidget.nextSibling);
+        }
+
+        // 點擊時鐘切換到天氣
+        clockWidget.onclick = () => {
+            clockWidget.style.display = 'none';
+            weatherWidget.style.display = 'flex';
+            updateWeatherData(city);
+        };
+
+        // 點擊天氣切換返時鐘
+        weatherWidget.onclick = () => {
+            weatherWidget.style.display = 'none';
+            clockWidget.style.display = 'flex';
+        };
+    }
+
+    // 4. 渲染 Board
     function render() {
         const grid = document.getElementById('appsGrid');
         if (!grid) return;
@@ -145,12 +166,10 @@
         data.apps.forEach(app => {
             const item = document.createElement('div');
             item.className = 'nb-app-item';
-            
             let iconContent = '';
-            const isNi = app.id === 'ni-core-system';
             const sys = SYSTEM_DEFAULTS[app.id];
 
-            if (isNi) iconContent = `<span>📂</span>`;
+            if (app.id === 'ni-core-system') iconContent = `<span>📂</span>`;
             else if (app.icon && app.icon.startsWith('http')) {
                 iconContent = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
                 iconContent += `<span style="display:none; font-weight:900;">${app.name[0].toUpperCase()}</span>`;
@@ -158,20 +177,15 @@
                 iconContent = `<span style="font-weight:900;">${sys ? sys.icon : app.name[0].toUpperCase()}</span>`;
             }
 
-            const bgColor = isNi ? '#2c3e50' : (app.iconColor || (sys ? sys.color : '#333'));
+            const bgColor = app.id === 'ni-core-system' ? '#2c3e50' : (app.iconColor || (sys ? sys.color : '#333'));
 
             item.innerHTML = `<div class="nb-icon-box" style="background-color: ${bgColor}">${iconContent}</div>
                               <div class="nb-app-label">${app.name}</div>`;
-            
-            item.onclick = () => {
-                if (isNi) (window.openNiManager ? window.openNiManager() : openApp(app.id));
-                else if (app.type === 'website' && app.url) window.location.href = app.url;
-                else if (typeof openApp === 'function') openApp(app.id);
-            };
+            item.onclick = () => (typeof openApp === 'function' ? openApp(app.id) : null);
             nGrid.appendChild(item);
         });
 
-        // NBoard Settings 入口
+        // Settings Button
         const nbBtn = document.createElement('div');
         nbBtn.className = 'nb-app-item';
         nbBtn.innerHTML = `<div class="nb-icon-box" style="background:linear-gradient(135deg, #FF5E62, #FF9966)">🛠️</div>
@@ -179,17 +193,10 @@
         nbBtn.onclick = openSettings;
         nGrid.appendChild(nbBtn);
 
-        // 綁定天氣點擊 (修正點擊邏輯)
-        const clock = document.querySelector('.clock-display');
-        if (clock) {
-            clock.onclick = (e) => {
-                e.stopPropagation();
-                toggleWeather(data.weather.location);
-            };
-        }
+        initDualWidget(data.weather.location);
     }
 
-    // 5. NaturalBoard 設定介面
+    // 5. Settings UI
     function openSettings() {
         let ui = document.getElementById('nb-settings-ui');
         if (!ui) {
@@ -203,13 +210,13 @@
         ui.innerHTML = `
             <div class="nb-ui-header">
                 <span style="font-size:22px; font-weight:800;">NaturalBoard</span>
-                <span onclick="document.getElementById('nb-settings-ui').style.display='none'" style="color:#007AFF; font-weight:600; cursor:pointer;">Done</span>
+                <span onclick="document.getElementById('nb-settings-ui').style.display='none'" style="color:#007AFF; cursor:pointer;">Done</span>
             </div>
             <div class="nb-ui-body">
-                <h3 style="margin: 0 0 10px 0;">Weather Location</h3>
+                <h3>Weather Location</h3>
                 <input type="text" class="nb-search-bar" placeholder="Search Global City..." id="nbCitySearch">
                 <div id="cityResults" style="margin-bottom:20px;"></div>
-                <h3 style="margin: 0 0 10px 0;">App Order</h3>
+                <h3>App Order</h3>
                 <div id="nbSortList"></div>
             </div>
         `;
@@ -221,15 +228,12 @@
             const sys = SYSTEM_DEFAULTS[app.id];
             const bg = app.iconColor || (sys ? sys.color : '#333');
             const iconHtml = (app.icon && app.icon.startsWith('http')) ? `<img src="${app.icon}">` : `<span>${sys ? sys.icon : app.name[0]}</span>`;
-            
-            row.innerHTML = `
-                <div class="nb-row-icon" style="background-color:${bg}">${iconHtml}</div>
-                <span style="flex:1; font-weight:500;">${app.name}</span>
-                <div style="display:flex; gap:12px;">
-                    <button onclick="nbMove(${i},-1)" style="background:none; border:none; color:white; font-size:20px;">▲</button>
-                    <button onclick="nbMove(${i},1)" style="background:none; border:none; color:white; font-size:20px;">▼</button>
-                </div>
-            `;
+            row.innerHTML = `<div class="nb-row-icon" style="background-color:${bg}">${iconHtml}</div>
+                             <span style="flex:1">${app.name}</span>
+                             <div style="display:flex; gap:12px;">
+                                <button onclick="nbMove(${i},-1)" style="background:none; border:none; color:white; font-size:20px;">▲</button>
+                                <button onclick="nbMove(${i},1)" style="background:none; border:none; color:white; font-size:20px;">▼</button>
+                             </div>`;
             list.appendChild(row);
         });
 
@@ -239,14 +243,8 @@
             if (!e.target.value) return;
             WORLD_CITIES.filter(c => c.toLowerCase().includes(e.target.value.toLowerCase())).forEach(c => {
                 const div = document.createElement('div');
-                div.className = 'nb-city-item';
-                div.innerText = c;
-                div.onclick = () => { 
-                    data.weather.location = c; 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
-                    weatherActive = false; // 重置天氣狀態
-                    openSettings(); 
-                };
+                div.className = 'nb-city-item'; div.innerText = c;
+                div.onclick = () => { data.weather.location = c; localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); openSettings(); render(); };
                 res.appendChild(div);
             });
         };
@@ -255,16 +253,13 @@
             if (i+dir >= 0 && i+dir < data.apps.length) {
                 [data.apps[i], data.apps[i+dir]] = [data.apps[i+dir], data.apps[i]];
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                openSettings();
-                render();
+                openSettings(); render();
             }
         };
     }
 
     const init = () => {
-        const obs = new MutationObserver(() => { 
-            if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) render(); 
-        });
+        const obs = new MutationObserver(() => { if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) render(); });
         obs.observe(document.body, { childList: true, subtree: true });
         render();
     };
