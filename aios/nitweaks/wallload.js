@@ -1,81 +1,94 @@
 (function() {
-    console.log("[WallLoad] Exploit Module Initialized.");
+    console.log("[WallLoad] Core Injection: Direct Object Definition Mode.");
 
-    // 1. 建立 WallLoad 基礎調試面板 (移除版本號與特定風格)
+    // 1. 建立 WallLoad 調試面板
     const wallLoadUI = document.createElement('div');
     wallLoadUI.id = 'wallload-debug-panel';
     wallLoadUI.innerHTML = `
         <div id="wl-label" style="font-family: monospace; font-weight: bold; margin-bottom: 8px;">WallLoad</div>
         <div>
-            <input type="text" id="wl-input" placeholder="Image URL" 
+            <input type="text" id="wl-input" placeholder="Image URL / Base64" 
                    style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 12px; box-sizing: border-box;">
             <div style="display: flex; gap: 5px; margin-top: 8px;">
-                <button id="wl-inject-btn" style="flex: 1; padding: 6px; cursor: pointer;">Inject</button>
-                <button id="wl-clear-btn" style="flex: 0.5; padding: 6px; cursor: pointer;">Clear</button>
+                <button id="wl-inject-btn" style="flex: 1; padding: 6px; cursor: pointer;">Force Inject</button>
+                <button id="wl-clear-btn" style="flex: 0.5; padding: 6px; cursor: pointer;">Reset</button>
             </div>
         </div>
-        <div id="wl-status" style="font-size: 10px; margin-top: 8px; font-family: monospace;">Ready</div>
+        <div id="wl-status" style="font-size: 10px; margin-top: 8px; font-family: monospace;">System Idle</div>
     `;
     
-    // 基礎定位與毛玻璃背景 (維持能見度)
     Object.assign(wallLoadUI.style, {
-        position: 'fixed', top: '160px', right: '15px', width: '200px', padding: '15px',
-        backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', webkitBackdropFilter: 'blur(10px)',
-        border: '1px solid #999', borderRadius: '8px', zIndex: '20000', pointerEvents: 'auto',
-        color: '#000'
+        position: 'fixed', top: '160px', right: '15px', width: '220px', padding: '15px',
+        backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', webkitBackdropFilter: 'blur(10px)',
+        border: '1px solid #999', borderRadius: '8px', zIndex: '20000', pointerEvents: 'auto', color: '#000'
     });
 
-    // 2. 漏洞注入邏輯：直接針對 homeWallpaper Key
-    function forceInjectWallpaper(url) {
+    // 2. 核心漏洞邏輯：強制製作並鎖定 homeWallpaper
+    function performWallLoad(url) {
         const status = document.getElementById('wl-status');
-        status.innerText = "Writing to Key...";
+        status.innerText = "Executing Exploit...";
 
-        // 核心：直接取代或製作 homeWallpaper 數據
+        // --- 策略 A: 寫入 Persistent Storage ---
         localStorage.setItem('homeWallpaper', url);
 
-        // 視覺：製作獨立圖層確保注入成功
-        let bgLayer = document.getElementById('wallload-injected-layer');
-        if (!bgLayer) {
-            bgLayer = document.createElement('div');
-            bgLayer.id = 'wallload-injected-layer';
-            Object.assign(bgLayer.style, {
-                position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
-                zIndex: '-2', backgroundSize: 'cover', backgroundPosition: 'center',
-                transition: 'opacity 0.8s'
-            });
-            document.body.appendChild(bgLayer);
+        // --- 策略 B: 強制建立/替換全域變數 (如果系統依賴全域變數讀取) ---
+        window.homeWallpaper = url;
+
+        // --- 策略 C: 強制製作一個擁有最高優先權嘅背景層 ---
+        let wlLayer = document.getElementById('wallload-layer');
+        if (!wlLayer) {
+            wlLayer = document.createElement('div');
+            wlLayer.id = 'wallload-layer';
+            // 使用 !important 級別嘅 CSS 注入
+            wlLayer.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: -9999 !important;
+                background-size: cover !important;
+                background-position: center !important;
+                display: block !important;
+                pointer-events: none !important;
+            `;
+            document.body.appendChild(wlLayer);
         }
 
+        // 執行圖片加載與注入
         const img = new Image();
+        img.crossOrigin = "Anonymous"; // 嘗試避開 CORS
         img.onload = function() {
-            bgLayer.style.backgroundImage = `url('${url}')`;
-            bgLayer.style.opacity = '1';
-            status.innerText = "Key 'homeWallpaper' updated.";
+            wlLayer.style.backgroundImage = `url('${url}')`;
+            status.innerText = "DONE: homeWallpaper Active";
+            console.log("[WallLoad] Success: Key injected and Layer rendered.");
         };
         img.onerror = function() {
-            status.innerText = "Error: Invalid Payload.";
+            status.innerText = "ERROR: Failed to load asset.";
         };
         img.src = url;
     }
 
-    // 3. 事件綁定
+    // 3. 處理事件
     document.body.appendChild(wallLoadUI);
     
     document.getElementById('wl-inject-btn').onclick = () => {
         const url = document.getElementById('wl-input').value;
-        if (url) forceInjectWallpaper(url);
+        if (url) performWallLoad(url);
     };
 
     document.getElementById('wl-clear-btn').onclick = () => {
         localStorage.removeItem('homeWallpaper');
-        const bgLayer = document.getElementById('wallload-injected-layer');
-        if (bgLayer) bgLayer.remove();
-        document.getElementById('wl-status').innerText = "Key cleared.";
+        delete window.homeWallpaper;
+        const layer = document.getElementById('wallload-layer');
+        if (layer) layer.remove();
+        document.getElementById('wl-status').innerText = "System Reset.";
     };
 
-    // 初始化檢查
+    // 自動加載 (持久化測試)
     const saved = localStorage.getItem('homeWallpaper');
     if (saved) {
-        setTimeout(() => forceInjectWallpaper(saved), 500);
+        setTimeout(() => performWallLoad(saved), 500);
     }
+
 })();
