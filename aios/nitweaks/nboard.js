@@ -1,5 +1,5 @@
 (function() {
-    console.log("[NaturalBoard] Perfecting Layout & Glassmorphism...");
+    console.log("[NaturalBoard] Enhanced Interactions & External App Navigation...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
@@ -22,62 +22,39 @@
 
     const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Toronto"];
 
-    // 1. 注入 CSS (優化間距與毛玻璃)
+    // 1. 注入 CSS (優化間距、毛玻璃與動畫)
     const style = document.createElement('style');
     style.innerHTML = `
-        /* 隱藏原生組件 */
         .clock-display { display: none !important; }
         #appsGrid > .app-icon { display: none !important; }
 
-        /* 新小工具區域：毛玻璃效果 */
         #nb-widget-area {
             width: calc(100% - 32px);
             margin: calc(env(safe-area-inset-top) + 20px) 16px 10px 16px;
             padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            cursor: pointer;
-            border-radius: 24px;
-            /* 毛玻璃效果核心 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; cursor: pointer; border-radius: 24px;
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             z-index: 100;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #nb-widget-time { 
-            font-size: 44px; 
-            font-weight: 200; 
-            line-height: 1;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-        #nb-widget-date { 
-            font-size: 15px; 
-            font-weight: 400; 
-            opacity: 0.8;
-            text-align: center;
-            padding: 0 10px;
-        }
+        #nb-widget-area:active { transform: scale(0.96); }
+        
+        #nb-widget-time { font-size: 44px; font-weight: 200; line-height: 1; margin-bottom: 8px; letter-spacing: -1px; }
+        #nb-widget-date { font-size: 15px; font-weight: 400; opacity: 0.8; text-align: center; padding: 0 10px; }
 
-        /* 主網格：確保在小工具下方，不重疊 */
         #natural-grid {
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px; 
-            padding: 10px 20px 40px 20px; 
-            width: 100%; 
-            box-sizing: border-box;
-            /* 避開導覽列底部 */
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 20px; padding: 10px 20px 40px 20px; width: 100%; box-sizing: border-box;
             margin-bottom: env(safe-area-inset-bottom, 20px);
         }
         
-        .nb-app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.1s; }
-        .nb-app-item:active { transform: scale(0.9); }
+        .nb-app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .nb-app-item:active { transform: scale(0.85); }
+        
         .nb-icon-box {
             width: 60px; height: 60px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
@@ -91,7 +68,6 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
-        /* 設定介面 */
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000;
@@ -107,10 +83,10 @@
     `;
     document.head.appendChild(style);
 
-    // 2. 數據同步 (保持原有優點)
+    // 2. 數據管理
     function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
-        let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
+        let data = store ? JSON.parse(store) : { apps: [], weather: { location: "Hong Kong" } };
         const installed = JSON.parse(localStorage.getItem('installedApps') || '[]');
         let currentApps = data.apps;
         let changed = false;
@@ -134,7 +110,7 @@
         return data;
     }
 
-    // 3. 自定義小工具邏輯
+    // 3. 小工具邏輯 (移除天氣 + 號)
     let isWeatherMode = false;
     let widgetTimer = null;
 
@@ -168,8 +144,10 @@
                 const response = await fetch(`https://wttr.in/${encodeURIComponent(data.weather.location)}?format=%t|%l`);
                 const text = await response.text();
                 if (text.includes('|') && isWeatherMode) {
-                    const [temp, location] = text.split('|');
-                    timeEl.innerText = temp.trim();
+                    let [temp, location] = text.split('|');
+                    // 關鍵修正：移除溫度前面嘅 + 號
+                    temp = temp.replace('+', '').trim();
+                    timeEl.innerText = temp;
                     dateEl.innerText = location.trim();
                 }
             } catch (e) { timeEl.innerText = "Offline"; }
@@ -185,7 +163,6 @@
         const grid = document.getElementById('appsGrid');
         if (!os || !grid) return;
 
-        // 插入小工具
         let widgetArea = document.getElementById('nb-widget-area');
         if (!widgetArea) {
             widgetArea = document.createElement('div');
@@ -196,7 +173,6 @@
             startWidget();
         }
 
-        // 插入網格
         let nGrid = document.getElementById('natural-grid');
         if (!nGrid) {
             nGrid = document.createElement('div');
@@ -231,8 +207,12 @@
                 if (isNi) {
                     if (typeof window.openNiManager === 'function') window.openNiManager();
                     else if (typeof openApp === 'function') openApp('ni-core-system');
-                } else if (app.type === 'website' && app.url) window.location.href = app.url;
-                else if (typeof openApp === 'function') openApp(app.id);
+                } else if (app.type === 'website' && app.url) {
+                    // 關鍵修正：導向新分頁打開三方網頁 App
+                    window.open(app.url, '_blank');
+                } else if (typeof openApp === 'function') {
+                    openApp(app.id);
+                }
             };
             nGrid.appendChild(item);
         });
@@ -245,7 +225,7 @@
         nGrid.appendChild(nbBtn);
     }
 
-    // 5. 設定介面 (略，同上一版)
+    // 5. 設定介面 (略，功能同上)
     function openSettings() {
         let ui = document.getElementById('nb-settings-ui');
         if (!ui) { ui = document.createElement('div'); ui.id = 'nb-settings-ui'; document.body.appendChild(ui); }
@@ -258,10 +238,10 @@
                 <span onclick="document.getElementById('nb-settings-ui').style.display='none'" style="color:#007AFF; font-weight:600; cursor:pointer;">Done</span>
             </div>
             <div class="nb-ui-body">
-                <h3 style="margin-bottom:10px;">Weather Location</h3>
-                <input type="text" class="nb-search-bar" placeholder="Search Global City..." id="nbCitySearch">
-                <div id="cityResults" style="margin-bottom:20px;"></div>
-                <h3 style="margin-bottom:10px;">App Order</h3>
+                <h3 style="margin-bottom:10px;">Weather City</h3>
+                <input type="text" class="nb-search-bar" placeholder="Enter City Name..." id="nbCitySearch">
+                <div id="cityResults"></div>
+                <h3 style="margin-top:20px; margin-bottom:10px;">App Management</h3>
                 <div id="nbSortList"></div>
             </div>
         `;
@@ -282,15 +262,15 @@
             list.appendChild(row);
         });
 
-        document.getElementById('nbCitySearch').oninput = (e) => {
-            const res = document.getElementById('cityResults');
-            res.innerHTML = '';
-            if (!e.target.value) return;
-            WORLD_CITIES.filter(c => c.toLowerCase().includes(e.target.value.toLowerCase())).forEach(c => {
-                const div = document.createElement('div'); div.className = 'nb-city-item'; div.innerText = c;
-                div.onclick = () => { data.weather.location = c; localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); isWeatherMode = false; openSettings(); };
-                res.appendChild(div);
-            });
+        const searchInput = document.getElementById('nbCitySearch');
+        searchInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && e.target.value) {
+                data.weather.location = e.target.value;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                isWeatherMode = false;
+                alert(`Location set to: ${e.target.value}`);
+                openSettings();
+            }
         };
 
         window.nbMove = (i, dir) => {
