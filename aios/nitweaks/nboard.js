@@ -1,5 +1,5 @@
 (function() {
-    console.log("[NaturalBoard] Layout Fixed: Lower Grid, Glassmorphism Restored.");
+    console.log("[NaturalBoard] Perfecting Layout & Glassmorphism...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
@@ -22,34 +22,60 @@
 
     const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Toronto"];
 
-    // 1. 注入 CSS (位置修復 + 毛玻璃效果)
+    // 1. 注入 CSS (優化間距與毛玻璃)
     const style = document.createElement('style');
     style.innerHTML = `
+        /* 隱藏原生組件 */
+        .clock-display { display: none !important; }
         #appsGrid > .app-icon { display: none !important; }
-        
-        /* 恢復時鐘毛玻璃效果並確保對齊 */
-        .clock-display {
-            background: rgba(255, 255, 255, 0.1) !important;
-            backdrop-filter: blur(20px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-            border-radius: 24px;
-            margin: 15px;
-            padding: 20px;
+
+        /* 新小工具區域：毛玻璃效果 */
+        #nb-widget-area {
+            width: calc(100% - 32px);
+            margin: calc(env(safe-area-inset-top) + 20px) 16px 10px 16px;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
             cursor: pointer;
-            z-index: 10;
+            border-radius: 24px;
+            /* 毛玻璃效果核心 */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        #nb-widget-time { 
+            font-size: 44px; 
+            font-weight: 200; 
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+        #nb-widget-date { 
+            font-size: 15px; 
+            font-weight: 400; 
+            opacity: 0.8;
+            text-align: center;
+            padding: 0 10px;
         }
 
-        /* 調低 Apps 區域位置，確保喺日期下低 */
+        /* 主網格：確保在小工具下方，不重疊 */
         #natural-grid {
             display: grid; 
             grid-template-columns: repeat(4, 1fr);
             gap: 20px; 
-            padding: 20px; 
+            padding: 10px 20px 40px 20px; 
             width: 100%; 
             box-sizing: border-box;
-            margin-top: 10px; /* 增加頂部間距避開小工具 */
+            /* 避開導覽列底部 */
+            margin-bottom: env(safe-area-inset-bottom, 20px);
         }
-
+        
         .nb-app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.1s; }
         .nb-app-item:active { transform: scale(0.9); }
         .nb-icon-box {
@@ -60,26 +86,28 @@
         }
         .nb-icon-box img { width: 100%; height: 100%; object-fit: cover; }
         .nb-app-label {
-            margin-top: 8px; font-size: 11px; color: white;
+            margin-top: 8px; font-size: 11px; color: white; text-align: center;
+            width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            width: 72px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
+        /* 設定介面 */
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000;
             display: none; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 44px);
-            color: white; font-family: sans-serif;
+            padding-top: env(safe-area-inset-top, 44px); color: white;
         }
         .nb-ui-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
         .nb-ui-body { flex: 1; overflow-y: auto; padding: 20px; }
         .nb-sort-row { display: flex; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 12px; }
         .nb-row-icon { width: 32px; height: 32px; border-radius: 7px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+        .nb-search-bar { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #222; color: white; margin-bottom: 15px; }
+        .nb-city-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; }
     `;
     document.head.appendChild(style);
 
-    // 2. 數據同步檢查
+    // 2. 數據同步 (保持原有優點)
     function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
         let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
@@ -106,38 +134,69 @@
         return data;
     }
 
-    // 3. 天氣與時鐘暫停邏輯
-    let weatherActive = false;
-    let originalUpdateClock = window.updateClock;
+    // 3. 自定義小工具邏輯
+    let isWeatherMode = false;
+    let widgetTimer = null;
 
-    async function toggleWeather(city) {
-        const t = document.getElementById('current-time');
-        const d = document.getElementById('current-date');
-        if (!weatherActive) {
-            weatherActive = true;
-            window.updateClock = function() {}; // 暫停時鐘
-            t.innerText = "Loading...";
+    function startWidget() {
+        if (widgetTimer) clearInterval(widgetTimer);
+        widgetTimer = setInterval(updateWidgetDisplay, 1000);
+        updateWidgetDisplay();
+    }
+
+    function updateWidgetDisplay() {
+        if (isWeatherMode) return;
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+        
+        const timeEl = document.getElementById('nb-widget-time');
+        const dateEl = document.getElementById('nb-widget-date');
+        if (timeEl) timeEl.innerText = timeStr;
+        if (dateEl) dateEl.innerText = dateStr;
+    }
+
+    async function toggleWidget() {
+        const data = getStore();
+        const timeEl = document.getElementById('nb-widget-time');
+        const dateEl = document.getElementById('nb-widget-date');
+
+        if (!isWeatherMode) {
+            isWeatherMode = true;
+            timeEl.innerText = "Loading...";
             try {
-                const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t|%l`);
+                const response = await fetch(`https://wttr.in/${encodeURIComponent(data.weather.location)}?format=%t|%l`);
                 const text = await response.text();
-                if (text.includes('|') && weatherActive) {
+                if (text.includes('|') && isWeatherMode) {
                     const [temp, location] = text.split('|');
-                    t.innerText = temp.trim();
-                    d.innerText = location.trim();
+                    timeEl.innerText = temp.trim();
+                    dateEl.innerText = location.trim();
                 }
-            } catch (e) { t.innerText = "Offline"; }
+            } catch (e) { timeEl.innerText = "Offline"; }
         } else {
-            weatherActive = false;
-            window.updateClock = originalUpdateClock; // 恢復時鐘
-            if (typeof window.updateClock === 'function') window.updateClock();
+            isWeatherMode = false;
+            updateWidgetDisplay();
         }
     }
 
     // 4. 渲染
     function render() {
+        const os = document.getElementById('mobile-os');
         const grid = document.getElementById('appsGrid');
-        if (!grid) return;
+        if (!os || !grid) return;
 
+        // 插入小工具
+        let widgetArea = document.getElementById('nb-widget-area');
+        if (!widgetArea) {
+            widgetArea = document.createElement('div');
+            widgetArea.id = 'nb-widget-area';
+            widgetArea.innerHTML = `<div id="nb-widget-time"></div><div id="nb-widget-date"></div>`;
+            widgetArea.onclick = toggleWidget;
+            os.insertBefore(widgetArea, os.firstChild);
+            startWidget();
+        }
+
+        // 插入網格
         let nGrid = document.getElementById('natural-grid');
         if (!nGrid) {
             nGrid = document.createElement('div');
@@ -151,10 +210,10 @@
             const item = document.createElement('div');
             item.className = 'nb-app-item';
             
-            let iconContent = '';
             const isNi = app.id === 'ni-core-system';
             const sys = SYSTEM_DEFAULTS[app.id];
 
+            let iconContent = '';
             if (isNi) iconContent = `<span>📂</span>`;
             else if (app.icon && app.icon.startsWith('http')) {
                 iconContent = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
@@ -172,11 +231,8 @@
                 if (isNi) {
                     if (typeof window.openNiManager === 'function') window.openNiManager();
                     else if (typeof openApp === 'function') openApp('ni-core-system');
-                } else if (app.type === 'website' && app.url) {
-                    window.location.href = app.url;
-                } else if (typeof openApp === 'function') {
-                    openApp(app.id);
-                }
+                } else if (app.type === 'website' && app.url) window.location.href = app.url;
+                else if (typeof openApp === 'function') openApp(app.id);
             };
             nGrid.appendChild(item);
         });
@@ -187,17 +243,9 @@
                           <div class="nb-app-label">NBoard</div>`;
         nbBtn.onclick = openSettings;
         nGrid.appendChild(nbBtn);
-
-        const clock = document.querySelector('.clock-display');
-        if (clock) {
-            clock.onclick = (e) => {
-                e.stopPropagation();
-                toggleWeather(data.weather.location);
-            };
-        }
     }
 
-    // 5. 設定介面
+    // 5. 設定介面 (略，同上一版)
     function openSettings() {
         let ui = document.getElementById('nb-settings-ui');
         if (!ui) { ui = document.createElement('div'); ui.id = 'nb-settings-ui'; document.body.appendChild(ui); }
@@ -240,7 +288,7 @@
             if (!e.target.value) return;
             WORLD_CITIES.filter(c => c.toLowerCase().includes(e.target.value.toLowerCase())).forEach(c => {
                 const div = document.createElement('div'); div.className = 'nb-city-item'; div.innerText = c;
-                div.onclick = () => { data.weather.location = c; localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); weatherActive = false; openSettings(); };
+                div.onclick = () => { data.weather.location = c; localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); isWeatherMode = false; openSettings(); };
                 res.appendChild(div);
             });
         };
@@ -255,7 +303,6 @@
     }
 
     const init = () => {
-        if (!originalUpdateClock) originalUpdateClock = window.updateClock;
         const obs = new MutationObserver(() => { if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) render(); });
         obs.observe(document.body, { childList: true, subtree: true });
         render();
