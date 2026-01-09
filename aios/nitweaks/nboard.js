@@ -1,9 +1,9 @@
 (function() {
-    console.log("[NaturalBoard] Initializing...");
+    console.log("[NaturalBoard] Initializing Secure Implementation...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
-    // 精確對接系統圖示
+    // 精確對接系統圖示及原名
     const SYSTEM_DEFAULTS = {
         'ni-core-system': { name: 'NI Manager', icon: '📂', color: '#2c3e50' },
         'settings': { name: 'Settings', icon: '⚙️', color: '#8E8E93' },
@@ -15,15 +15,15 @@
         'calculator': { name: 'Calculator', icon: '🔢', color: '#FF9500' },
         'ai-assistant': { name: 'Assistant', icon: '🤖', color: '#000' },
         'terminal': { name: 'Terminal', icon: '💻', color: '#2C3E50' },
-        'cydia2': { name: 'Cydia', icon: '📦', color: '#9B59B6' },
+        'cydia2': { name: 'Cydia2', icon: '📦', color: '#9B59B6' },
         'maths-ai': { name: 'Math AI', icon: '🧠', color: '#FF3B30' },
         'ai-to-ui': { name: 'AI to UI', icon: '🎨', color: '#5856D6' },
         'aos-switcher': { name: 'Switcher', icon: '🔄', color: '#34495E' }
     };
 
-    const WORLD_CITIES = ["New York, USA", "London, UK", "Tokyo, Japan", "Hong Kong", "Taipei, Taiwan", "Paris, France", "Berlin, Germany", "Sydney, Australia", "Singapore", "Seoul, South Korea", "Bangkok, Thailand", "Dubai, UAE", "Zurich, Switzerland", "Toronto, Canada"];
+    const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Zurich", "Toronto"];
 
-    // 1. 注入 CSS (含防遮擋處理)
+    // 1. 注入 CSS
     const style = document.createElement('style');
     style.innerHTML = `
         #appsGrid > .app-icon { display: none !important; }
@@ -44,50 +44,82 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             width: 72px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        /* 設定介面佈局 */
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 10000;
+            background: rgba(0,0,0,0.95); z-index: 10000;
             display: none; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 40px); /* 防狀態列遮擋 */
-            color: white; font-family: sans-serif;
+            padding-top: env(safe-area-inset-top, 44px);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
         .nb-ui-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .nb-ui-body { flex: 1; overflow-y: auto; padding: 20px; }
-        .nb-sort-row { display: flex; align-items: center; padding: 10px; background: #222; margin-bottom: 5px; border-radius: 8px; }
-        .nb-search-bar { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-bottom: 15px; }
-        .nb-city-item { padding: 10px; border-bottom: 1px solid #333; }
-        .clock-display { cursor: pointer; }
+        .nb-ui-body { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 40px; }
+        .nb-sort-row { display: flex; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 12px; }
+        .nb-row-icon { width: 32px; height: 32px; border-radius: 7px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+        .nb-row-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .nb-search-bar { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #222; color: white; margin-bottom: 15px; }
+        .nb-city-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; }
+        .clock-display { cursor: pointer; transition: transform 0.1s; }
+        .clock-display:active { transform: scale(0.95); }
     `;
     document.head.appendChild(style);
 
-    // 2. 數據管理
-    function initStorage() {
+    // 2. 數據管理與同步檢查
+    function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
-        if (store) return JSON.parse(store);
+        let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
 
         const installed = JSON.parse(localStorage.getItem('installedApps') || '[]');
-        let apps = [];
-        
-        // 合併系統與三方
+        let currentApps = data.apps;
+        let changed = false;
+
+        // 初始化或補全系統 App
         Object.keys(SYSTEM_DEFAULTS).forEach(id => {
-            apps.push({ id, ...SYSTEM_DEFAULTS[id], isSystem: true });
-        });
-        installed.forEach(a => {
-            if (!apps.find(exist => exist.id === a.id)) apps.push(a);
+            if (!currentApps.find(a => a.id === id)) {
+                currentApps.push({ id, ...SYSTEM_DEFAULTS[id], isSystem: true });
+                changed = true;
+            }
         });
 
-        const data = { apps, weather: { location: "New York, USA" } };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        // 檢查新安裝的 App (同步更新)
+        installed.forEach(instApp => {
+            if (!currentApps.find(a => a.id === instApp.id)) {
+                currentApps.push(instApp);
+                changed = true;
+            }
+        });
+
+        // 檢查已刪除的 App (同步刪除，但不影響系統 App)
+        data.apps = currentApps.filter(app => {
+            if (SYSTEM_DEFAULTS[app.id]) return true;
+            const stillInstalled = installed.find(i => i.id === app.id);
+            if (!stillInstalled) changed = true;
+            return stillInstalled;
+        });
+
+        if (changed || !store) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         return data;
     }
 
-    function saveStore(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        render();
+    // 3. 實時天氣獲取 (wttr.in)
+    async function fetchRealWeather(city) {
+        try {
+            const t = document.getElementById('current-time');
+            const d = document.getElementById('current-date');
+            t.innerText = "Loading...";
+            // 使用 wttr.in 獲取純文字天氣數據 (溫度 + 地點)
+            const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t|%l`);
+            const text = await response.text();
+            if (text.includes('|')) {
+                const [temp, location] = text.split('|');
+                t.innerText = temp.trim();
+                d.innerText = location.trim();
+            }
+        } catch (e) {
+            document.getElementById('current-time').innerText = "Error";
+        }
     }
 
-    // 3. 渲染主介面
+    // 4. 渲染主畫面
     function render() {
         const grid = document.getElementById('appsGrid');
         if (!grid) return;
@@ -100,7 +132,7 @@
         }
         nGrid.innerHTML = '';
 
-        const data = initStorage();
+        const data = getStore();
         data.apps.forEach(app => {
             const item = document.createElement('div');
             item.className = 'nb-app-item';
@@ -109,15 +141,12 @@
             const isNi = app.id === 'ni-core-system';
             const sys = SYSTEM_DEFAULTS[app.id];
 
-            if (isNi) {
-                iconContent = `<span>📂</span>`;
-            } else if (app.icon && app.icon.startsWith('http')) {
-                // 三方圖標優化渲染
+            if (isNi) iconContent = `<span>📂</span>`;
+            else if (app.icon && app.icon.startsWith('http')) {
                 iconContent = `<img src="${app.icon}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';">`;
-                iconContent += `<span style="display:none; font-weight:bold;">${app.name[0].toUpperCase()}</span>`;
+                iconContent += `<span style="display:none; font-weight:900; font-size:24px;">${app.name[0].toUpperCase()}</span>`;
             } else {
-                // 如果無圖標，用首字母替代 Emoji
-                iconContent = `<span style="font-weight:bold;">${sys ? sys.icon : app.name[0].toUpperCase()}</span>`;
+                iconContent = `<span style="font-weight:900; font-size:24px;">${sys ? sys.icon : app.name[0].toUpperCase()}</span>`;
             }
 
             const bgColor = isNi ? '#2c3e50' : (app.iconColor || (sys ? sys.color : '#333'));
@@ -128,37 +157,33 @@
                 </div>
                 <div class="nb-app-label">${app.name}</div>
             `;
-            item.onclick = () => (isNi ? (window.openNiManager ? window.openNiManager() : openApp(app.id)) : openApp(app.id));
+            item.onclick = () => {
+                if (isNi) (window.openNiManager ? window.openNiManager() : openApp(app.id));
+                else if (app.type === 'website' && app.url) window.location.href = app.url;
+                else if (typeof openApp === 'function') openApp(app.id);
+            };
             nGrid.appendChild(item);
         });
 
-        // NBoard 圖標
+        // NBoard入口
         const nbBtn = document.createElement('div');
         nbBtn.className = 'nb-app-item';
         nbBtn.innerHTML = `<div class="nb-icon-box" style="background:linear-gradient(135deg, #FF5E62, #FF9966)">🛠️</div><div class="nb-app-label">NBoard</div>`;
         nbBtn.onclick = openSettings;
         nGrid.appendChild(nbBtn);
 
-        setupWeather(data.weather.location);
-    }
-
-    // 4. 天氣功能
-    function setupWeather(loc) {
+        // 初始化天氣點擊
         const clock = document.querySelector('.clock-display');
-        if (!clock) return;
-        clock.onclick = () => {
-            const t = document.getElementById('current-time');
-            const d = document.getElementById('current-date');
-            if (t.innerText.includes(':')) {
-                t.innerText = "22°C";
-                d.innerText = loc;
-            } else {
-                if (window.updateClock) window.updateClock();
-            }
-        };
+        if (clock) {
+            clock.onclick = () => {
+                const t = document.getElementById('current-time');
+                if (t.innerText.includes(':')) fetchRealWeather(data.weather.location);
+                else if (window.updateClock) window.updateClock();
+            };
+        }
     }
 
-    // 5. 設定介面
+    // 5. NBoard 設定介面
     function openSettings() {
         let ui = document.getElementById('nb-settings-ui');
         if (!ui) {
@@ -167,15 +192,18 @@
             document.body.appendChild(ui);
         }
         ui.style.display = 'flex';
-        const data = initStorage();
+        const data = getStore();
 
         ui.innerHTML = `
-            <div class="nb-ui-header"><b>NBoard Settings</b> <span onclick="document.getElementById('nb-settings-ui').style.display='none'" style="color:#007AFF">Done</span></div>
+            <div class="nb-ui-header">
+                <span style="font-size:20px; font-weight:800;">NaturalBoard</span>
+                <span onclick="document.getElementById('nb-settings-ui').style.display='none'" style="color:#007AFF; font-weight:600; cursor:pointer;">Done</span>
+            </div>
             <div class="nb-ui-body">
-                <p>Weather Location</p>
-                <input type="text" class="nb-search-bar" placeholder="Search City..." id="nbCitySearch">
-                <div id="cityResults"></div>
-                <p>Order Icons</p>
+                <h3 style="margin-bottom:10px;">Weather Location</h3>
+                <input type="text" class="nb-search-bar" placeholder="Search Global City..." id="nbCitySearch">
+                <div id="cityResults" style="margin-bottom:20px;"></div>
+                <h3 style="margin-bottom:10px;">App Layout</h3>
                 <div id="nbSortList"></div>
             </div>
         `;
@@ -184,26 +212,40 @@
         data.apps.forEach((app, i) => {
             const row = document.createElement('div');
             row.className = 'nb-sort-row';
-            row.innerHTML = `<span style="flex:1">${app.name}</span><button onclick="move(${i},-1)">▲</button><button onclick="move(${i},1)">▼</button>`;
+            const sys = SYSTEM_DEFAULTS[app.id];
+            const bg = app.iconColor || (sys ? sys.color : '#333');
+            const iconHtml = (app.icon && app.icon.startsWith('http')) ? `<img src="${app.icon}">` : `<span>${sys ? sys.icon : app.name[0]}</span>`;
+            
+            row.innerHTML = `
+                <div class="nb-row-icon" style="background-color:${bg}">${iconHtml}</div>
+                <span style="flex:1; font-weight:500;">${app.name}</span>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="nbMove(${i},-1)" style="background:none; border:none; color:white; font-size:18px;">▲</button>
+                    <button onclick="nbMove(${i},1)" style="background:none; border:none; color:white; font-size:18px;">▼</button>
+                </div>
+            `;
             list.appendChild(row);
         });
 
         document.getElementById('nbCitySearch').oninput = (e) => {
             const res = document.getElementById('cityResults');
             res.innerHTML = '';
+            if (!e.target.value) return;
             WORLD_CITIES.filter(c => c.toLowerCase().includes(e.target.value.toLowerCase())).forEach(c => {
                 const div = document.createElement('div');
                 div.className = 'nb-city-item';
                 div.innerText = c;
-                div.onclick = () => { data.weather.location = c; saveStore(data); openSettings(); };
+                div.onclick = () => { data.weather.location = c; localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); openSettings(); };
                 res.appendChild(div);
             });
         };
 
-        window.move = (i, dir) => {
+        window.nbMove = (i, dir) => {
             if (i+dir >= 0 && i+dir < data.apps.length) {
                 [data.apps[i], data.apps[i+dir]] = [data.apps[i+dir], data.apps[i]];
-                saveStore(data); openSettings();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                openSettings();
+                render();
             }
         };
     }
