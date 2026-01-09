@@ -1,8 +1,9 @@
 (function() {
-    console.log("[NaturalBoard] Synchronizing Widget Styles & NI Manager...");
+    console.log("[NaturalBoard] Implementing Widget Pause Logic & NI Manager Fix...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
+    // 嚴格對照系統 App 名稱與 ID
     const SYSTEM_DEFAULTS = {
         'ni-core-system': { name: 'NI Manager', icon: '📂', color: '#2c3e50' },
         'camera': { name: 'Camera', icon: '📷', color: '#4A4A4A' },
@@ -22,7 +23,7 @@
 
     const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Toronto"];
 
-    // 1. 注入 CSS (同步時鐘外觀 + 避讓狀態列)
+    // 1. 注入 CSS
     const style = document.createElement('style');
     style.innerHTML = `
         #appsGrid > .app-icon { display: none !important; }
@@ -44,7 +45,6 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             width: 72px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        /* 設定介面 UI */
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000;
@@ -58,13 +58,11 @@
         .nb-row-icon { width: 32px; height: 32px; border-radius: 7px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
         .nb-search-bar { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #222; color: white; margin-bottom: 15px; }
         .nb-city-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; }
-        
-        /* 統一小工具點擊感 */
         .clock-display { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     `;
     document.head.appendChild(style);
 
-    // 2. 數據管理 (含同步檢查)
+    // 2. 數據同步檢查
     function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
         let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
@@ -91,28 +89,38 @@
         return data;
     }
 
-    // 3. 天氣小工具：外觀完全同步原生時鐘
+    // 3. 天氣小工具：暫停/恢復時鐘邏輯
     let weatherActive = false;
+    let originalUpdateClock = window.updateClock; // 保存原始時鐘函數
+
     async function toggleWeather(city) {
         const t = document.getElementById('current-time');
         const d = document.getElementById('current-date');
         
         if (!weatherActive) {
             weatherActive = true;
+            
+            // --- 暫停時鐘 ---
+            // 將 updateClock 變成空函數，令系統定時器失效
+            window.updateClock = function() { console.log("[NBoard] Clock updates paused for weather."); };
+
             t.innerText = "Loading...";
             try {
-                // 使用原生時鐘樣式，避免閃爍或重疊
                 const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t|%l`);
                 const text = await response.text();
                 if (text.includes('|') && weatherActive) {
                     const [temp, location] = text.split('|');
-                    t.innerText = temp.trim(); // 保持與 .clock-time 大小一致
-                    d.innerText = location.trim(); // 保持與 .clock-date 大小一致
+                    t.innerText = temp.trim();
+                    d.innerText = location.trim();
                 }
             } catch (e) { t.innerText = "Offline"; }
         } else {
             weatherActive = false;
-            if (window.updateClock) window.updateClock(); // 回復原生時間顯示
+            
+            // --- 恢復時鐘 ---
+            // 還原原始函數並立即執行一次
+            window.updateClock = originalUpdateClock;
+            if (typeof window.updateClock === 'function') window.updateClock();
         }
     }
 
@@ -152,7 +160,6 @@
                               <div class="nb-app-label">${app.name}</div>`;
             
             item.onclick = () => {
-                // 修復 NI 管理器打開邏輯
                 if (isNi) {
                     if (typeof window.openNiManager === 'function') window.openNiManager();
                     else if (typeof openApp === 'function') openApp('ni-core-system');
@@ -239,6 +246,9 @@
     }
 
     const init = () => {
+        // 保存最初始的時鐘函數引用
+        if (!originalUpdateClock) originalUpdateClock = window.updateClock;
+        
         const obs = new MutationObserver(() => { if (document.getElementById('appsGrid') && !document.getElementById('natural-grid')) render(); });
         obs.observe(document.body, { childList: true, subtree: true });
         render();
