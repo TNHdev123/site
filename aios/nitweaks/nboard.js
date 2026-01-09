@@ -1,5 +1,5 @@
 (function() {
-    console.log("[NaturalBoard] Initializing Dual-Widget System...");
+    console.log("[NaturalBoard] Polishing Dual-Widget UI Consistency...");
 
     const STORAGE_KEY = 'NBoardStorage';
     
@@ -22,7 +22,7 @@
 
     const WORLD_CITIES = ["New York", "London", "Tokyo", "Hong Kong", "Taipei", "Paris", "Berlin", "Sydney", "Singapore", "Seoul", "Bangkok", "Dubai", "Toronto"];
 
-    // 1. 注入 CSS (優化小工具切換動畫)
+    // 1. 注入 CSS (嚴格對齊時鐘樣式)
     const style = document.createElement('style');
     style.innerHTML = `
         #appsGrid > .app-icon { display: none !important; }
@@ -44,17 +44,22 @@
             width: 72px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* 天氣小工具專屬樣式 */
-        #nb-weather-widget {
+        /* 天氣小工具外觀統一化 */
+        #nb-weather-container {
             display: none; flex-direction: column; align-items: center;
             justify-content: center; width: 100%; cursor: pointer;
-            animation: fadeIn 0.3s ease;
+            text-align: center;
         }
-        .weather-temp { font-size: 48px; font-weight: 200; color: white; }
-        .weather-loc { font-size: 16px; color: rgba(255,255,255,0.8); }
+        .weather-temp { 
+            font-size: 48px; font-weight: 200; color: white; 
+            margin: 0; line-height: 1.2;
+        }
+        .weather-loc { 
+            font-size: 18px; font-weight: 400; color: white; 
+            margin-top: 5px;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
+        /* 設定介面佈局 */
         #nb-settings-ui {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000;
@@ -70,7 +75,7 @@
     `;
     document.head.appendChild(style);
 
-    // 2. 數據同步檢查
+    // 2. 數據管理
     function getStore() {
         let store = localStorage.getItem(STORAGE_KEY);
         let data = store ? JSON.parse(store) : { apps: [], weather: { location: "New York" } };
@@ -79,12 +84,8 @@
         let changed = false;
 
         Object.keys(SYSTEM_DEFAULTS).forEach(id => {
-            let existing = currentApps.find(a => a.id === id);
-            if (!existing) {
+            if (!currentApps.find(a => a.id === id)) {
                 currentApps.push({ id, ...SYSTEM_DEFAULTS[id], isSystem: true });
-                changed = true;
-            } else if (existing.name !== SYSTEM_DEFAULTS[id].name) {
-                existing.name = SYSTEM_DEFAULTS[id].name;
                 changed = true;
             }
         });
@@ -105,8 +106,8 @@
         return data;
     }
 
-    // 3. 實時天氣切換邏輯
-    async function updateWeatherData(city) {
+    // 3. 雙模小工具處理 (解決重疊與樣式統一)
+    async function updateWeatherUI(city) {
         const tempEl = document.querySelector('.weather-temp');
         const locEl = document.querySelector('.weather-loc');
         tempEl.innerText = "--°";
@@ -122,30 +123,30 @@
         } catch (e) { locEl.innerText = "Offline"; }
     }
 
-    function initDualWidget(city) {
-        const clockWidget = document.querySelector('.clock-display');
-        if (!clockWidget) return;
+    function setupWidgetSwitch(city) {
+        const clockDisplay = document.querySelector('.clock-display');
+        if (!clockDisplay) return;
 
-        // 如果天氣小工具未建立，就建立佢
-        let weatherWidget = document.getElementById('nb-weather-widget');
-        if (!weatherWidget) {
-            weatherWidget = document.createElement('div');
-            weatherWidget.id = 'nb-weather-widget';
-            weatherWidget.innerHTML = `<div class="weather-temp">--°</div><div class="weather-loc">Loading...</div>`;
-            clockWidget.parentNode.insertBefore(weatherWidget, clockWidget.nextSibling);
+        // 建立天氣容器
+        let weatherContainer = document.getElementById('nb-weather-container');
+        if (!weatherContainer) {
+            weatherContainer = document.createElement('div');
+            weatherContainer.id = 'nb-weather-container';
+            // 複製時鐘內部的結構類名（如有需要）或使用對齊樣式
+            weatherContainer.innerHTML = `<div class="weather-temp">--°</div><div class="weather-loc">Loading...</div>`;
+            clockDisplay.parentNode.insertBefore(weatherContainer, clockDisplay.nextSibling);
         }
 
-        // 點擊時鐘切換到天氣
-        clockWidget.onclick = () => {
-            clockWidget.style.display = 'none';
-            weatherWidget.style.display = 'flex';
-            updateWeatherData(city);
+        // 點擊事件：切換隱藏與顯示
+        clockDisplay.onclick = () => {
+            clockDisplay.style.display = 'none';
+            weatherContainer.style.display = 'flex';
+            updateWeatherUI(city);
         };
 
-        // 點擊天氣切換返時鐘
-        weatherWidget.onclick = () => {
-            weatherWidget.style.display = 'none';
-            clockWidget.style.display = 'flex';
+        weatherContainer.onclick = () => {
+            weatherContainer.style.display = 'none';
+            clockDisplay.style.display = 'flex';
         };
     }
 
@@ -185,7 +186,7 @@
             nGrid.appendChild(item);
         });
 
-        // Settings Button
+        // Settings Entry
         const nbBtn = document.createElement('div');
         nbBtn.className = 'nb-app-item';
         nbBtn.innerHTML = `<div class="nb-icon-box" style="background:linear-gradient(135deg, #FF5E62, #FF9966)">🛠️</div>
@@ -193,7 +194,7 @@
         nbBtn.onclick = openSettings;
         nGrid.appendChild(nbBtn);
 
-        initDualWidget(data.weather.location);
+        setupWidgetSwitch(data.weather.location);
     }
 
     // 5. Settings UI
@@ -214,7 +215,7 @@
             </div>
             <div class="nb-ui-body">
                 <h3>Weather Location</h3>
-                <input type="text" class="nb-search-bar" placeholder="Search Global City..." id="nbCitySearch">
+                <input type="text" class="nb-search-bar" placeholder="Search City..." id="nbCitySearch">
                 <div id="cityResults" style="margin-bottom:20px;"></div>
                 <h3>App Order</h3>
                 <div id="nbSortList"></div>
