@@ -75,7 +75,7 @@
         .btn-main {
             background-color: var(--ios-blue);
             color: #fff; border: none; padding: 18px; border-radius: 18px;
-            font-size: 18px; font-weight: 600; width: 100%;
+            font-size: 18px; font-weight: 600; width: 100%; display: block; text-decoration: none;
             transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.2s;
         }
         .btn-main:active { transform: scale(0.96); opacity: 0.85; }
@@ -113,13 +113,17 @@
         .alert-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
         .alert-msg { font-size: 15px; color: var(--text-main); opacity: 0.9; margin-bottom: 32px; line-height: 1.5; }
 
+        /* 關鍵修正：將 A 標籤偽裝成按鈕 */
         .btn-liquid {
+            display: block;
+            text-decoration: none;
             position: relative;
             background-color: var(--ios-blue);
             color: #fff; border: none; padding: 16px; border-radius: 20px;
             font-size: 17px; font-weight: 700; width: 100%;
             margin-bottom: 12px; overflow: hidden;
             box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            transition: transform 0.1s;
         }
         .btn-liquid:active { transform: scale(0.95); }
 
@@ -137,7 +141,6 @@
             border: none; padding: 16px; border-radius: 20px;
             font-size: 17px; width: 100%;
         }
-
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -155,10 +158,10 @@
             <div class="alert-title">打開設定</div>
             <div class="alert-msg">打開 “VPN與裝置管理” 設定</div>
             
-            <button class="btn-liquid" id="liquidBtn" onclick="launchSettings()">
+            <a href="prefs:root=General&path=ManagedConfigurationList" class="btn-liquid" id="liquidBtn" onclick="handleLinkClick()">
                 <div class="specular-layer"></div>
                 打開
-            </button>
+            </a>
             <button class="btn-close" onclick="closeModal()">關閉</button>
         </div>
     </div>
@@ -167,12 +170,8 @@
         // --- 離線快取邏輯 ---
         if ('serviceWorker' in navigator) {
             const swCode = `
-                const CACHE_NAME = 'ios-settings-v3';
-                const ASSETS = [
-                    './',
-                    'https://tnhdev123.github.io/site/IMG_0102.jpeg',
-                    'https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png'
-                ];
+                const CACHE_NAME = 'ios-settings-v4';
+                const ASSETS = ['./', 'https://tnhdev123.github.io/site/IMG_0102.jpeg', 'https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png'];
                 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))));
                 self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
             `;
@@ -197,13 +196,11 @@
             }, 400);
         }
 
-        function launchSettings() {
-            // 改回原本的 URL 並使用新分頁開啟
-            window.open("prefs:root=General&path=ManagedConfigurationList", "_blank");
+        function handleLinkClick() {
+            // 點擊後自動關閉彈窗
             setTimeout(closeModal, 600);
         }
 
-        // 液態反光追蹤
         const updateSpecular = (e) => {
             const rect = liquidBtn.getBoundingClientRect();
             const touch = e.touches[0];
@@ -215,7 +212,6 @@
         liquidBtn.addEventListener('touchstart', updateSpecular);
         liquidBtn.addEventListener('touchmove', updateSpecular);
 
-        // 禁止縮放
         document.addEventListener('gesturestart', e => e.preventDefault());
         document.addEventListener('touchmove', e => {
             if (!overlay.classList.contains('active')) e.preventDefault();
