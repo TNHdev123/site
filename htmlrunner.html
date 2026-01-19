@@ -1,113 +1,225 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HTML 離線運行器</title>
-    <link rel="manifest" id="pwa-manifest">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>設定</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="設定">
+    
+    <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/IMG_0102.jpeg">
+    
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuioreWumSIsCiAgInNob3J0X25hbWUiOiAi6Kit5a6aIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2VuLzIvMjMvU3lzdGVtX1ByZWZlcmVuY2VzX2ljb24ucG5nIiwKICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAicHVycG9zZSI6ICJtYXNrYWJsZSBhbnkiCiAgfV19">
+
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
-        textarea { width: 100%; height: 300px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; font-family: monospace; }
-        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 18px; margin-top: 10px; cursor: pointer; }
-        #preview-container { margin-top: 20px; border: 1px dashed #aaa; padding: 10px; background: white; min-height: 100px; }
+        :root {
+            --ios-blue: #007AFF;
+            --text-main: #000000;
+            --text-secondary: rgba(60, 60, 67, 0.6);
+            --bg-color: #F2F2F7;
+            --modal-bg: rgba(255, 255, 255, 0.85);
+            /* 極致立體厚度變數 */
+            --glass-rim: rgba(255, 255, 255, 1.0);
+            --glass-bevel: rgba(0, 0, 0, 0.12);
+            --glass-shadow: rgba(0, 0, 0, 0.35);
+            --transition-speed: 0.6s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ios-blue: #0A84FF;
+                --text-main: #FFFFFF;
+                --text-secondary: rgba(235, 235, 245, 0.6);
+                --bg-color: #000000;
+                --modal-bg: rgba(54, 54, 56, 0.92);
+                --glass-rim: rgba(255, 255, 255, 0.3);
+                --glass-bevel: rgba(0, 0, 0, 0.45);
+                --glass-shadow: rgba(0, 0, 0, 0.7);
+            }
+        }
+
+        /* 鎖定網頁行為與蘋果式漸變 */
+        * {
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            box-sizing: border-box;
+            transition: background var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
+                        color var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: -apple-system, "SF Pro Display", sans-serif;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .container { text-align: center; width: 85%; max-width: 420px; }
+
+        .settings-icon {
+            width: 94px; height: 94px; margin: 0 auto 35px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png');
+            background-size: cover;
+            border-radius: 22px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border: 0.5px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-size: 28px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; letter-spacing: -0.8px; }
+        h2 { font-size: 24px; font-weight: 600; color: var(--text-main); margin-bottom: 35px; }
+        .sub { font-size: 17px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 80px; }
+
+        /* 主按鈕：維持簡潔 */
+        .btn-main {
+            background-color: var(--ios-blue);
+            color: #fff; border: none; padding: 18px; border-radius: 18px;
+            font-size: 18px; font-weight: 600; width: 100%;
+            transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.2s;
+        }
+        .btn-main:active { transform: scale(0.96); opacity: 0.85; }
+
+        /* 彈窗背景與過渡動畫 */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(35px) saturate(210%);
+            -webkit-backdrop-filter: blur(35px) saturate(210%);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .overlay.active { display: flex; opacity: 1; }
+
+        /* 極致厚玻璃彈窗：強化立體感與順滑動畫 */
+        .alert-card {
+            background: var(--modal-bg);
+            width: 300px;
+            border-radius: 44px;
+            padding: 32px 24px;
+            position: relative;
+            text-align: center;
+            /* 五層物理結構：強化厚度 */
+            box-shadow: 
+                0 40px 80px var(--glass-shadow),
+                0 0 0 2.2px var(--glass-bevel),      /* 立體倒角 */
+                inset 0 3px 2.2px var(--glass-rim),   /* 頂部強光 */
+                inset 0 -2px 3px rgba(0,0,0,0.12),    /* 底部陰影 */
+                0 0 0 0.5px rgba(255,255,255,0.4);    /* 極細外緣反光 */
+            
+            /* 出現動畫 */
+            transform: scale(0.7) translateY(40px);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+        }
+        .overlay.active .alert-card { transform: scale(1) translateY(0); }
+        
+        /* 關閉動畫狀態 */
+        .overlay.closing .alert-card { transform: scale(0.85) translateY(10px); opacity: 0; }
+
+        .alert-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
+        .alert-msg { font-size: 15px; color: var(--text-main); opacity: 0.9; margin-bottom: 32px; line-height: 1.5; }
+
+        /* 打開按鈕：液態反光追蹤 */
+        .btn-liquid {
+            position: relative;
+            background-color: var(--ios-blue);
+            color: #fff; border: none; padding: 16px; border-radius: 20px;
+            font-size: 17px; font-weight: 700; width: 100%;
+            margin-bottom: 12px; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            transition: transform 0.1s;
+        }
+        .btn-liquid:active { transform: scale(0.95); }
+
+        .specular-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.7) 0%, transparent 60%);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .btn-liquid:active .specular-layer { opacity: 1; transition: opacity 0.1s; }
+
+        .btn-close {
+            background: rgba(120, 120, 128, 0.16);
+            color: var(--ios-blue);
+            border: none; padding: 16px; border-radius: 20px;
+            font-size: 17px; width: 100%;
+            transition: opacity 0.2s;
+        }
+        .btn-close:active { opacity: 0.7; }
+
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <div id="editor-ui">
-        <h2>輸入 HTML 原始碼</h2>
-        <textarea id="html-input" placeholder="喺度輸入或者貼上你嘅 HTML..."></textarea>
-        <button onclick="executeHtml()">執行並產生連結</button>
+    <div class="container">
+        <div class="settings-icon"></div>
+        <h1>請不要更新此 iPadOS 系統版本</h1>
+        <h2>謝謝 🙏</h2>
+        <div class="sub">避免更新後系統發生 卡頓 及各種 不習慣 與 意外行為<br>導致 影響學習</div>
+        <button class="btn-main" onclick="openModal()">打開設定</button>
     </div>
 
-    <div id="render-area" style="display:none;">
+    <div class="overlay" id="iosOverlay">
+        <div class="alert-card">
+            <div class="alert-title">打開設定</div>
+            <div class="alert-msg">打開 “VPN與裝置管理” 設定</div>
+            
+            <button class="btn-liquid" id="liquidBtn" onclick="launchSettings()">
+                <div class="specular-layer"></div>
+                打開
+            </button>
+            <button class="btn-close" onclick="closeModal()">關閉</button>
         </div>
+    </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const encodedData = urlParams.get('data');
+        // 完全禁用縮放與滾動
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('touchmove', e => {
+            if (!document.getElementById('iosOverlay').classList.contains('active')) e.preventDefault();
+        }, { passive: false });
 
-        // --- 核心功能：執行與跳轉 ---
-        function executeHtml() {
-            const code = document.getElementById('html-input').value;
-            if (!code) return alert('請輸入內容');
-            
-            // 使用 Base64 編碼，避免 URL 字元衝突
-            const b64 = btoa(unescape(encodeURIComponent(code)));
-            const newUrl = window.location.origin + window.location.pathname + '?data=' + b64;
-            
-            window.location.href = newUrl;
+        const overlay = document.getElementById('iosOverlay');
+        const liquidBtn = document.getElementById('liquidBtn');
+
+        function openModal() {
+            overlay.style.display = 'flex';
+            // 強制重繪以觸發動畫
+            setTimeout(() => overlay.classList.add('active'), 10);
         }
 
-        // --- 核心功能：渲染邏輯 ---
-        if (encodedData) {
-            try {
-                const decodedHtml = decodeURIComponent(escape(atob(encodedData)));
-                
-                // 隱藏編輯器，顯示渲染區
-                document.getElementById('editor-ui').style.display = 'none';
-                const renderArea = document.getElementById('render-area');
-                renderArea.style.display = 'block';
-                renderArea.innerHTML = decodedHtml;
-
-                // 嘗試更新標題同圖示 (根據輸入嘅 HTML)
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = decodedHtml;
-                
-                const newTitle = tempDiv.querySelector('title')?.innerText;
-                if (newTitle) document.title = newTitle;
-
-                // 處理 Script 執行
-                const scripts = renderArea.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
-
-                // 離線圖片處理：嘗試將所有 <img> 轉為 Base64（如果 CORS 允許）
-                if (window.matchMedia('(display-mode: standalone)').matches) {
-                    processImagesToOffline(renderArea);
-                }
-
-            } catch (e) {
-                console.error('解碼失敗', e);
-            }
+        function closeModal() {
+            overlay.classList.add('closing');
+            overlay.classList.remove('active');
+            // 等待動畫完成後隱藏
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('closing');
+            }, 400);
         }
 
-        async function processImagesToOffline(container) {
-            const imgs = container.querySelectorAll('img');
-            for (let img of imgs) {
-                if (img.src.startsWith('http')) {
-                    try {
-                        const response = await fetch(img.src);
-                        const blob = await response.blob();
-                        const reader = new FileReader();
-                        reader.onloadend = () => img.src = reader.result;
-                        reader.readAsDataURL(blob);
-                    } catch (e) {
-                        console.warn('圖片無法離線化 (CORS 限制):', img.src);
-                    }
-                }
-            }
+        function launchSettings() {
+            window.location.href = "prefs:root=General&path=ManagedConfigurationList";
+            setTimeout(closeModal, 600);
         }
 
-        // --- Service Worker 註冊 (離線支持) ---
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'html-executor-v1';
-                self.addEventListener('install', e => {
-                    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['/', window.location.pathname])));
-                });
-                self.addEventListener('fetch', e => {
-                    e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
-                });
-            `;
-            const blob = new Blob([swCode], {type: 'application/javascript'});
-            const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW 註冊失敗', err));
-        }
+        // 觸控液體反光追蹤邏輯
+        const updateSpecular = (e) => {
+            const rect = liquidBtn.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            liquidBtn.style.setProperty('--x', `${x}px`);
+            liquidBtn.style.setProperty('--y', `${y}px`);
+        };
+
+        liquidBtn.addEventListener('touchstart', updateSpecular);
+        liquidBtn.addEventListener('touchmove', updateSpecular);
     </script>
 </body>
 </html>
