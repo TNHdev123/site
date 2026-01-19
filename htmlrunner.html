@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HTML 離線運行器</title>
+    <link rel="manifest" id="pwa-manifest">
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        textarea { width: 100%; height: 300px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; font-family: monospace; }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 18px; margin-top: 10px; cursor: pointer; }
+        #preview-container { margin-top: 20px; border: 1px dashed #aaa; padding: 10px; background: white; min-height: 100px; }
+    </style>
+</head>
+<body>
+
+    <div id="editor-ui">
+        <h2>輸入 HTML 原始碼</h2>
+        <textarea id="html-input" placeholder="喺度輸入或者貼上你嘅 HTML..."></textarea>
+        <button onclick="executeHtml()">執行並產生連結</button>
+    </div>
+
+    <div id="render-area" style="display:none;">
+        </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedData = urlParams.get('data');
+
+        // --- 核心功能：執行與跳轉 ---
+        function executeHtml() {
+            const code = document.getElementById('html-input').value;
+            if (!code) return alert('請輸入內容');
+            
+            // 使用 Base64 編碼，避免 URL 字元衝突
+            const b64 = btoa(unescape(encodeURIComponent(code)));
+            const newUrl = window.location.origin + window.location.pathname + '?data=' + b64;
+            
+            window.location.href = newUrl;
+        }
+
+        // --- 核心功能：渲染邏輯 ---
+        if (encodedData) {
+            try {
+                const decodedHtml = decodeURIComponent(escape(atob(encodedData)));
+                
+                // 隱藏編輯器，顯示渲染區
+                document.getElementById('editor-ui').style.display = 'none';
+                const renderArea = document.getElementById('render-area');
+                renderArea.style.display = 'block';
+                renderArea.innerHTML = decodedHtml;
+
+                // 嘗試更新標題同圖示 (根據輸入嘅 HTML)
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = decodedHtml;
+                
+                const newTitle = tempDiv.querySelector('title')?.innerText;
+                if (newTitle) document.title = newTitle;
+
+                // 處理 Script 執行
+                const scripts = renderArea.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+
+                // 離線圖片處理：嘗試將所有 <img> 轉為 Base64（如果 CORS 允許）
+                if (window.matchMedia('(display-mode: standalone)').matches) {
+                    processImagesToOffline(renderArea);
+                }
+
+            } catch (e) {
+                console.error('解碼失敗', e);
+            }
+        }
+
+        async function processImagesToOffline(container) {
+            const imgs = container.querySelectorAll('img');
+            for (let img of imgs) {
+                if (img.src.startsWith('http')) {
+                    try {
+                        const response = await fetch(img.src);
+                        const blob = await response.blob();
+                        const reader = new FileReader();
+                        reader.onloadend = () => img.src = reader.result;
+                        reader.readAsDataURL(blob);
+                    } catch (e) {
+                        console.warn('圖片無法離線化 (CORS 限制):', img.src);
+                    }
+                }
+            }
+        }
+
+        // --- Service Worker 註冊 (離線支持) ---
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'html-executor-v1';
+                self.addEventListener('install', e => {
+                    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['/', window.location.pathname])));
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                });
+            `;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW 註冊失敗', err));
+        }
+    </script>
+</body>
+</html>
