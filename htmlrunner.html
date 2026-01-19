@@ -20,7 +20,6 @@
             --text-secondary: rgba(60, 60, 67, 0.6);
             --bg-color: #F2F2F7;
             --modal-bg: rgba(255, 255, 255, 0.85);
-            /* 極致立體厚度變數 */
             --glass-rim: rgba(255, 255, 255, 1.0);
             --glass-bevel: rgba(0, 0, 0, 0.12);
             --glass-shadow: rgba(0, 0, 0, 0.35);
@@ -40,7 +39,6 @@
             }
         }
 
-        /* 鎖定網頁行為與蘋果式漸變 */
         * {
             -webkit-user-select: none;
             -webkit-touch-callout: none;
@@ -74,7 +72,6 @@
         h2 { font-size: 24px; font-weight: 600; color: var(--text-main); margin-bottom: 35px; }
         .sub { font-size: 17px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 80px; }
 
-        /* 主按鈕：維持簡潔 */
         .btn-main {
             background-color: var(--ios-blue);
             color: #fff; border: none; padding: 18px; border-radius: 18px;
@@ -83,7 +80,6 @@
         }
         .btn-main:active { transform: scale(0.96); opacity: 0.85; }
 
-        /* 彈窗背景與過渡動畫 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.45);
@@ -95,7 +91,6 @@
         }
         .overlay.active { display: flex; opacity: 1; }
 
-        /* 極致厚玻璃彈窗：強化立體感與順滑動畫 */
         .alert-card {
             background: var(--modal-bg);
             width: 300px;
@@ -103,27 +98,21 @@
             padding: 32px 24px;
             position: relative;
             text-align: center;
-            /* 五層物理結構：強化厚度 */
             box-shadow: 
                 0 40px 80px var(--glass-shadow),
-                0 0 0 2.2px var(--glass-bevel),      /* 立體倒角 */
-                inset 0 3px 2.2px var(--glass-rim),   /* 頂部強光 */
-                inset 0 -2px 3px rgba(0,0,0,0.12),    /* 底部陰影 */
-                0 0 0 0.5px rgba(255,255,255,0.4);    /* 極細外緣反光 */
-            
-            /* 出現動畫 */
+                0 0 0 2.2px var(--glass-bevel),
+                inset 0 3px 2.2px var(--glass-rim),
+                inset 0 -2px 3px rgba(0,0,0,0.12),
+                0 0 0 0.5px rgba(255,255,255,0.4);
             transform: scale(0.7) translateY(40px);
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
         }
         .overlay.active .alert-card { transform: scale(1) translateY(0); }
-        
-        /* 關閉動畫狀態 */
         .overlay.closing .alert-card { transform: scale(0.85) translateY(10px); opacity: 0; }
 
         .alert-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
         .alert-msg { font-size: 15px; color: var(--text-main); opacity: 0.9; margin-bottom: 32px; line-height: 1.5; }
 
-        /* 打開按鈕：液態反光追蹤 */
         .btn-liquid {
             position: relative;
             background-color: var(--ios-blue);
@@ -178,7 +167,36 @@
     </div>
 
     <script>
-        // 完全禁用縮放與滾動
+        // --- 離線與自動下載邏輯 (Service Worker) ---
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'ios-settings-offline-v1';
+                const ASSETS = [
+                    './',
+                    'https://tnhdev123.github.io/site/IMG_0102.jpeg',
+                    'https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png'
+                ];
+
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+                    );
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((response) => {
+                            return response || fetch(event.request);
+                        })
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'text/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl);
+        }
+
+        // --- 原有功能與動畫 ---
         document.addEventListener('gesturestart', e => e.preventDefault());
         document.addEventListener('touchmove', e => {
             if (!document.getElementById('iosOverlay').classList.contains('active')) e.preventDefault();
@@ -189,14 +207,12 @@
 
         function openModal() {
             overlay.style.display = 'flex';
-            // 強制重繪以觸發動畫
             setTimeout(() => overlay.classList.add('active'), 10);
         }
 
         function closeModal() {
             overlay.classList.add('closing');
             overlay.classList.remove('active');
-            // 等待動畫完成後隱藏
             setTimeout(() => {
                 overlay.style.display = 'none';
                 overlay.classList.remove('closing');
@@ -208,7 +224,6 @@
             setTimeout(closeModal, 600);
         }
 
-        // 觸控液體反光追蹤邏輯
         const updateSpecular = (e) => {
             const rect = liquidBtn.getBoundingClientRect();
             const touch = e.touches[0];
