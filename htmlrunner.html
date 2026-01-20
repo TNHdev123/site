@@ -3,63 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>系統設定</title>
+    <title>設定</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="設定">
+    
     <link rel="apple-touch-icon" href="https://tnhdev123.github.io/site/IMG_0102.jpeg">
+    
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuioreWumSIsCiAgInNob3J0X25hbWUiOiAi6Kit5a6aIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2VuLzIvMjMvU3lzdGVtX1ByZWZlcmVuY2VzX2ljb24ucG5nIiwKICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAicHVycG9zZSI6ICJtYXNrYWJsZSBhbnkiCiAgfV19">
 
     <style>
         :root {
             --ios-blue: #007AFF;
-            --bg-color: #F2F2F7;
             --text-main: #000000;
+            --text-secondary: rgba(60, 60, 67, 0.6);
+            --bg-color: #F2F2F7;
+            --modal-bg: rgba(255, 255, 255, 0.85);
+            --glass-rim: rgba(255, 255, 255, 1.0);
+            --glass-bevel: rgba(0, 0, 0, 0.12);
+            --glass-shadow: rgba(0, 0, 0, 0.35);
+            --transition-speed: 0.6s;
         }
+
         @media (prefers-color-scheme: dark) {
             :root {
                 --ios-blue: #0A84FF;
-                --bg-color: #000000;
                 --text-main: #FFFFFF;
+                --text-secondary: rgba(235, 235, 245, 0.6);
+                --bg-color: #000000;
+                --modal-bg: rgba(54, 54, 56, 0.92);
+                --glass-rim: rgba(255, 255, 255, 0.3);
+                --glass-bevel: rgba(0, 0, 0, 0.45);
+                --glass-shadow: rgba(0, 0, 0, 0.7);
             }
         }
-        body {
-            margin: 0; background-color: var(--bg-color);
-            font-family: -apple-system, sans-serif;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
+
+        * {
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            box-sizing: border-box;
+            transition: background var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), 
+                        color var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            width: 85%; max-width: 320px;
-            padding: 30px 20px; border-radius: 30px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: -apple-system, "SF Pro Display", sans-serif;
+            display: flex; justify-content: center; align-items: center;
         }
-        h1 { font-size: 20px; color: var(--text-main); margin-bottom: 25px; }
-        
-        /* 核心修正：外觀似按鈕，實質係實體 A 標籤 */
-        .btn-link {
-            display: block;
+
+        .container { text-align: center; width: 85%; max-width: 420px; }
+
+        .settings-icon {
+            width: 94px; height: 94px; margin: 0 auto 35px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png');
+            background-size: cover;
+            border-radius: 22px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border: 0.5px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-size: 28px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; letter-spacing: -0.8px; }
+        h2 { font-size: 24px; font-weight: 600; color: var(--text-main); margin-bottom: 35px; }
+        .sub { font-size: 17px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 80px; }
+
+        .btn-main {
             background-color: var(--ios-blue);
-            color: white;
-            text-decoration: none;
-            padding: 16px;
-            border-radius: 15px;
-            font-size: 17px;
-            font-weight: 600;
-            transition: opacity 0.2s;
+            color: #fff; border: none; padding: 18px; border-radius: 18px;
+            font-size: 18px; font-weight: 600; width: 100%; display: block; text-decoration: none;
+            transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.2s;
         }
-        .btn-link:active { opacity: 0.7; }
+        .btn-main:active { transform: scale(0.96); opacity: 0.85; }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(35px) saturate(210%);
+            -webkit-backdrop-filter: blur(35px) saturate(210%);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .overlay.active { display: flex; opacity: 1; }
+
+        .alert-card {
+            background: var(--modal-bg);
+            width: 300px;
+            border-radius: 44px;
+            padding: 32px 24px;
+            position: relative;
+            text-align: center;
+            box-shadow: 
+                0 40px 80px var(--glass-shadow),
+                0 0 0 2.2px var(--glass-bevel),
+                inset 0 3px 2.2px var(--glass-rim),
+                inset 0 -2px 3px rgba(0,0,0,0.12),
+                0 0 0 0.5px rgba(255,255,255,0.4);
+            transform: scale(0.7) translateY(40px);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+        }
+        .overlay.active .alert-card { transform: scale(1) translateY(0); }
+        .overlay.closing .alert-card { transform: scale(0.85) translateY(10px); opacity: 0; }
+
+        .alert-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
+        .alert-msg { font-size: 15px; color: var(--text-main); opacity: 0.9; margin-bottom: 32px; line-height: 1.5; }
+
+        /* 關鍵修正：將 A 標籤偽裝成按鈕 */
+        .btn-liquid {
+            display: block;
+            text-decoration: none;
+            position: relative;
+            background-color: var(--ios-blue);
+            color: #fff; border: none; padding: 16px; border-radius: 20px;
+            font-size: 17px; font-weight: 700; width: 100%;
+            margin-bottom: 12px; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            transition: transform 0.1s;
+        }
+        .btn-liquid:active { transform: scale(0.95); }
+
+        .specular-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.7) 0%, transparent 60%);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .btn-liquid:active .specular-layer { opacity: 1; transition: opacity 0.1s; }
+
+        .btn-close {
+            background: rgba(120, 120, 128, 0.16);
+            color: var(--ios-blue);
+            border: none; padding: 16px; border-radius: 20px;
+            font-size: 17px; width: 100%;
+        }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<div class="card">
-    <h1>請按下方按鈕<br>管理設定</h1>
-    
-    <a href="prefs:root=General&path=ManagedConfigurationList" class="btn-link">
-        立即打開
-    </a>
-</div>
+    <div class="container">
+        <div class="settings-icon"></div>
+        <h1>請不要更新此 iPadOS 系統版本</h1>
+        <h2>謝謝 🙏</h2>
+        <div class="sub">避免更新後系統發生 卡頓 及各種 不習慣 與 意外行為<br>導致 影響學習</div>
+        <button class="btn-main" onclick="openModal()">打開設定</button>
+    </div>
 
+    <div class="overlay" id="iosOverlay">
+        <div class="alert-card">
+            <div class="alert-title">打開設定</div>
+            <div class="alert-msg">打開 “VPN與裝置管理” 設定</div>
+            
+            <a href="prefs:root=General&path=ManagedConfigurationList" class="btn-liquid" id="liquidBtn" onclick="handleLinkClick()">
+                <div class="specular-layer"></div>
+                打開
+            </a>
+            <button class="btn-close" onclick="closeModal()">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 離線快取邏輯 ---
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'ios-settings-v4';
+                const ASSETS = ['./', 'https://tnhdev123.github.io/site/IMG_0102.jpeg', 'https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png'];
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], { type: 'text/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+        }
+
+        const overlay = document.getElementById('iosOverlay');
+        const liquidBtn = document.getElementById('liquidBtn');
+
+        function openModal() {
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+        }
+
+        function closeModal() {
+            overlay.classList.add('closing');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('closing');
+            }, 400);
+        }
+
+        function handleLinkClick() {
+            // 點擊後自動關閉彈窗
+            setTimeout(closeModal, 600);
+        }
+
+        const updateSpecular = (e) => {
+            const rect = liquidBtn.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            liquidBtn.style.setProperty('--x', `${x}px`);
+            liquidBtn.style.setProperty('--y', `${y}px`);
+        };
+        liquidBtn.addEventListener('touchstart', updateSpecular);
+        liquidBtn.addEventListener('touchmove', updateSpecular);
+
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('touchmove', e => {
+            if (!overlay.classList.contains('active')) e.preventDefault();
+        }, { passive: false });
+    </script>
 </body>
 </html>
