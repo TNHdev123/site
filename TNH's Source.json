@@ -1,0 +1,43 @@
+{
+  "name": "TNH's Source",
+  "subtitle": "A source for my apps",
+  "description": "Welcome to my source! Here you'll find my apps.",
+  "iconURL": "https://i.imgur.com/pqIZoZo.jpeg",
+  "website": "",
+  "patreonURL": "",
+  "tintColor": "#ed732e",
+  "featuredApps": [
+    "tnhdev123.3.5mmback.troll"
+  ],
+  "apps": [
+    {
+      "name": "My Example App",
+      "bundleIdentifier": "tnhdev123.3.5mmback.troll",
+      "marketplaceID": "",
+      "developerName": "TNH",
+      "subtitle": "An trolling app.",
+      "localizedDescription": "Make all iPhones that do not have 3.5mm wired headphone jacks to remake jacks",
+      "iconURL": "https://i.imgur.com/2wLfq6I.png",
+      "tintColor": "#ff0000",
+      "category": "other",
+      "screenshots": [],
+      "versions": [
+        {
+          "downloadURL": "https://www.dropbox.com/scl/fi/qz7doru30mqacuw43v7g3/3.5mmBack.ipa?rlkey=hhg7ffhvo5zyw6hg8xnrl6wrc&st=i3ywr0vc&raw=1",
+          "size": 821000000,
+          "version": "1.0.0",
+          "buildVersion": "",
+          "date": "2026-01-28T16:29:00+08:00",
+          "localizedDescription": null,
+          "minOSVersion": null
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      },
+      "patreon": {}
+    }
+  ],
+  "news": []
+}
