@@ -1,15 +1,46 @@
 {
   "name": "TNH's Source",
   "subtitle": "A source for my apps",
-  "description": "Welcome to my source! Here you'll find my apps.",
-  "iconURL": "https://i.imgur.com/pqIZoZo.jpeg",
-  "website": "",
+  "description": "Welcome to my source! Here you'll find my apps.\n歡迎來到我的來源！ 在這裡你會發現我的應用程式。",
+  "iconURL": "https://i.imgur.com/5ra2ijB.png",
+  "website": "https://www.threads.com/@tnh_minecraft_lost?igshid=NTc4MTIwNjQ2YQ==",
   "patreonURL": "",
   "tintColor": "#ed732e",
   "featuredApps": [
-    "tnhdev123.3.5mmback.troll"
+    "tnhdev123.3.5mmback.troll",
+    "news.of.acc"
   ],
+  "headerURL": "https://i.imgur.com/u0XNJlX.png",
   "apps": [
+    {
+      "name": "My Example App",
+      "bundleIdentifier": "news.of.acc",
+      "marketplaceID": "",
+      "developerName": "TNH Minecraft",
+      "subtitle": "An awesome app.",
+      "localizedDescription": "狂追Threads更新",
+      "iconURL": "https://i.imgur.com/aSmtodPh.jpg",
+      "tintColor": "#000000",
+      "category": "social",
+      "screenshots": [
+        "https://i.imgur.com/dukoffK.png"
+      ],
+      "versions": [
+        {
+          "downloadURL": "https://dl.dropboxusercontent.com/scl/fi/1ut2ppo7jbb2kd7eh6lgt/.ipa?rlkey=cq40uswt6o7beahz5qecxuqzc&raw=1",
+          "size": 826000000,
+          "version": "0.0.1",
+          "buildVersion": "1",
+          "date": "2026-03-09T11:14:00+08:00",
+          "localizedDescription": "Initial Release",
+          "minOSVersion": "15.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      }
+    },
     {
       "name": "3.5mmBack! 3",
       "bundleIdentifier": "tnhdev123.3.5mmback.troll",
@@ -23,20 +54,19 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "3.0.0",
+          "date": "2026-01-28T16:29:00+08:00",
+          "localizedDescription": "Fixed download link for AltStore compatibility.",
           "downloadURL": "https://www.dropbox.com/scl/fi/iddq4osm561wushe7bcla/3.5mmBack-3.ipa?rlkey=ix4n7y4nrew6rvc58u8rbil1m&st=4q929x3i&raw=1",
           "size": 821000000,
-          "version": "3.0.0",
-          "buildVersion": "",
-          "date": "2026-01-28T16:29:00+08:00",
-          "localizedDescription": null,
-          "minOSVersion": null
+          "buildVersion": "3",
+          "minOSVersion": "12.0"
         }
       ],
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
-      },
-      "patreon": {}
+      }
     }
   ],
   "news": []
