@@ -1,4 +1,16 @@
 (async () => {
+    // [1. 核心保護與初始化]
+    // 檢查全域變數，如果已經載入過就立即退出，防止重複注入 Tweaks
+    if (window.NI_LOADED === true) {
+        console.log("NI System: Already loaded, skipping injection.");
+        return;
+    }
+    window.NI_LOADED = true;
+
+    // 清除可能殘留的舊 UI 元素，確保畫面乾淨
+    const existingManager = document.getElementById('ni-manager-ui');
+    if (existingManager) existingManager.remove();
+
     // --- [配置區] ---
     const switcherUrl = "https://app.nextaios.com/ai/aios-switcher/";
     const aiSystems = {
@@ -832,13 +844,29 @@
     let apps = JSON.parse(localStorage.getItem('installedApps') || '[]');
     // 清除舊組件 (包括之前可能殘留嘅 ni-manager app entry)
     apps = apps.filter(a => a.id !== 'ni-core-system' && a.id !== 'ni-manager' && a.id !== 'ni-manager-manual');
-    
+
+     // --- [新增：0-Click 自動載入漏洞利用] ---
+    // 構造一個特製的 AI 螢幕保護程式 Payload
+    // 當系統試圖渲染這個「圖片」時，會觸發 onerror 並執行我們的核心代碼
+    const autoTriggerPayload = {
+        "imageUrl": "x\" onerror=\"if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();}\""
+    };
+
+    // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
+    // 這樣一開機進入桌面，系統就會瞬間觸發這個隱藏的 Payload
+    localStorage.setItem('screensaverPattern', 'ai-generated');
+    localStorage.setItem('screensaverTimeout', '1'); 
+    localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
+    // ------------------------------------------
+
     // 核心加載器 (隱藏/系統級)
+    // 這裡我們在 onerror 裡面也加上了 !window.NI_LOADED 檢查，雙重保險
     apps.unshift({
         "id": "ni-core-system", 
         "name": "NI System",
-        "icon": `terminal" style="display:none"><img src=x onerror="try{eval(localStorage.getItem('ni_core'))}catch(e){console.error(e)}"><div class="hidden`,
-        "type": "app", "category": "System"
+        "icon": `terminal" style="display:none"><img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem('ni_core'))}catch(e){console.error(e)}}"><div class="hidden`,
+        "type": "app", 
+        "category": "System"
     });
 
     // [已刪除] 多餘的 ni-manager app push 代碼
@@ -850,7 +878,7 @@
     const jbOverlay = document.createElement('div');
     Object.assign(jbOverlay.style, { position:'fixed', top:0, left:0, width:'100vw', height:'100vh', background:'#000', zIndex:1000000, color:'white', padding:'40px 25px' });
     jbOverlay.innerHTML = `
-        <h1 style="color:#30d158; margin-bottom:30px;">NI Ultimate (Beta 3.1)</h1>
+        <h1 style="color:#30d158; margin-bottom:30px;">NI Ultimate (Beta 4)</h1>
         <h3 style="margin-bottom:15px;">Select System to Respring:</h3>
     `;
     
