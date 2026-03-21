@@ -2,6 +2,31 @@
     // [1. 核心保護與初始化]
     if (window.NI_LOADED === true) return;
     window.NI_LOADED = true;
+    
+// --- [功能劫持：禁止 Screen Saver 再度觸發] ---
+if (typeof window.showScreenSaver === 'function') {
+    // 劫持原生的 showScreenSaver
+    window.showScreenSaver = function() {
+        console.log("NI System: Screen Saver execution blocked to prevent flicker.");
+        // 如果容器已經存在，強制隱藏它
+        const ss = document.getElementById('screenSaver');
+        if (ss) {
+            ss.style.display = 'none';
+            ss.style.opacity = '0';
+        }
+        // 如果有原生的隱藏函數也順便調用
+        if (typeof window.hideScreenSaver === 'function') {
+            window.hideScreenSaver();
+        }
+        return false; // 告訴系統不執行顯示動作
+    };
+}
+
+// 徹底移除已經存在的 DOM 節點，防止 CSS 殘留導致的閃爍
+const existingSS = document.getElementById('screenSaver');
+if (existingSS) {
+    existingSS.remove();
+}
 
     // --- [新增：禁止 Screen Saver 執行] ---
     // 劫持系統原生的 showScreenSaver 函數
