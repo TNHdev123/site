@@ -1,13 +1,32 @@
 (async () => {
     // [1. 核心保護與初始化]
-    // 檢查全域變數，如果已經載入過就立即退出，防止重複注入 Tweaks
-    if (window.NI_LOADED === true) {
-        console.log("NI System: Already loaded, skipping injection.");
-        return;
-    }
+    if (window.NI_LOADED === true) return;
     window.NI_LOADED = true;
 
-    // 清除可能殘留的舊 UI 元素，確保畫面乾淨
+    // --- [新增：禁止 Screen Saver 執行] ---
+    // 劫持系統原生的 showScreenSaver 函數
+    if (typeof window.showScreenSaver === 'function') {
+        // 先備份原有的函數（如果以後需要恢復可以派上用場）
+        window._originalShowScreenSaver = window.showScreenSaver;
+        
+        // 將原函數覆蓋，讓它執行時甚麼都不做
+        window.showScreenSaver = function() {
+            console.log("NI System: Screen Saver execution blocked.");
+            // 保險起見，如果它真的彈了出來，立即把它隱藏
+            const ssElement = document.getElementById('screenSaver');
+            if (ssElement) {
+                ssElement.style.display = 'none';
+                ssElement.style.opacity = '0';
+            }
+            if (typeof window.hideScreenSaver === 'function') {
+                window.hideScreenSaver();
+            }
+            return false;
+        };
+    }
+    // ------------------------------------
+
+    // 清除可能殘留的舊 UI 元素
     const existingManager = document.getElementById('ni-manager-ui');
     if (existingManager) existingManager.remove();
 
