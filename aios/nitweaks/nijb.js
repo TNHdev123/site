@@ -865,7 +865,7 @@
     // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
     // 這樣一開機進入桌面，系統就會瞬間觸發這個隱藏的 Payload
     localStorage.setItem('screensaverPattern', 'ai-generated');
-    localStorage.setItem('screensaverTimeout', '1'); 
+    localStorage.setItem('screensaverTimeout', '0'); 
     localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
     // ------------------------------------------
 
