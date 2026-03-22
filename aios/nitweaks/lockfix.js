@@ -31,5 +31,25 @@
         }
     };
 
+    // --- [新增：啟動強制上鎖邏輯] ---
+    const forceLockOnStart = () => {
+        // 檢查系統有沒有設定密碼
+        const correctPass = localStorage.getItem('devicePasscode');
+        if (correctPass) {
+            // 檢查系統原生的 lockScreen 函數是否存在
+            if (typeof window.lockScreen === 'function') {
+                // 直接呼叫系統的函數來生成並顯示鎖定畫面
+                window.lockScreen();
+                console.log("[LockFix] Device passcode detected, system locked on startup.");
+            } else {
+                console.error("[LockFix] window.lockScreen function not found.");
+            }
+        }
+    };
+
+    // 延遲一點點執行，確保系統的主邏輯已經準備好
+    setTimeout(forceLockOnStart, 100);
+    // ---------------------------------
+
     console.log("%c[NI Tweak] TruePasscode Applied (Target: devicePasscode)", "color: #ff9500;");
 })();
