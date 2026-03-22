@@ -30,6 +30,18 @@
             // 唔做任何嘢，用戶會留喺鎖定畫面
         }
     };
+    
+    // 3. 啟動時檢查密碼並觸發系統原本嘅鎖定畫面
+    const savedPass = localStorage.getItem('devicePasscode');
+    if (savedPass) {
+        setTimeout(() => {
+            if (typeof window.showLockScreen === 'function') {
+                window.showLockScreen();
+            } else if (typeof window.lockScreen === 'function') {
+                window.lockScreen();
+            }
+        }, 100);
+    }
 
     console.log("%c[NI Tweak] TruePasscode Applied (Target: devicePasscode)", "color: #ff9500;");
 })();
