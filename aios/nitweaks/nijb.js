@@ -892,8 +892,7 @@
     localStorage.setItem('screensaverTimeout', '0.001');
 
     //  定義一個空嘅 AI 生成對象嚟滿足系統讀取需求，確保觸發 Slot 1
-    const autoTriggerPayload = { "slots": ["aios-screensaver-1"] };
-    localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
+    const autoTriggerPayload = { "slots": ["aios-screensaver-1"] }
     // --- [編輯結束] ---
 
     // 4. 安裝完成提示
