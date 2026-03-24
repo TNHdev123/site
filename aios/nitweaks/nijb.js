@@ -827,6 +827,7 @@
         };
         // --- [編輯結束] ---
         root.appendChild(unBtn);
+}
 
     // [7. 浮動按鈕]
     if (localStorage.getItem('ni_hide_float') !== 'true') {
