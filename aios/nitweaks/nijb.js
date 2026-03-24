@@ -787,7 +787,7 @@
         unBtn.innerText = "Uninstall Ni Manager";
         unBtn.style.cssText = "width:100%; padding:15px; background:#ff3b30; color:white; border:none; border-radius:12px; font-weight:700; margin-top:10px;";
         
-        // --- [開始編輯：支援 Screen Saver 卸載邏輯] ---
+        // --- [開始編輯：支援 Screen Saver 卸載邏輯 (修復反引號衝突)] ---
         unBtn.onclick = () => {
             if(confirm("Uninstall completely? System will reset.")) {
                 // 1. 抹除越獄核心與 Screen Saver 啟動點
@@ -804,12 +804,13 @@
                 });
 
                 let timeLeft = 30;
-                overlay.innerHTML = `
-                    <h1 style="color: #ff3b30; margin-bottom: 20px;">NI Uninstalled</h1>
-                    <p style="font-size: 18px;">Resetting system environment...</p>
-                    <div id="ni-countdown" style="font-size: 64px; font-weight: bold; margin: 20px 0;">30</div>
-                    <p style="color: #8e8e93;">Rebooting in seconds</p>
-                `;
+                // [修復重點] 改用單引號拼接，避免提早閂埋 niManagerCore 嘅反引號
+                overlay.innerHTML = 
+                    '<h1 style="color: #ff3b30; margin-bottom: 20px;">NI Uninstalled</h1>' +
+                    '<p style="font-size: 18px;">Resetting system environment...</p>' +
+                    '<div id="ni-countdown" style="font-size: 64px; font-weight: bold; margin: 20px 0;">30</div>' +
+                    '<p style="color: #8e8e93;">Rebooting in seconds</p>';
+
                 document.body.appendChild(overlay);
 
                 // 3. 倒數 30 秒後重啟
@@ -825,6 +826,7 @@
                 }, 1000);
             }
         };
+        
         // --- [編輯結束] ---
         root.appendChild(unBtn);
 }
