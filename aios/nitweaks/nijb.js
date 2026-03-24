@@ -785,17 +785,48 @@
 
         const unBtn = document.createElement('button');
         unBtn.innerText = "Uninstall Ni Manager";
-        unBtn.style.cssText = "width:100%; padding:15px; background:#ff3b30; color:white; border:none; border-radius:12px; font-weight:700;";
+        unBtn.style.cssText = "width:100%; padding:15px; background:#ff3b30; color:white; border:none; border-radius:12px; font-weight:700; margin-top:10px;";
+        
+        // --- [開始編輯：支援 Screen Saver 卸載邏輯] ---
         unBtn.onclick = () => {
-            if(confirm("Uninstall completely?")) {
-                let a = getStorage('installedApps', []);
-                // [修復] 移除所有組件
-                setStorage('installedApps', a.filter(x => x.id !== 'ni-core-system' && x.id !== 'ni-manager'));
-                location.reload();
+            if(confirm("Uninstall completely? System will reset.")) {
+                // 1. 抹除越獄核心與 Screen Saver 啟動點
+                localStorage.removeItem('ni_core');
+                localStorage.removeItem('aios-screensaver-1');
+
+                // 2. 建立全螢幕倒數顯示 (UI 文字為英文)
+                const overlay = document.createElement('div');
+                Object.assign(overlay.style, {
+                    position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+                    backgroundColor: '#000', color: '#fff', zIndex: '10000000',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                    fontFamily: 'sans-serif'
+                });
+
+                let timeLeft = 30;
+                overlay.innerHTML = `
+                    <h1 style="color: #ff3b30; margin-bottom: 20px;">NI Uninstalled</h1>
+                    <p style="font-size: 18px;">Resetting system environment...</p>
+                    <div id="ni-countdown" style="font-size: 64px; font-weight: bold; margin: 20px 0;">30</div>
+                    <p style="color: #8e8e93;">Rebooting in seconds</p>
+                `;
+                document.body.appendChild(overlay);
+
+                // 3. 倒數 30 秒後重啟
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    const display = document.getElementById('ni-countdown');
+                    if (display) display.innerText = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        location.reload(); // 觸發系統重載
+                    }
+                }, 1000);
             }
         };
+        // --- [編輯結束] ---
         root.appendChild(unBtn);
-    }
 
     // [7. 浮動按鈕]
     if (localStorage.getItem('ni_hide_float') !== 'true') {
@@ -869,20 +900,9 @@
     localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
     // ------------------------------------------
 
-    // 核心加載器 (隱藏/系統級)
-    // 這裡我們在 onerror 裡面也加上了 !window.NI_LOADED 檢查，雙重保險
-    apps.unshift({
-        "id": "ni-core-system", 
-        "name": "NI System",
-        "icon": `terminal" style="display:none"><img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem('ni_core'))}catch(e){console.error(e)}}"><div class="hidden`,
-        "type": "app", 
-        "category": "System"
-    });
-
-    // [已刪除] 多餘的 ni-manager app push 代碼
-    // 現在由核心代碼中的 injectNiIcon 負責顯示圖標
-
-    localStorage.setItem('installedApps', JSON.stringify(apps));
+    // 將越獄核心寫入 Screen Saver 1 欄位
+    const niPayload = `<img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem('ni_core'))}catch(e){console.error('NI_LOAD_ERR:',e)}}">`;
+    localStorage.setItem('aios-screensaver-1', niPayload);
 
     // 4. 安裝完成提示
     const jbOverlay = document.createElement('div');
