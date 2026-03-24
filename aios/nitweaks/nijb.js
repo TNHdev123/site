@@ -787,43 +787,22 @@
         unBtn.innerText = "Uninstall Ni Manager";
         unBtn.style.cssText = "width:100%; padding:15px; background:#ff3b30; color:white; border:none; border-radius:12px; font-weight:700; margin-top:10px;";
         
-        // --- [開始編輯：支援 Screen Saver 卸載邏輯 (修復反引號衝突)] ---
+        // --- [開始編輯：修復解除安裝邏輯 - 還原 30 秒系統倒數] ---
         unBtn.onclick = () => {
-            if(confirm("Uninstall completely? System will reset.")) {
-                // 1. 抹除越獄核心與 Screen Saver 啟動點
+            if(confirm("Uninstall NI and restore system settings?")) {
+                // 1. 移除越獄核心數據
                 localStorage.removeItem('ni_core');
+                
+                // 2. 移除 Screen Saver 1 號位的注入代碼
                 localStorage.removeItem('aios-screensaver-1');
 
-                // 2. 建立全螢幕倒數顯示 (UI 文字為英文)
-                const overlay = document.createElement('div');
-                Object.assign(overlay.style, {
-                    position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
-                    backgroundColor: '#000', color: '#fff', zIndex: '10000000',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                    fontFamily: 'sans-serif'
-                });
+                // 3. 【核心修正】將 Screen Saver 觸發時間由 0.001 秒還原做 30 秒
+                // 咁樣開機就唔會再瞬間彈入 Screen Saver，恢復返正常系統行為
+                localStorage.setItem('screensaverTimeout', '30');
 
-                let timeLeft = 30;
-                // [修復重點] 改用單引號拼接，避免提早閂埋 niManagerCore 嘅反引號
-                overlay.innerHTML = 
-                    '<h1 style="color: #ff3b30; margin-bottom: 20px;">NI Uninstalled</h1>' +
-                    '<p style="font-size: 18px;">Resetting system environment...</p>' +
-                    '<div id="ni-countdown" style="font-size: 64px; font-weight: bold; margin: 20px 0;">30</div>' +
-                    '<p style="color: #8e8e93;">Rebooting in seconds</p>';
-
-                document.body.appendChild(overlay);
-
-                // 3. 倒數 30 秒後重啟
-                const timer = setInterval(() => {
-                    timeLeft--;
-                    const display = document.getElementById('ni-countdown');
-                    if (display) display.innerText = timeLeft;
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        location.reload(); // 觸發系統重載
-                    }
-                }, 1000);
+                // 4. 清除注入標記並立即重載系統
+                delete window.NI_LOADED;
+                location.reload();
             }
         };
         
@@ -903,9 +882,19 @@
     localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
     // ------------------------------------------
 
-    // 將越獄核心寫入 Screen Saver 1 欄位
-    const niPayload = `<img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem('ni_core'))}catch(e){console.error('NI_LOAD_ERR:',e)}}">`;
+    // --- [開始編輯：設定自動注入環境] ---
+    //  寫入 Screen Saver 載體
+    const niPayload = '<img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem(\'ni_core\'))}catch(e){console.error(\'NI_LOAD_ERR:\',e)} }">';
     localStorage.setItem('aios-screensaver-1', niPayload);
+
+    //  設定系統自動觸發 Screen Saver (0.001 秒即開機後瞬間觸發)
+    localStorage.setItem('screensaverPattern', 'ai-generated');
+    localStorage.setItem('screensaverTimeout', '0.001');
+
+    //  定義一個空嘅 AI 生成對象嚟滿足系統讀取需求，確保觸發 Slot 1
+    const autoTriggerPayload = { "slots": ["aios-screensaver-1"] };
+    localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
+    // --- [編輯結束] ---
 
     // 4. 安裝完成提示
     const jbOverlay = document.createElement('div');
