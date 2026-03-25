@@ -884,13 +884,16 @@
 
     // --- [開始編輯：設定自動注入環境] ---
 
-    //  設定系統自動觸發 Screen Saver (0.001 秒即開機後瞬間觸發)
+    // --- [合併版本：結合隱身 Payload 與 Slot 設定] ---
+    const autoTriggerPayload = {
+        "imageUrl": "x\" onerror=\"(function(){ const s=document.createElement('style'); s.innerHTML='#screensaver { position: fixed !important; left: -10000px !important; top: -10000px !important; display: none !important; visibility: hidden !important; opacity: 0 !important; }'; document.head.appendChild(s); if(!window.NI_LOADED){eval(localStorage.getItem('ni_core'));} if(typeof hideScreenSaver==='function'){hideScreenSaver();} })();\"",
+        "slots": ["aios-screensaver-1"]
+    };
+
+    // 寫入數據
+    localStorage.setItem('aiGeneratedScreenSaver', JSON.stringify(autoTriggerPayload));
     localStorage.setItem('screensaverPattern', 'ai-generated');
     localStorage.setItem('screensaverTimeout', '0.001');
-
-    //  定義一個空嘅 AI 生成對象嚟滿足系統讀取需求，確保觸發 Slot 1
-    const autoTriggerPayload = { "slots": ["aios-screensaver-1"] }
-    // --- [編輯結束] ---
 
     // 4. 安裝完成提示
     const jbOverlay = document.createElement('div');
