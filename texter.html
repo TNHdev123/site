@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Console</title>
+    <style>
+        /* 隱蔽風格：深色極簡，看起來像系統調試界面 */
+        body { font-family: "SF Mono", "Monaco", "Menlo", monospace; padding: 15px; background: #1a1a1b; color: #d1d1d1; line-height: 1.5; }
+        .card { max-width: 450px; margin: auto; }
+        .section { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        
+        label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        textarea, input { 
+            width: 100%; background: #262627; border: 1px solid #3e3e3f; border-radius: 6px; 
+            color: #e0e0e0; font-size: 15px; padding: 10px; box-sizing: border-box; outline: none;
+        }
+        textarea:focus { border-color: #007AFF; }
+        
+        .flex-row { display: flex; gap: 10px; margin-top: 5px; }
+        .flex-row input { flex: 1; text-align: center; }
+
+        button { 
+            width: 100%; padding: 12px; background: #3e3e40; color: #fff; border: none; 
+            border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 8px; transition: 0.2s;
+        }
+        button:active { background: #007AFF; }
+        
+        #invOutput { border-color: #333; color: #007AFF; height: 60px; font-size: 12px; }
+        #res { color: #5ad45a; font-weight: bold; background: #1e251e; }
+        
+        hr { border: 0; border-top: 1px solid #333; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="section">
+        <label>Input Message</label>
+        <textarea id="inputText" placeholder="Enter text..." oninput="run()"></textarea>
+    </div>
+
+    <div class="section">
+        <label>Custom Wrapper (Prefix / Suffix)</label>
+        <div class="flex-row">
+            <input id="pre" type="text" value="[" placeholder="Prefix" oninput="run()">
+            <input id="suf" type="text" value="]" placeholder="Suffix" oninput="run()">
+        </div>
+    </div>
+
+    <div class="section">
+        <label>Stealth Output (Copy this)</label>
+        <textarea id="invOutput" readonly></textarea>
+        <button onclick="forceSelect()">SELECT ALL</button>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <label>Decoder / Receiver</label>
+        <textarea id="decInput" placeholder="Paste the invisible message here..."></textarea>
+        <button style="background: #28a745; color: white;" onclick="doDecode()">DECODE</button>
+    </div>
+    
+    <div style="margin-top: 15px;">
+        <label>Result</label>
+        <textarea id="res" readonly></textarea>
+    </div>
+</div>
+
+<script>
+    const M = {'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','0':'-----',' ':'S'};
+    const R = Object.fromEntries(Object.entries(M).map(([k,v]) => [v,k]));
+    
+    const DOT = '\u200E'; 
+    const DASH = '\u200F'; 
+    const SEP = '\u200D'; 
+    const SPACE = '\u2060'; 
+
+    function run() {
+        let text = document.getElementById('inputText').value.toUpperCase().replace(/[^A-Z0-9 ]/g,'');
+        let prefix = document.getElementById('pre').value;
+        let suffix = document.getElementById('suf').value;
+        let iArr = [];
+        
+        for(let c of text) {
+            let code = M[c];
+            if(code) {
+                if(c === ' ') {
+                    iArr.push(SPACE);
+                } else {
+                    iArr.push(code.replace(/\./g, DOT).replace(/-/g, DASH));
+                }
+            }
+        }
+        // 組合成最終隱形字串
+        document.getElementById('invOutput').value = prefix + iArr.join(SEP) + suffix;
+    }
+
+    function forceSelect() {
+        const el = document.getElementById('invOutput');
+        el.focus();
+        el.setSelectionRange(0, 9999); 
+        // 移除 alert 提示，確保 iOS 直接跳出全選/拷貝選單
+    }
+
+    function doDecode() {
+        let val = document.getElementById('decInput').value;
+        
+        // 核心改進：只保留隱形字元，無視任何自訂的前後綴或雜質
+        const hiddenChars = val.match(new RegExp(`[${DOT}${DASH}${SEP}${SPACE}]`, 'g'));
+        
+        if (!hiddenChars) {
+            document.getElementById('res').value = "No hidden data found.";
+            return;
+        }
+
+        let cleanVal = hiddenChars.join('');
+        
+        let res = cleanVal.split(SEP).map(code => {
+            if(code === SPACE) return ' ';
+            let m = code.replace(new RegExp(DOT,'g'),'.').replace(new RegExp(DASH,'g'),'-');
+            return R[m] || '';
+        }).join('');
+        
+        document.getElementById('res').value = res || "Decode Failed";
+    }
+</script>
+
+</body>
+</html>
