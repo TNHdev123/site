@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Kwigei-AppFinder</title>
+
+<style>
+:root{
+  --bg:#fff;
+  --card:#f2f2f2;
+  --text:#111;
+  --btn:#007aff;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000;
+    --card:#1c1c1e;
+    --text:#fff;
+    --btn:#0a84ff;
+  }
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{max-width:800px;margin:auto;padding:16px;}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+}
+
+input{background:var(--card);color:var(--text);}
+button{margin-top:10px;background:var(--btn);color:#fff;}
+
+.card{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:var(--card);
+}
+
+.item{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+img{
+  width:60px;
+  height:60px;
+  border-radius:12px;
+}
+
+a{
+  display:inline-block;
+  margin-top:6px;
+  margin-right:6px;
+  padding:6px 10px;
+  border-radius:8px;
+  background:var(--btn);
+  color:#fff;
+  text-decoration:none;
+  font-size:13px;
+}
+
+/* ===== MODAL ===== */
+
+#overlay{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  z-index:99;
+}
+
+#sheet{
+  position:fixed;
+  left:0;
+  bottom:-100%;
+  width:100%;
+  background:var(--card);
+  border-radius:18px 18px 0 0;
+  padding:16px;
+  transition:0.3s;
+  z-index:100;
+}
+
+#sheet.active{
+  bottom:0;
+}
+
+.close{
+  text-align:center;
+  font-size:22px;
+  cursor:pointer;
+  margin-bottom:10px;
+}
+
+.qr{
+  display:flex;
+  justify-content:center;
+  margin-top:12px;
+}
+
+.qr img{
+  width:160px;
+  height:160px;
+  border-radius:12px;
+  background:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Cross App Matcher FIX v7</h2>
+
+<input id="q" placeholder="App Store / Play Store / Name / ID">
+<button onclick="run()">Find</button>
+
+<div id="out"></div>
+
+</div>
+
+<!-- MODAL -->
+<div id="overlay" onclick="closeSheet()"></div>
+
+<div id="sheet">
+  <div class="close" onclick="closeSheet()">⌄</div>
+  <div id="sheetContent"></div>
+</div>
+
+<script>
+
+document.addEventListener('gesturestart',e=>e.preventDefault());
+
+const p=new URLSearchParams(location.search);
+const q=p.get("=")||p.get("q");
+if(q){
+  document.getElementById("q").value=q;
+  setTimeout(run,100);
+}
+
+/* Apple ID */
+function appleId(t){
+  const m=t.match(/id(\d+)/);
+  return m?m[1]:null;
+}
+
+/* Apple API */
+async function appleFetch(q){
+  if(/^\d+$/.test(q)){
+    const r=await fetch(`https://itunes.apple.com/lookup?id=${q}`);
+    const j=await r.json();
+    return j.results||[];
+  }
+
+  const r=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=software&limit=5`);
+  const j=await r.json();
+  return j.results||[];
+}
+
+/* GOOGLE LINK */
+function googleLink(name,dev){
+  const q = dev ? `${name} ${dev}` : name;
+  return `https://play.google.com/store/search?q=${encodeURIComponent(q)}&c=apps`;
+}
+
+/* QR */
+function qr(url){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+}
+
+/* MODAL */
+function openSheet(store,app,dev,url){
+  document.getElementById("overlay").style.display="block";
+  const sheet=document.getElementById("sheet");
+  sheet.classList.add("active");
+
+  document.getElementById("sheetContent").innerHTML=`
+    <h3>${store}</h3>
+    <b>${app}</b><br>
+    <small>${dev}</small>
+
+    <div class="qr">
+      <img src="${qr(url)}">
+    </div>
+  `;
+}
+
+function closeSheet(){
+  document.getElementById("overlay").style.display="none";
+  document.getElementById("sheet").classList.remove("active");
+}
+
+/* MAIN */
+async function run(){
+
+  const input=document.getElementById("q").value.trim();
+  const out=document.getElementById("out");
+
+  if(!input) return;
+
+  out.innerHTML="loading...";
+
+  const key = appleId(input) || input;
+
+  const apps = await appleFetch(key);
+
+  let html="";
+
+  for(const app of apps){
+
+    const name=app.trackName;
+    const dev=app.sellerName||"";
+    const ios=app.trackViewUrl;
+    const android=googleLink(name,dev);
+
+    html+=`
+    <div class="card">
+      <div class="item">
+        <img src="${app.artworkUrl100}">
+        <div>
+          <b>${name}</b><br>
+          <small>${dev}</small><br>
+
+          <a href="javascript:void(0)"
+             onclick="openSheet('App Store','${name.replace(/'/g,"")}','${dev.replace(/'/g,"")}','${ios}')">
+             iOS
+          </a>
+
+          <a href="javascript:void(0)"
+             onclick="openSheet('Google Play','${name.replace(/'/g,"")}','${dev.replace(/'/g,"")}','${android}')">
+             Android
+          </a>
+
+        </div>
+      </div>
+    </div>`;
+  }
+
+  out.innerHTML=html;
+}
+
+</script>
+
+</body>
+</html>
