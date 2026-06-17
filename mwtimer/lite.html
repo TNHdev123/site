@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <!-- 適合流動裝置及防止縮放，支援 iOS 7 minimal-ui -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MWTimmerL">
+    <title>Multi-Work Timmer</title>
+    <style>
+        /* 基礎樣式重設 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+            width: 100%;
+            height: 100%;
+            /* 允許整個視窗在舊版系統與小螢幕上正常捲動，防止畫面超出被裁切 */
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 允許輸入框選取及輸入文字 */
+        input {
+            -webkit-user-select: text;
+            user-select: text;
+            font-family: inherit;
+        }
+
+        /* 主容器佈局：改用自然流動排版，徹底解決小螢幕及舊系統頂部死結 */
+        #app-wrapper {
+            position: relative;
+            width: 100%;
+            padding: 16px;
+            padding-top: 16px;
+            padding-bottom: 16px;
+            /* 現代裝置的安全區域相容留白 */
+            padding-top: calc(16px + constant(safe-area-inset-top));
+            padding-top: calc(16px + env(safe-area-inset-top));
+            padding-bottom: calc(16px + constant(safe-area-inset-bottom));
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+        }
+
+        /* 標題欄 */
+        header {
+            position: relative;
+            width: 100%;
+            height: 44px;
+            text-align: center;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 44px;
+            letter-spacing: 0.5px;
+        }
+
+        .trash-btn-top {
+            position: absolute;
+            right: 4px;
+            top: 6px;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .trash-btn-top svg {
+            width: 24px;
+            height: 24px;
+            fill: #ff453a;
+        }
+
+        /* 中央圓圈計時區 */
+        .timer-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 10px auto;
+        }
+
+        .timer-svg {
+            -webkit-transform: rotate(-90deg);
+            transform: rotate(-90deg);
+            width: 260px;
+            height: 260px;
+        }
+
+        .timer-track {
+            stroke: #2c2c2e;
+            stroke-width: 6;
+            fill: none;
+        }
+
+        /* 每個分段的底軌道段落樣式 */
+        .timer-segment-track {
+            stroke-width: 6;
+            fill: none;
+        }
+
+        .timer-progress {
+            stroke: #ff9500;
+            stroke-width: 6;
+            fill: none;
+            stroke-linecap: square;
+        }
+
+        .timer-text-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 260px;
+            text-align: center;
+        }
+
+        .end-time-display {
+            font-size: 14px;
+            color: #aeaeb2;
+            margin-top: 65px;
+            height: 20px;
+            line-height: 20px;
+        }
+
+        .main-countdown {
+            font-size: 52px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 5px;
+            line-height: 1;
+        }
+
+        .current-mode-lbl {
+            font-size: 16px;
+            color: #aeaeb2;
+            margin-top: 15px;
+        }
+
+        /* 控制按鈕區 (取消 / 暫停 / 開始) */
+        .controls-row {
+            position: relative;
+            width: 100%;
+            height: 64px;
+            margin-top: 5px;
+        }
+
+        .circle-btn {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            border: none;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .left-btn {
+            left: 10px;
+            background-color: #1c1c1e;
+            color: #ffffff;
+            display: none; /* 未計時狀態隱藏 */
+        }
+
+        .right-btn {
+            right: 10px;
+        }
+
+        .btn-start {
+            background-color: #1c3d23;
+            color: #30d158;
+        }
+
+        .btn-pause {
+            background-color: #3d2a1c;
+            color: #ff9500;
+        }
+
+        /* 模式與時數操作按鈕區 */
+        .action-row {
+            width: 100%;
+            height: 44px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .rect-btn {
+            width: 47%;
+            height: 44px;
+            background-color: #2c2c2e;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .rect-btn:active {
+            background-color: #3a3a3c;
+        }
+
+        .left-action {
+            float: left;
+        }
+
+        .right-action {
+            float: right;
+        }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        /* 分段工作時數列表區：改用相對排版，完美兼容 iOS 7 滾動與點擊 */
+        .list-panel {
+            background-color: #1c1c1e;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .list-header-row {
+            height: 40px;
+            background-color: #2c2c2e;
+            padding: 0 14px;
+            line-height: 40px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .list-header-left {
+            float: left;
+        }
+
+        .list-header-right {
+            float: right;
+            color: #aeaeb2;
+        }
+
+        .scrollable-list {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            max-height: 280px; /* 限制內部最大高度，超出時內部可滾動 */
+        }
+
+        .task-item-row {
+            position: relative;
+            height: 48px;
+            border-bottom: 1px solid #2c2c2e;
+            line-height: 48px;
+            padding: 0 14px;
+            font-size: 15px;
+        }
+
+        .task-name {
+            float: left;
+            max-width: 40%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .task-sorting {
+            position: absolute;
+            left: 42%;
+            width: 60px;
+            text-align: center;
+        }
+
+        .sort-arrow {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            background-color: #2c2c2e;
+            border-radius: 4px;
+            margin: 0 2px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .task-status-time {
+            float: right;
+            margin-right: 30px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .task-status-time.completed {
+            color: #30d158;
+        }
+
+        .item-delete-btn {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            width: 24px;
+            height: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .item-delete-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #ff453a;
+        }
+
+        /* 彈出視窗樣式：拋棄舊版 iOS 容易崩潰的 Flex 居中，改用相容性極佳的絕對定位居中 */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup-card {
+            background-color: #2c2c2e;
+            border-radius: 14px;
+            width: 88%;
+            max-width: 320px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            max-height: 80%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+        }
+
+        .popup-header {
+            width: 100%;
+            height: 30px;
+            line-height: 30px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .popup-close-x {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            background-color: #3a3a3c;
+            color: #ffffff;
+            border-radius: 14px;
+            border: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            line-height: 28px;
+        }
+
+        /* 彈出視窗表單元素 */
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .popup-input {
+            width: 100%;
+            height: 38px;
+            background-color: #1c1c1e;
+            border: 1px solid #3a3a3c;
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 0 10px;
+            font-size: 15px;
+        }
+
+        .time-inputs-row {
+            width: 100%;
+        }
+
+        .time-input-half {
+            width: 48%;
+            float: left;
+        }
+
+        .time-input-half-right {
+            width: 48%;
+            float: right;
+        }
+
+        .popup-action-btn {
+            width: 100%;
+            height: 40px;
+            background-color: #3a3a3c;
+            color: #ff9500;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .popup-action-btn.danger-btn {
+            color: #ff453a;
+        }
+
+        /* 工作模式列表特定樣式 */
+        .mode-list-item {
+            height: 44px;
+            line-height: 44px;
+            border-bottom: 1px solid #3a3a3c;
+            padding: 0 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .mode-name-span {
+            float: left;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mode-delete-btn {
+            float: right;
+            margin-top: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .mode-delete-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: #ff453a;
+        }
+
+        .inline-add-mode-box {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #3a3a3c;
+        }
+
+        /* 結束視窗特定 */
+        .celebrate-icon {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: #aeaeb2;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .popup-desc-text {
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .popup-desc-text.alert-color {
+            color: #ff453a;
+        }
+
+        .big-close-btn {
+            background-color: #3a3a3c;
+            color: #ffffff;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-wrapper">
+    <!-- 頂部列 -->
+    <header>
+        <div class="app-title">Multi-Work Timmer</div>
+        <button class="trash-btn-top" onclick="openClearDataPopup()">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+    </header>
+
+    <!-- 中央環形計時面版 -->
+    <div class="timer-container">
+        <svg class="timer-svg">
+            <!-- 底圈背景 -->
+            <circle class="timer-track" cx="130" cy="130" r="120"></circle>
+            <!-- 用於放置動態生成的節段分段底軌道 -->
+            <g id="segments-track-group"></g>
+            <!-- 實時進度指示條 -->
+            <circle id="progress-circle" class="timer-progress" cx="130" cy="130" r="120" stroke-dasharray="753.98" stroke-dashoffset="753.98"></circle>
+        </svg>
+        <div class="timer-text-box">
+            <div id="end-time-display" class="end-time-display"></div>
+            <div id="main-countdown" class="main-countdown">00:00</div>
+            <div id="current-mode-lbl" class="current-mode-lbl">預設</div>
+        </div>
+    </div>
+
+    <!-- 控制按鈕區 -->
+    <div class="controls-row">
+        <button id="left-control-btn" class="circle-btn left-btn" onclick="handleCancelClick()">取消</button>
+        <button id="right-control-btn" class="circle-btn right-btn btn-start" onclick="handleRightClick()">開始</button>
+    </div>
+
+    <!-- 選項切換與添加時數區 -->
+    <div class="action-row clearfix">
+        <button class="rect-btn left-action" onclick="openModePopup()">切換工作模式</button>
+        <button class="rect-btn right-action" onclick="openAddTaskPopup()">新增工作時數</button>
+    </div>
+
+    <!-- 下方數據清單面版 -->
+    <div class="list-panel">
+        <div class="list-header-row clearfix">
+            <div class="list-header-left">總工作時數</div>
+            <div id="total-duration-lbl" class="list-header-right">00:00</div>
+        </div>
+        <div id="scrollable-list" class="scrollable-list">
+            <!-- 任務清單項目將動態生成 -->
+        </div>
+    </div>
+</div>
+
+<!-- ================= 彈出視窗組合 (POPUP) ================= -->
+
+<!-- 1. 工作模式管理視窗 -->
+<div id="popup-mode" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-header">
+            <div class="popup-title">工作模式</div>
+            <button class="popup-close-x" onclick="closePopup('popup-mode')">X</button>
+        </div>
+        <div id="mode-items-container" style="max-height: 180px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+            <!-- 模式項目 -->
+        </div>
+        <div class="inline-add-mode-box">
+            <div class="input-group">
+                <input type="text" id="new-mode-input" class="popup-input" placeholder="新模式名稱">
+            </div>
+            <button class="popup-action-btn" onclick="submitNewMode()">新增</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. 新增工作時數視窗 -->
+<div id="popup-add-task" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-header">
+            <div class="popup-title">新增工作時數</div>
+            <button class="popup-close-x" onclick="closePopup('popup-add-task')">X</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="task-name-input" class="popup-input" placeholder="名稱">
+        </div>
+        <div class="input-group clearfix">
+            <div class="time-input-half">
+                <input type="number" id="task-min-input" class="popup-input" placeholder="分" min="0">
+            </div>
+            <div class="time-input-half-right">
+                <input type="number" id="task-sec-input" class="popup-input" placeholder="秒" min="0" max="59">
+            </div>
+        </div>
+        <button class="popup-action-btn" onclick="submitNewTask()">新增</button>
+    </div>
+</div>
+
+<!-- 3. 刪除項目二次確認視窗 -->
+<div id="popup-confirm-delete" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-header">
+            <div class="popup-title">刪除項目</div>
+            <button class="popup-close-x" onclick="closePopup('popup-confirm-delete')">X</button>
+        </div>
+        <div id="delete-msg-text" class="popup-desc-text">你確定要刪除嗎？</div>
+        <button class="popup-action-btn danger-btn" onclick="executeDeletion()">刪除</button>
+    </div>
+</div>
+
+<!-- 4. 清除資料警告視窗 -->
+<div id="popup-clear-data" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-header">
+            <div class="popup-title">清除資料</div>
+            <button class="popup-close-x" onclick="closePopup('popup-clear-data')">X</button>
+        </div>
+        <div class="popup-desc-text alert-color" style="font-weight: bold;">你確定要清除本App所有資料嗎？</div>
+        <button class="popup-action-btn danger-btn" onclick="executeClearAllData()">刪除</button>
+    </div>
+</div>
+
+<!-- 5. 計時結束與補時視窗 -->
+<div id="popup-timer-finished" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-header">
+            <div class="popup-title">計時結束</div>
+        </div>
+        <div class="celebrate-icon">🎉</div>
+        
+        <div class="section-subtitle">補時數</div>
+        <div class="input-group">
+            <input type="text" id="extra-name-input" class="popup-input" placeholder="名稱">
+        </div>
+        <div class="input-group clearfix">
+            <div class="time-input-half">
+                <input type="number" id="extra-min-input" class="popup-input" placeholder="分" min="0">
+            </div>
+            <div class="time-input-half-right">
+                <input type="number" id="extra-sec-input" class="popup-input" placeholder="秒" min="0" max="59">
+            </div>
+        </div>
+        <button class="popup-action-btn" onclick="submitExtraTask()">新增</button>
+        
+        <button class="popup-action-btn big-close-btn" onclick="closeFinishedPopupAndReset()">關閉</button>
+    </div>
+</div>
+
+<!-- ================= 邏輯程式碼 JavaScript (完全重構為 ES5 標準以極致相容 iOS 7) ================= -->
+<script>
+    // 核心資料狀態 (全部改為 var 宣告，避免 iOS 7 核心 JavaScript 解析失敗導致死機)
+    var state = {
+        modes: {
+            "預設": []
+        },
+        currentMode: "預設",
+        isRunning: false,
+        isPaused: false,
+        elapsedSeconds: 0,
+        
+        timerIntervalId: null,
+        startTimeStamp: null,
+        pausedElapsedSeconds: 0,
+        
+        deleteBuffer: null 
+    };
+
+    var CIRCUMFERENCE = 753.98; // 2 * Math.PI * 120
+
+    // 初始化載入
+    window.onload = function() {
+        loadDataFromStorage();
+        // 刪除原先會導致 iOS 7 全局點擊失效的手勢攔截代碼
+        document.title = "Multi-Work Timmer";
+        renderApp();
+    };
+
+    // 本地儲存資料
+    function loadDataFromStorage() {
+        var saved = localStorage.getItem('multi_work_timer_data_store');
+        if (saved) {
+            try {
+                var parsed = JSON.parse(saved);
+                if (parsed.modes && parsed.modes["預設"]) {
+                    state.modes = parsed.modes;
+                    state.currentMode = parsed.currentMode || "預設";
+                }
+            } catch(e) {
+                // 維持初值
+            }
+        }
+    }
+
+    function saveDataToStorage() {
+        var dataToSave = {
+            modes: state.modes,
+            currentMode: state.currentMode
+        };
+        localStorage.setItem('multi_work_timer_data_store', JSON.stringify(dataToSave));
+    }
+
+    // 時間格式化 (MM:SS)
+    function formatTimeStrings(totalSecs) {
+        var m = Math.floor(totalSecs / 60);
+        var s = totalSecs % 60;
+        return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+    }
+
+    // 計算當前模式下的總目標秒數
+    function getCurrentModeTotalSeconds() {
+        var list = state.modes[state.currentMode] || [];
+        var total = 0;
+        for (var i = 0; i < list.length; i++) {
+            total += (parseInt(list[i].min) * 60) + parseInt(list[i].sec);
+        }
+        return total;
+    }
+
+    // 畫面核心渲染
+    function renderApp() {
+        var tasks = state.modes[state.currentMode] || [];
+        var totalSeconds = getCurrentModeTotalSeconds();
+        
+        document.getElementById('current-mode-lbl').innerText = state.currentMode;
+        
+        // 渲染外圈分段
+        renderCircleSegments(tasks, totalSeconds);
+        
+        if (state.isRunning) {
+            document.getElementById('left-control-btn').style.display = 'block';
+            
+            var rBtn = document.getElementById('right-control-btn');
+            if (state.isPaused) {
+                rBtn.innerText = "開始";
+                rBtn.className = "circle-btn right-btn btn-start";
+            } else {
+                rBtn.innerText = "暫停";
+                rBtn.className = "circle-btn right-btn btn-pause";
+            }
+            
+            document.getElementById('main-countdown').innerText = formatTimeStrings(state.elapsedSeconds);
+            
+            var progressRatio = totalSeconds > 0 ? (state.elapsedSeconds / totalSeconds) : 0;
+            if (progressRatio > 1) progressRatio = 1;
+            var dashOffsetValue = CIRCUMFERENCE - (progressRatio * CIRCUMFERENCE);
+            document.getElementById('progress-circle').setAttribute('stroke-dashoffset', dashOffsetValue);
+            
+            var remainSecs = totalSeconds - state.elapsedSeconds;
+            if (remainSecs < 0) remainSecs = 0;
+            var endWallTime = new Date(Date.now() + remainSecs * 1000);
+            var hour = endWallTime.getHours();
+            var min = endWallTime.getMinutes();
+            var period = hour >= 12 ? "下午" : "上午";
+            if (hour > 12) hour = hour - 12;
+            if (hour === 0) hour = 12;
+            var minStr = min < 10 ? "0" + min : min;
+            document.getElementById('end-time-display').innerHTML = "&#128276; " + period + " " + hour + ":" + minStr;
+            
+            document.getElementById('total-duration-lbl').innerText = formatTimeStrings(state.elapsedSeconds) + "/" + formatTimeStrings(totalSeconds);
+            
+            renderLiveTaskList(tasks);
+        } else {
+            document.getElementById('left-control-btn').style.display = 'none';
+            var rBtn = document.getElementById('right-control-btn');
+            rBtn.innerText = "開始";
+            rBtn.className = "circle-btn right-btn btn-start";
+            
+            document.getElementById('main-countdown').innerText = "00:00";
+            document.getElementById('progress-circle').setAttribute('stroke-dashoffset', CIRCUMFERENCE);
+            document.getElementById('end-time-display').innerText = "";
+            
+            document.getElementById('total-duration-lbl').innerText = formatTimeStrings(totalSeconds);
+            
+            renderEditableTaskList(tasks);
+        }
+    }
+
+    // 在圓圈上劃分段落
+    function renderCircleSegments(tasks, totalSeconds) {
+        var group = document.getElementById('segments-track-group');
+        group.innerHTML = ""; 
+        
+        if (totalSeconds <= 0 || tasks.length <= 1) {
+            return; 
+        }
+        
+        var accumulatedSec = 0;
+        var GAP_SIZE = 3; 
+
+        for (var i = 0; i < tasks.length; i++) {
+            var itemSec = (parseInt(tasks[i].min) * 60) + parseInt(tasks[i].sec);
+            var ratio = itemSec / totalSeconds;
+            var segmentLength = ratio * CIRCUMFERENCE;
+            
+            if (segmentLength <= GAP_SIZE) continue;
+            
+            var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("class", "timer-segment-track");
+            circle.setAttribute("cx", "130");
+            circle.setAttribute("cy", "130");
+            circle.setAttribute("r", "120");
+            
+            var strokeColor = (i % 2 === 0) ? "#3a3a3c" : "#2c2c2e";
+            circle.setAttribute("stroke", strokeColor);
+            
+            var drawLength = segmentLength - GAP_SIZE;
+            var spaceLength = CIRCUMFERENCE - drawLength;
+            circle.setAttribute("stroke-dasharray", drawLength + " " + spaceLength);
+            
+            var startOffset = (accumulatedSec / totalSeconds) * CIRCUMFERENCE;
+            circle.setAttribute("stroke-dashoffset", -startOffset);
+            
+            group.appendChild(circle);
+            accumulatedSec += itemSec;
+        }
+    }
+
+    // 計時中的列表
+    function renderLiveTaskList(tasks) {
+        var container = document.getElementById('scrollable-list');
+        container.innerHTML = "";
+        
+        var accumulatedSec = 0;
+        for (var i = 0; i < tasks.length; i++) {
+            var itemSec = (parseInt(tasks[i].min) * 60) + parseInt(tasks[i].sec);
+            var row = document.createElement('div');
+            row.className = "task-item-row clearfix";
+            
+            var nameDiv = document.createElement('div');
+            nameDiv.className = "task-name";
+            nameDiv.innerText = tasks[i].name;
+            row.appendChild(nameDiv);
+            
+            var timeStatusDiv = document.createElement('div');
+            timeStatusDiv.className = "task-status-time";
+            
+            if (state.elapsedSeconds >= (accumulatedSec + itemSec)) {
+                timeStatusDiv.className += " completed";
+                timeStatusDiv.innerText = "✅已完結" + formatTimeStrings(itemSec);
+            } else if (state.elapsedSeconds >= accumulatedSec && state.elapsedSeconds < (accumulatedSec + itemSec)) {
+                var currentItemElapsed = state.elapsedSeconds - accumulatedSec;
+                timeStatusDiv.innerText = formatTimeStrings(currentItemElapsed) + "/" + formatTimeStrings(itemSec);
+            } else {
+                timeStatusDiv.innerText = formatTimeStrings(itemSec);
+            }
+            
+            row.appendChild(timeStatusDiv);
+            container.appendChild(row);
+            
+            accumulatedSec += itemSec;
+        }
+    }
+
+    // 未計時的編輯列表
+    function renderEditableTaskList(tasks) {
+        var container = document.getElementById('scrollable-list');
+        container.innerHTML = "";
+        
+        for (var i = 0; i < tasks.length; i++) {
+            var itemSec = (parseInt(tasks[i].min) * 60) + parseInt(tasks[i].sec);
+            var row = document.createElement('div');
+            row.className = "task-item-row clearfix";
+            
+            var nameDiv = document.createElement('div');
+            nameDiv.className = "task-name";
+            nameDiv.innerText = tasks[i].name;
+            row.appendChild(nameDiv);
+            
+            var sortDiv = document.createElement('div');
+            sortDiv.className = "task-sorting";
+            
+            var upArrow = document.createElement('span');
+            upArrow.className = "sort-arrow";
+            upArrow.innerText = "⬆️";
+            upArrow.onclick = (function(idx) {
+                return function() { moveTaskOrder(idx, -1); };
+            })(i);
+            
+            var downArrow = document.createElement('span');
+            downArrow.className = "sort-arrow";
+            downArrow.innerText = "⬇️";
+            downArrow.onclick = (function(idx) {
+                return function() { moveTaskOrder(idx, 1); };
+            })(i);
+            
+            sortDiv.appendChild(upArrow);
+            sortDiv.appendChild(downArrow);
+            row.appendChild(sortDiv);
+            
+            var timeDiv = document.createElement('div');
+            timeDiv.className = "task-status-time";
+            timeDiv.innerText = formatTimeStrings(itemSec);
+            row.appendChild(timeDiv);
+            
+            var delBtn = document.createElement('button');
+            delBtn.className = "item-delete-btn";
+            delBtn.onclick = (function(idx) {
+                return function() { openDeleteConfirmPopup('task', idx); };
+            })(i);
+            delBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+            row.appendChild(delBtn);
+            
+            container.appendChild(row);
+        }
+    }
+
+    // 調整順序
+    function moveTaskOrder(index, direction) {
+        var list = state.modes[state.currentMode] || [];
+        var targetIndex = index + direction;
+        if (targetIndex >= 0 && targetIndex < list.length) {
+            var temp = list[index];
+            list[index] = list[targetIndex];
+            list[targetIndex] = temp;
+            saveDataToStorage();
+            renderApp();
+        }
+    }
+
+    // 按鈕控制
+    function handleRightClick() {
+        var totalSeconds = getCurrentModeTotalSeconds();
+        if (totalSeconds <= 0) return; 
+        
+        if (!state.isRunning) {
+            state.isRunning = true;
+            state.isPaused = false;
+            state.elapsedSeconds = 0;
+            state.startTimeStamp = Date.now();
+            startTimerEngine();
+        } else {
+            if (state.isPaused) {
+                state.isPaused = false;
+                state.startTimeStamp = Date.now() - (state.elapsedSeconds * 1000);
+                startTimerEngine();
+            } else {
+                state.isPaused = true;
+                clearInterval(state.timerIntervalId);
+            }
+        }
+        renderApp();
+    }
+
+    function handleCancelClick() {
+        if (state.isRunning) {
+            state.isRunning = false;
+            state.isPaused = false;
+            state.elapsedSeconds = 0;
+            clearInterval(state.timerIntervalId);
+            renderApp();
+        }
+    }
+
+    // 定時核心驅動
+    function startTimerEngine() {
+        clearInterval(state.timerIntervalId);
+        state.timerIntervalId = setInterval(function() {
+            if (state.isRunning && !state.isPaused) {
+                var passed = Math.floor((Date.now() - state.startTimeStamp) / 1000);
+                state.elapsedSeconds = passed;
+                
+                var totalSeconds = getCurrentModeTotalSeconds();
+                if (state.elapsedSeconds >= totalSeconds) {
+                    state.elapsedSeconds = totalSeconds;
+                    clearInterval(state.timerIntervalId);
+                    openFinishedPopup();
+                }
+                renderApp();
+            }
+        }, 200);
+    }
+
+    // 視窗控制
+    function showPopupOverlay(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function closePopup(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // 1. 工作模式
+    function openModePopup() {
+        if (state.isRunning) return; 
+        var container = document.getElementById('mode-items-container');
+        container.innerHTML = "";
+        
+        for (var modeName in state.modes) {
+            var div = document.createElement('div');
+            div.className = "mode-list-item clearfix";
+            
+            var nameSpan = document.createElement('span');
+            nameSpan.className = "mode-name-span";
+            nameSpan.innerText = modeName;
+            nameSpan.onclick = (function(name) {
+                return function() {
+                    state.currentMode = name;
+                    saveDataToStorage();
+                    renderApp();
+                    closePopup('popup-mode');
+                };
+            })(modeName);
+            div.appendChild(nameSpan);
+            
+            if (modeName !== "預設") {
+                var delBtn = document.createElement('button');
+                delBtn.className = "mode-delete-btn";
+                delBtn.onclick = (function(name) {
+                    return function() { openDeleteConfirmPopup('mode', name); };
+                })(modeName);
+                delBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+                div.appendChild(delBtn);
+            }
+            
+            container.appendChild(div);
+        }
+        document.getElementById('new-mode-input').value = "";
+        showPopupOverlay('popup-mode');
+    }
+
+    function submitNewMode() {
+        var inputVal = document.getElementById('new-mode-input').value.trim();
+        if (inputVal && !state.modes[inputVal]) {
+            state.modes[inputVal] = [];
+            saveDataToStorage();
+            openModePopup(); 
+        }
+    }
+
+    // 2. 新增時數
+    function openAddTaskPopup() {
+        if (state.isRunning) return; 
+        document.getElementById('task-name-input').value = "";
+        document.getElementById('task-min-input').value = "";
+        document.getElementById('task-sec-input').value = "";
+        showPopupOverlay('popup-add-task');
+    }
+
+    function submitNewTask() {
+        var name = document.getElementById('task-name-input').value.trim() || "未命名";
+        var min = parseInt(document.getElementById('task-min-input').value) || 0;
+        var sec = parseInt(document.getElementById('task-sec-input').value) || 0;
+        
+        if (min === 0 && sec === 0) return;
+        
+        state.modes[state.currentMode].push({
+            name: name,
+            min: min,
+            sec: sec
+        });
+        
+        saveDataToStorage();
+        renderApp();
+        closePopup('popup-add-task');
+    }
+
+    // 3. 刪除確認
+    function openDeleteConfirmPopup(type, targetKey) {
+        state.deleteBuffer = { type: type, target: targetKey };
+        var msg = "";
+        if (type === 'mode') {
+            msg = "你確定要刪除工作模式 '" + targetKey + "' 嗎？";
+        } else {
+            var taskItem = state.modes[state.currentMode][targetKey];
+            msg = "你確定要刪除工作時數 '" + taskItem.name + "' 嗎？";
+        }
+        document.getElementById('delete-msg-text').innerText = msg;
+        showPopupOverlay('popup-confirm-delete');
+    }
+
+    function executeDeletion() {
+        if (!state.deleteBuffer) return;
+        var info = state.deleteBuffer;
+        
+        if (info.type === 'mode') {
+            if (state.modes[info.target] && info.target !== "預設") {
+                delete state.modes[info.target];
+                if (state.currentMode === info.target) {
+                    state.currentMode = "預設";
+                }
+                saveDataToStorage();
+                closePopup('popup-confirm-delete');
+                openModePopup(); 
+            }
+        } else if (info.type === 'task') {
+            var list = state.modes[state.currentMode] || [];
+            if (info.target >= 0 && info.target < list.length) {
+                list.splice(info.target, 1);
+                saveDataToStorage();
+                closePopup('popup-confirm-delete');
+                renderApp();
+            }
+        }
+        state.deleteBuffer = null;
+    }
+
+    // 4. 清除全部
+    function openClearDataPopup() {
+        showPopupOverlay('popup-clear-data');
+    }
+
+    function executeClearAllData() {
+        localStorage.removeItem('multi_work_timer_data_store');
+        state.modes = { "預設": [] };
+        state.currentMode = "預設";
+        state.isRunning = false;
+        state.isPaused = false;
+        state.elapsedSeconds = 0;
+        clearInterval(state.timerIntervalId);
+        
+        closePopup('popup-clear-data');
+        renderApp();
+    }
+
+    // 5. 計時結束
+    function openFinishedPopup() {
+        document.getElementById('extra-name-input').value = "";
+        document.getElementById('extra-min-input').value = "";
+        document.getElementById('extra-sec-input').value = "";
+        showPopupOverlay('popup-timer-finished');
+    }
+
+    function submitExtraTask() {
+        var name = document.getElementById('extra-name-input').value.trim() || "補時數";
+        var min = parseInt(document.getElementById('extra-min-input').value) || 0;
+        var sec = parseInt(document.getElementById('extra-sec-input').value) || 0;
+        
+        if (min === 0 && sec === 0) return;
+        
+        state.modes[state.currentMode].push({
+            name: name,
+            min: min,
+            sec: sec
+        });
+        
+        saveDataToStorage();
+        closePopup('popup-timer-finished');
+        
+        state.startTimeStamp = Date.now() - (state.elapsedSeconds * 1000);
+        startTimerEngine();
+        renderApp();
+    }
+
+    function closeFinishedPopupAndReset() {
+        state.isRunning = false;
+        state.isPaused = false;
+        state.elapsedSeconds = 0;
+        clearInterval(state.timerIntervalId);
+        
+        closePopup('popup-timer-finished');
+        renderApp();
+    }
+</script>
+
+</body>
+</html>
